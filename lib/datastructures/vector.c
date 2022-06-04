@@ -107,12 +107,7 @@ bool vector_remove(vector_t *v, unsigned index) {
     return false;
   }
 
-  // NOTE: Das hier hat sehr schlechte Performance, wenn man wiederholt einzelne
-  // Elemente am Anfang löscht und der Vektor groß genug ist. Fürs erste sollte
-  // es aber gut genug sein.
-  memmove(&v->data[index], &v->data[index + 1],
-          (v->size - (index + 1)) * sizeof(int));
-  v->size--;
+  v->data[index] = v->data[--v->size];
   return true;
 }
 

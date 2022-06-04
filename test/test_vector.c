@@ -59,7 +59,7 @@ Test(vector, remove) {
   cr_assert(vector_remove(v, 9) == false);
   cr_assert(vector_size(v) == 7);
 
-  int items_after[7] = {1, 2, 4, 5, 6, 8, 9};
+  int items_after[7] = {9, 1, 2, 8, 4, 5, 6};
 
   for (unsigned i = 0; i < 7; i++) {
     int item;
