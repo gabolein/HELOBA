@@ -19,12 +19,15 @@ Test(vector, create_with_capacity) {
 }
 
 Test(vector, access) {
-  int item;
   vector_t *v = vector_create();
-  cr_assert(vector_at(v, 0, &item) == false);
-  cr_assert(vector_insert(v, 42) == true);
-  cr_assert(vector_at(v, 0, &item) == true);
-  cr_assert(item == 42);
+  vector_append(v, 42);
+  cr_assert(vector_at(v, 0) == 42);
+  vector_destroy(v);
+}
+
+Test(vector, access_oob, .signal = SIGABRT) {
+  vector_t *v = vector_create();
+  vector_at(v, 3);
   vector_destroy(v);
 }
 
@@ -33,13 +36,11 @@ Test(vector, insert) {
   vector_t *v = vector_create();
 
   for (unsigned i = 0; i < 10; i++) {
-    vector_insert(v, items[i]);
+    vector_append(v, items[i]);
   }
 
   for (unsigned i = 0; i < 10; i++) {
-    int item;
-    cr_assert(vector_at(v, i, &item) == true);
-    cr_assert(item == items[i]);
+    cr_assert(vector_at(v, i) == items[i]);
   }
 
   vector_destroy(v);
@@ -50,33 +51,36 @@ Test(vector, remove) {
   vector_t *v = vector_create();
 
   for (unsigned i = 0; i < 10; i++) {
-    vector_insert(v, items[i]);
+    vector_append(v, items[i]);
   }
 
-  cr_assert(vector_remove(v, 7) == true);
-  cr_assert(vector_remove(v, 3) == true);
-  cr_assert(vector_remove(v, 0) == true);
-  cr_assert(vector_remove(v, 9) == false);
+  cr_assert(vector_remove(v, 7) == items[7]);
+  cr_assert(vector_remove(v, 3) == items[3]);
+  cr_assert(vector_remove(v, 0) == items[0]);
   cr_assert(vector_size(v) == 7);
 
   int items_after[7] = {9, 1, 2, 8, 4, 5, 6};
 
   for (unsigned i = 0; i < 7; i++) {
-    int item;
-    cr_assert(vector_at(v, i, &item) == true);
-    cr_assert(item == items_after[i]);
+    cr_assert(vector_at(v, i) == items_after[i]);
   }
 
   vector_destroy(v);
 }
 
+Test(vector, remove_oob, .signal = SIGABRT) {
+  vector_t *v = vector_create();
+  vector_remove(v, 13);
+  vector_destroy(v);
+}
+
 Test(vector, destroy) {
   vector_t *v = vector_create();
-  cr_assert(vector_destroy(v) == true);
+  vector_destroy(v);
+}
 
-  vector_t *w = vector_create();
-  w->size = 9001;
-  cr_assert(vector_destroy(w) == false);
-  w->size = 0;
-  cr_assert(vector_destroy(w) == true);
+Test(vector, destroy_invalid, .signal = SIGABRT) {
+  vector_t *v = vector_create();
+  v->size = 9001;
+  vector_destroy(v);
 }

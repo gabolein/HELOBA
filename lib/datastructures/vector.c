@@ -1,121 +1,92 @@
 #include "lib/datastructures/vector.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-bool vector_is_valid(vector_t *v);
-bool vector_expand(vector_t *v);
+void __v_sanity_check(vector_t *v);
+void __v_expand(vector_t *v);
 
-bool vector_is_valid(vector_t *v) {
-  if (v == NULL || v->data == NULL || v->size > v->capacity) {
-    fprintf(stderr,
-            "[WARNING] Vector @ %p was found to be in an inconsistent state.\n",
-            v);
-    return false;
-  }
-
-  return true;
+void __v_sanity_check(vector_t *v) {
+  assert(v != NULL);
+  assert(v->data != NULL);
+  assert(v->size <= v->capacity);
 }
 
-bool vector_expand(vector_t *v) {
-  if (!vector_is_valid(v))
-    return false;
+void __v_expand(vector_t *v) {
+  __v_sanity_check(v);
 
-  if (v->capacity < 2)
+  if (v->capacity < 2) {
     v->capacity = 2;
-  else if (__builtin_uadd_overflow(v->capacity, v->capacity / 2, &v->capacity))
-    return false;
+  } else {
+    bool overflowed =
+        __builtin_uadd_overflow(v->capacity, v->capacity / 2, &v->capacity);
+    assert(!overflowed);
+  }
 
   v->data = realloc(v->data, v->capacity * sizeof(int));
-  return vector_is_valid(v);
+  __v_sanity_check(v);
 }
 
 vector_t *vector_create() {
   vector_t *vector = malloc(sizeof(vector_t));
-  if (vector == NULL) {
-    fprintf(stderr, "[WARNING] malloc returned NULL.\n");
-    return NULL;
-  }
+  assert(vector != NULL);
 
   vector->capacity = 0;
   vector->size = 0;
   vector->data = malloc(0);
-  if (vector->data == NULL) {
-    fprintf(stderr, "[WARNING] malloc returned NULL.\n");
-    return NULL;
-  }
+  assert(vector->data != NULL);
 
   return vector;
 }
 
 vector_t *vector_create_with_capacity(unsigned capacity) {
   vector_t *vector = malloc(sizeof(vector_t));
-  if (vector == NULL) {
-    fprintf(stderr, "[WARNING] malloc returned NULL.\n");
-    return NULL;
-  }
+  assert(vector != NULL);
 
   vector->capacity = capacity;
   vector->size = 0;
   vector->data = malloc(capacity * sizeof(int));
-  if (vector->data == NULL) {
-    fprintf(stderr, "[WARNING] malloc returned NULL.\n");
-    return NULL;
-  }
+  assert(vector->data != NULL);
 
   return vector;
 }
 
-unsigned vector_size(vector_t *v) { return v->size; }
-
-bool vector_at(vector_t *v, unsigned index, int *out) {
-  if (!vector_is_valid(v))
-    return false;
-
-  if (index >= v->size) {
-    fprintf(
-        stderr,
-        "[WARNING] Index %u is out of bounds for Vector @ %p with size = %u\n",
-        index, v, v->size);
-    return false;
-  }
-
-  *out = v->data[index];
-  return true;
+unsigned vector_size(vector_t *v) {
+  __v_sanity_check(v);
+  return v->size;
 }
 
-bool vector_insert(vector_t *v, int item) {
-  if (v->size == v->capacity && vector_expand(v) == false) {
-    fprintf(stderr, "[WARNING] Couldn't expand Vector @ %p.\n", v);
-    return false;
+int vector_at(vector_t *v, unsigned index) {
+  __v_sanity_check(v);
+  assert(index < v->size);
+  return v->data[index];
+}
+
+void vector_append(vector_t *v, int item) {
+  __v_sanity_check(v);
+
+  if (v->size == v->capacity) {
+    __v_expand(v);
   }
 
   v->data[v->size++] = item;
-  return true;
 }
 
-bool vector_remove(vector_t *v, unsigned index) {
-  if (!vector_is_valid(v))
-    return false;
 
-  if (index >= v->size) {
-    fprintf(
-        stderr,
-        "[WARNING] Index %u is out of bounds for Vector @ %p with size = %u\n",
-        index, v, v->size);
-    return false;
-  }
+int vector_remove(vector_t *v, unsigned index) {
+  __v_sanity_check(v);
+  assert(index < v->size);
 
+  int removed = v->data[index];
   v->data[index] = v->data[--v->size];
-  return true;
+  return removed;
 }
 
-bool vector_destroy(vector_t *v) {
-  if (!vector_is_valid(v))
-    return false;
+void vector_destroy(vector_t *v) {
+  __v_sanity_check(v);
 
   free(v->data);
   free(v);
-  return true;
 }
