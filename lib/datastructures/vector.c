@@ -74,6 +74,15 @@ void vector_append(vector_t *v, int item) {
   v->data[v->size++] = item;
 }
 
+void vector_swap(vector_t *v, unsigned i1, unsigned i2) {
+  __v_sanity_check(v);
+  assert(i1 < v->size);
+  assert(i2 < v->size);
+
+  int tmp = v->data[i1];
+  v->data[i1] = v->data[i2];
+  v->data[i2] = tmp;
+}
 
 int vector_remove(vector_t *v, unsigned index) {
   __v_sanity_check(v);
