@@ -6,7 +6,6 @@
 #include <string.h>
 
 void __v_sanity_check(vector_t *v);
-void __v_expand(vector_t *v);
 
 void __v_sanity_check(vector_t *v) {
   assert(v != NULL);
@@ -14,7 +13,7 @@ void __v_sanity_check(vector_t *v) {
   assert(v->size <= v->capacity);
 }
 
-void __v_expand(vector_t *v) {
+void vector_expand(vector_t *v) {
   __v_sanity_check(v);
 
   if (v->capacity < 2) {
@@ -69,11 +68,17 @@ int vector_at(vector_t *v, unsigned index) {
   return v->data[index];
 }
 
+void vector_insert_at(vector_t *v, unsigned index, int item) {
+  __v_sanity_check(v);
+  assert(index < v->size);
+  v->data[index] = item;
+}
+
 void vector_append(vector_t *v, int item) {
   __v_sanity_check(v);
 
   if (v->size == v->capacity) {
-    __v_expand(v);
+    vector_expand(v);
   }
 
   v->data[v->size++] = item;
@@ -96,6 +101,20 @@ int vector_remove(vector_t *v, unsigned index) {
   int removed = v->data[index];
   v->data[index] = v->data[--v->size];
   return removed;
+}
+
+void vector_clear(vector_t *v) {
+  __v_sanity_check(v);
+  v->size = 0;
+}
+
+vector_t *vector_clone(vector_t *v) {
+  __v_sanity_check(v);
+
+  vector_t *c = vector_create_with_capacity(v->capacity);
+  c->size = v->size;
+  memcpy(c->data, v->data, v->size * sizeof(int));
+  return c;
 }
 
 void vector_destroy(vector_t *v) {
