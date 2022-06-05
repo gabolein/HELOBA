@@ -58,6 +58,11 @@ unsigned vector_size(vector_t *v) {
   return v->size;
 }
 
+bool vector_full(vector_t *v) {
+  __v_sanity_check(v);
+  return v->size == v->capacity;
+}
+
 int vector_at(vector_t *v, unsigned index) {
   __v_sanity_check(v);
   assert(index < v->size);

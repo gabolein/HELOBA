@@ -22,6 +22,7 @@
   name##_vector_t *name##_vector_create();                                     \
   name##_vector_t *name##_vector_create_with_capacity(unsigned capacity);      \
   unsigned name##_vector_size(name##_vector_t *v);                             \
+  bool name##_vector_full(name##_vector_t *v);                                 \
   T name##_vector_at(name##_vector_t *v, unsigned index);                      \
   void name##_vector_append(name##_vector_t *v, T item);                       \
   void name##_vector_swap(name##_vector_t *v, unsigned i1, unsigned i2);       \
@@ -80,6 +81,11 @@
   unsigned name##_vector_size(name##_vector_t *v) {                            \
     __name##_v_sanity_check(v);                                                \
     return v->size;                                                            \
+  }                                                                            \
+                                                                               \
+  bool name##_vector_full(name##_vector_t *v) {                                \
+    __name##_v_sanity_check(v);                                                \
+    return v->size == v->capacity;                                             \
   }                                                                            \
                                                                                \
   T name##_vector_at(name##_vector_t *v, unsigned index) {                     \

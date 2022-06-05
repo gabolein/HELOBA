@@ -66,6 +66,18 @@ Test(vector, swap) {
   int_vector_destroy(v);
 }
 
+Test(vector, full) {
+  int items[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int_vector_t *v = int_vector_create_with_capacity(10);
+
+  for (unsigned i = 0; i < 10; i++) {
+    int_vector_append(v, items[i]);
+  }
+
+  cr_assert(int_vector_full(v));
+  int_vector_destroy(v);
+}
+
 Test(vector, remove) {
   int items[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   int_vector_t *v = int_vector_create();
