@@ -22,7 +22,7 @@ endif
 CPPFLAGS = -Iinclude
 
 ifeq ($(MAKECMDGOALS),test)
-LDFLAGS = -lcriterion
+LDFLAGS = -lcriterion -lm
 else
 LDFLAGS = -lspi -lprussdrvd -lm
 endif
