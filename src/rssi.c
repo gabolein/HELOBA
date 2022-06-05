@@ -16,10 +16,12 @@ static int8_t global_rssi_threshold = 0;
 static bool global_rssi_threshold_valid = false;
 
 bool detect_RSSI(){
+  start_receiver_blocking();
   struct timespec start;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   while (!hit_timeout(10, &start)) {
-    if (read_RSSI(&curr_rssi) && curr_rssi >= threshold)
+    int8_t curr_rssi;
+    if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold)
       return true;
   }
   return false;

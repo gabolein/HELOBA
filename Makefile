@@ -11,7 +11,7 @@ CC = gcc
 # configuration
 CFLAGS = -Wall -Wextra -g -fstack-protector-strong
 CPPFLAGS = -Iinclude
-LDFLAGS = -lspi -lprussdrvd -lm
+LDFLAGS = -lspi -lprussdrvd -lm -lpthread
 
 # Regeln
 .PHONY: all
