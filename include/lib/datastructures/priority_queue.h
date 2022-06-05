@@ -1,7 +1,7 @@
 #ifndef PRIORITY_QUEUE_H
 #define PRIORITY_QUEUE_H
 
-#include "lib/datastructures/vector.h"
+#include "lib/datastructures/int_vector.h"
 
 // NOTE: ist es besser, [-1, 0, 1] oder [true, false] zurückzugeben?
 // Spätestens für die generische Version kann diese Funktion auch inlined
@@ -10,7 +10,7 @@ typedef int (*cmp_t)(int, int);
 
 typedef struct {
   cmp_t cmp;
-  vector_t *items;
+  int_vector_t *items;
 } priority_queue_t;
 
 priority_queue_t *priority_queue_create();
