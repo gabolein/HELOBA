@@ -24,7 +24,7 @@
   unsigned name##_vector_size(name##_vector_t *v);                             \
   bool name##_vector_full(name##_vector_t *v);                                 \
   T name##_vector_at(name##_vector_t *v, unsigned index);                      \
-  void name##_vector_expand(name##_vector_t *v);                               \
+  void name##_vector_ensure_capacity(name##_vector_t *v, unsigned capacity);   \
   void name##_vector_insert_at(name##_vector_t *v, unsigned index, T item);    \
   void name##_vector_append(name##_vector_t *v, T item);                       \
   void name##_vector_swap(name##_vector_t *v, unsigned i1, unsigned i2);       \
@@ -42,18 +42,15 @@
     assert(v->size <= v->capacity);                                            \
   }                                                                            \
                                                                                \
-  void name##_vector_expand(name##_vector_t *v) {                              \
+  void name##_vector_ensure_capacity(name##_vector_t *v, unsigned capacity) {  \
     __##name##_v_sanity_check(v);                                              \
                                                                                \
-    if (v->capacity < 2) {                                                     \
-      v->capacity = 2;                                                         \
-    } else {                                                                   \
-      bool overflowed =                                                        \
-          __builtin_uadd_overflow(v->capacity, v->capacity / 2, &v->capacity); \
-      assert(!overflowed);                                                     \
-    }                                                                          \
+    if (capacity < v->capacity)                                                \
+      return;                                                                  \
                                                                                \
+    v->capacity = capacity;                                                    \
     v->data = realloc(v->data, v->capacity * sizeof(T));                       \
+                                                                               \
     __##name##_v_sanity_check(v);                                              \
   }                                                                            \
                                                                                \
@@ -107,7 +104,8 @@
     __##name##_v_sanity_check(v);                                              \
                                                                                \
     if (v->size == v->capacity) {                                              \
-      name##_vector_expand(v);                                                 \
+      unsigned cap = v->capacity < 2 ? 2 : v->capacity + v->capacity / 2;      \
+      name##_vector_ensure_capacity(v, cap);                                   \
     }                                                                          \
                                                                                \
     v->data[v->size++] = item;                                                 \

@@ -13,18 +13,15 @@ void __v_sanity_check(vector_t *v) {
   assert(v->size <= v->capacity);
 }
 
-void vector_expand(vector_t *v) {
+void vector_ensure_capacity(vector_t *v, unsigned capacity) {
   __v_sanity_check(v);
 
-  if (v->capacity < 2) {
-    v->capacity = 2;
-  } else {
-    bool overflowed =
-        __builtin_uadd_overflow(v->capacity, v->capacity / 2, &v->capacity);
-    assert(!overflowed);
-  }
+  if (capacity < v->capacity)
+    return;
 
+  v->capacity = capacity;
   v->data = realloc(v->data, v->capacity * sizeof(int));
+
   __v_sanity_check(v);
 }
 
@@ -78,7 +75,8 @@ void vector_append(vector_t *v, int item) {
   __v_sanity_check(v);
 
   if (v->size == v->capacity) {
-    vector_expand(v);
+    unsigned cap = v->capacity < 2 ? 2 : v->capacity + v->capacity / 2;
+    vector_ensure_capacity(v, cap);
   }
 
   v->data[v->size++] = item;
