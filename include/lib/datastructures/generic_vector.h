@@ -30,17 +30,17 @@
   void name##_vector_destroy(name##_vector_t *v);
 
 #define MAKE_SPECIFIC_VECTOR_SOURCE(T, name)                                   \
-  void __name##_v_sanity_check(name##_vector_t *v);                            \
-  void __name##_v_expand(name##_vector_t *v);                                  \
+  void __##name##_v_sanity_check(name##_vector_t *v);                          \
+  void __##name##_v_expand(name##_vector_t *v);                                \
                                                                                \
-  void __name##_v_sanity_check(name##_vector_t *v) {                           \
+  void __##name##_v_sanity_check(name##_vector_t *v) {                         \
     assert(v != NULL);                                                         \
     assert(v->data != NULL);                                                   \
     assert(v->size <= v->capacity);                                            \
   }                                                                            \
                                                                                \
-  void __name##_v_expand(name##_vector_t *v) {                                 \
-    __name##_v_sanity_check(v);                                                \
+  void __##name##_v_expand(name##_vector_t *v) {                               \
+    __##name##_v_sanity_check(v);                                              \
                                                                                \
     if (v->capacity < 2) {                                                     \
       v->capacity = 2;                                                         \
@@ -51,7 +51,7 @@
     }                                                                          \
                                                                                \
     v->data = realloc(v->data, v->capacity * sizeof(T));                       \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
   }                                                                            \
                                                                                \
   name##_vector_t *name##_vector_create() {                                    \
@@ -79,33 +79,33 @@
   }                                                                            \
                                                                                \
   unsigned name##_vector_size(name##_vector_t *v) {                            \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
     return v->size;                                                            \
   }                                                                            \
                                                                                \
   bool name##_vector_full(name##_vector_t *v) {                                \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
     return v->size == v->capacity;                                             \
   }                                                                            \
                                                                                \
   T name##_vector_at(name##_vector_t *v, unsigned index) {                     \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
     assert(index < v->size);                                                   \
     return v->data[index];                                                     \
   }                                                                            \
                                                                                \
   void name##_vector_append(name##_vector_t *v, T item) {                      \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
                                                                                \
     if (v->size == v->capacity) {                                              \
-      __name##_v_expand(v);                                                    \
+      __##name##_v_expand(v);                                                  \
     }                                                                          \
                                                                                \
     v->data[v->size++] = item;                                                 \
   }                                                                            \
                                                                                \
   void name##_vector_swap(name##_vector_t *v, unsigned i1, unsigned i2) {      \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
     assert(i1 < v->size);                                                      \
     assert(i2 < v->size);                                                      \
                                                                                \
@@ -115,7 +115,7 @@
   }                                                                            \
                                                                                \
   T name##_vector_remove(name##_vector_t *v, unsigned index) {                 \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
     assert(index < v->size);                                                   \
                                                                                \
     T removed = v->data[index];                                                \
@@ -124,7 +124,7 @@
   }                                                                            \
                                                                                \
   void name##_vector_destroy(name##_vector_t *v) {                             \
-    __name##_v_sanity_check(v);                                                \
+    __##name##_v_sanity_check(v);                                              \
                                                                                \
     free(v->data);                                                             \
     free(v);                                                                   \
