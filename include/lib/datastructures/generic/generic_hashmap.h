@@ -54,7 +54,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
         name##_hashentry_vector_clone(hm->entries);                            \
                                                                                \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
-    unsigned new_size = __hm_next_prime(size + size / 2);                      \
+    unsigned new_size = __ghm_next_prime(size + size / 2);                     \
                                                                                \
     name##_hashentry_vector_ensure_capacity(hm->entries, new_size);            \
     name##_hashentry_vector_clear(hm->entries);                                \
