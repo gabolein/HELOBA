@@ -36,14 +36,10 @@ queue_elem* peek_queue(queue* q){
   return q->first;
 }
 
-node_msg_struct* create_msg(size_t len, char* data){
-  node_msg_struct* new_msg_struct = malloc(sizeof(node_msg_struct));
-  new_msg_struct->message.len = len;
-  strncpy((char*)new_msg_struct->message.data, data, 255);
-  new_msg_struct->backoff.attempts = 0;
-  new_msg_struct->backoff.backoff_ms = 0;
-  struct timespec time = {0, 0};
-  new_msg_struct->backoff.start_backoff = time;
+msg* create_msg(size_t len, char* data){
+  msg* new_msg = malloc(sizeof(msg));
+  new_msg->len = len;
+  strncpy((char*)new_msg->data, data, 255);
 
-  return new_msg_struct;
+  return new_msg;
 }

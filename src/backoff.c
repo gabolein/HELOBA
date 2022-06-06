@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include "backoff.h"
 #include "rssi.h"
-#include "boilerplate.h"
 #include "packet.h"
+
+static backoff_struct node_backoff = {0, 0, 0};
 
 size_t random_number_between(size_t min, size_t max) {
   assert(min <= max);
@@ -38,20 +39,21 @@ bool collision_detection(backoff_struct* backoff){
   return true;
 }
 
-bool send_ready() {
-  node_msg_struct* current_msg = peek_queue(msg_queue)->val;
+bool send_ready(queue* q) {
+  msg* current_msg = peek_queue(q)->val;
 
-  if(!current_msg || !check_backoff_timeout(&current_msg->backoff))
+  if(!current_msg || !check_backoff_timeout(&node_backoff))
     return false;
 
-  if(!collision_detection(&current_msg->backoff))
+  if(!collision_detection(&node_backoff))
     return false;
 
-  send_packet((uint8_t*)&current_msg->message);
+  send_packet((uint8_t*)&current_msg);
+  node_backoff.attempts = 0;
 
-  if(!collision_detection(&current_msg->backoff))
+  if(!collision_detection(&node_backoff))
     return false;
 
-  dequeue(msg_queue);
+  dequeue(q);
   return true;
 }

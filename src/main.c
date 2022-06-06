@@ -34,7 +34,7 @@ void listen(){
 }
 
 int main() {
-  msg_queue = create_queue();
+  queue* msg_queue = create_queue();
   pthread_t user_input_thread;
   pthread_create(&user_input_thread, NULL, collect_user_input, NULL);
   while(!shutdown_flag) {
@@ -43,7 +43,7 @@ int main() {
     while(!hit_timeout(10, &start_time)){
       listen();
     }
-    send_ready();
+    send_ready(msg_queue);
   }
 }
 

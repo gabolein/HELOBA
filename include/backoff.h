@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+#include "boilerplate.h"
 
 typedef struct _backoff_struct{
   uint8_t attempts;
@@ -11,6 +12,6 @@ typedef struct _backoff_struct{
   struct timespec start_backoff;
 } backoff_struct;
 
-bool send_ready(void);
+bool send_ready(queue*);
 
 #endif
