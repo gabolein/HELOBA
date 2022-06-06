@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_INIT_CAPACITY 8
-
 #define LHS(x) (2 * (x) + 1)
 #define RHS(x) (2 * (x) + 2)
 #define PARENT(x) (((x)-1) / 2)
@@ -54,7 +52,7 @@ priority_queue_t *priority_queue_create() {
   assert(q != NULL);
 
   q->cmp = __pq_default_cmp;
-  q->items = int_vector_create_with_capacity(DEFAULT_INIT_CAPACITY);
+  q->items = int_vector_create();
   assert(q != NULL);
 
   return q;

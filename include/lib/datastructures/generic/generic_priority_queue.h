@@ -27,8 +27,6 @@ unsigned __gpq_parent(unsigned i);
   void name##_priority_queue_destroy(name##_priority_queue_t *q);
 
 #define MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(T, name, cmp)                      \
-  static unsigned DEFAULT_INIT_CAPACITY = 8;                                   \
-                                                                               \
   void __##name##_pq_sanity_check(name##_priority_queue_t *q);                 \
   void __##name##_pq_heapify(name##_priority_queue_t *q, unsigned root_index); \
                                                                                \
@@ -67,7 +65,7 @@ unsigned __gpq_parent(unsigned i);
     name##_priority_queue_t *q = malloc(sizeof(name##_priority_queue_t));      \
     assert(q != NULL);                                                         \
                                                                                \
-    q->items = name##_vector_create_with_capacity(DEFAULT_INIT_CAPACITY);      \
+    q->items = name##_vector_create();                                         \
     assert(q != NULL);                                                         \
                                                                                \
     return q;                                                                  \
