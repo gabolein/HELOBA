@@ -7,6 +7,8 @@
 #include "rssi.h"
 #include "packet.h"
 
+#define TWO_PWR_OF(n)(1 << n)
+
 static backoff_struct node_backoff = {0, 0, 0};
 
 size_t random_number_between(size_t min, size_t max) {
@@ -17,7 +19,7 @@ size_t random_number_between(size_t min, size_t max) {
 
 void set_new_backoff(backoff_struct* backoff){
   backoff->attempts++;
-  backoff->backoff_ms = random_number_between(0, (1 << backoff->attempts)-1);
+  backoff->backoff_ms = random_number_between(0, TWO_PWR_OF(backoff->attempts)-1);
   clock_gettime(CLOCK_MONOTONIC_RAW, &backoff->start_backoff);
 }
 
@@ -42,7 +44,7 @@ bool collision_detection(backoff_struct* backoff){
 bool send_ready(queue* q) {
   msg* current_msg = peek_queue(q)->val;
 
-  if(!current_msg || !check_backoff_timeout(&node_backoff))
+  if(!current_msg || ((node_backoff.attempts > 0) && !check_backoff_timeout(&node_backoff)))
     return false;
 
   if(!collision_detection(&node_backoff))
