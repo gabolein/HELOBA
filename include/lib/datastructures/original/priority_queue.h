@@ -1,7 +1,9 @@
 #ifndef PRIORITY_QUEUE_H
 #define PRIORITY_QUEUE_H
 
-#include "lib/datastructures/int_vector.h"
+#include "lib/datastructures/generic/generic_vector.h"
+
+MAKE_SPECIFIC_VECTOR_HEADER(int, int)
 
 // NOTE: ist es besser, [-1, 0, 1] oder [true, false] zurückzugeben?
 // Spätestens für die generische Version kann diese Funktion auch inlined

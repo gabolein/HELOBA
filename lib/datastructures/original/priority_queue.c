@@ -1,4 +1,4 @@
-#include "lib/datastructures/priority_queue.h"
+#include "lib/datastructures/original/priority_queue.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

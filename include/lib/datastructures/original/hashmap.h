@@ -1,7 +1,7 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
-#include "lib/datastructures/generic_vector.h"
+#include "lib/datastructures/generic/generic_vector.h"
 
 typedef bool (*eq_t)(int, int);
 typedef unsigned (*hash_t)(int);

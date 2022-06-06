@@ -1,4 +1,4 @@
-#include "lib/datastructures/hashmap.h"
+#include "lib/datastructures/original/hashmap.h"
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
