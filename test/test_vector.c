@@ -166,8 +166,8 @@ typedef struct test_struct{
   int a;
   void* b;
   char d;
-} test_struct;
-int cmp_test_struct(test_struct struct1, test_struct struct2) {
+} test_struct_vector;
+int cmp_test_struct(test_struct_vector struct1, test_struct_vector struct2) {
   if (struct1.a > struct2.a)
     return 1;
   if (struct1.a < struct2.a)
@@ -175,11 +175,11 @@ int cmp_test_struct(test_struct struct1, test_struct struct2) {
   return 0;
 }
 
-MAKE_SPECIFIC_VECTOR_HEADER(test_struct, test_struct)
-MAKE_SPECIFIC_VECTOR_SOURCE(test_struct, test_struct)
+MAKE_SPECIFIC_VECTOR_HEADER(test_struct_vector, test_struct_vector)
+MAKE_SPECIFIC_VECTOR_SOURCE(test_struct_vector, test_struct_vector)
 
 Test(vector, generic_create) {
-  test_struct_vector_t *v = test_struct_vector_create();
-  cr_assert(test_struct_vector_size(v) == 0);
-  test_struct_vector_destroy(v);
+  test_struct_vector_vector_t *v = test_struct_vector_vector_create();
+  cr_assert(test_struct_vector_vector_size(v) == 0);
+  test_struct_vector_vector_destroy(v);
 }
