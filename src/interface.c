@@ -2,11 +2,12 @@
 #include "boilerplate.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 void insert_input(char* data, size_t* len, msg_priority_queue_t* q){
-    scanf("%255s%n", data, (uint32_t*)len); 
-    msg* new_msg = create_msg(*len, data);
-    msg_priority_queue_push(q, new_msg);
+  scanf("%255s%n", data, (uint32_t*)len); 
+  msg* new_msg = create_msg(*len, data);
+  msg_priority_queue_push(q, new_msg);
 }
 
 void* collect_user_input(void* args){
