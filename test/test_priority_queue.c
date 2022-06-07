@@ -117,6 +117,7 @@ int cmp_test_struct(test_struct struct1, test_struct struct2) {
 }
 
 MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(test_struct, test_struct)
+MAKE_SPECIFIC_VECTOR_SOURCE(test_struct, test_struct)
 MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(test_struct, test_struct, cmp_test_struct)
 
 Test(priority_queue, generic_create){
