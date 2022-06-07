@@ -10,6 +10,7 @@ int cmp(msg* message1, msg* message2){
   return 0;
 }
 
+MAKE_SPECIFIC_VECTOR_SOURCE(msg*, msg);
 MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(msg*, msg, cmp);
 
 msg* create_msg(size_t len, char* data){
