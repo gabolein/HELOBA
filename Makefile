@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 BUILD_DIR = build
 
 # FIXME: bessere Lösung dafür finden
