@@ -31,7 +31,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   void name##_hashmap_insert(name##_hashmap_t *hm, K key, V value);            \
   void name##_hashmap_delete(name##_hashmap_t *hm, K key);                     \
   bool name##_hashmap_exists(name##_hashmap_t *hm, K key);                     \
-  int name##_hashmap_get(name##_hashmap_t *hm, K key);                         \
+  V name##_hashmap_get(name##_hashmap_t *hm, K key);                           \
   void name##_hashmap_destroy(name##_hashmap_t *hm);
 
 #define MAKE_SPECIFIC_HASHMAP_SOURCE(K, V, name, h1, h2, eq)                   \
@@ -172,7 +172,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     return index < name##_hashentry_vector_size(hm->entries);                  \
   }                                                                            \
                                                                                \
-  int name##_hashmap_get(name##_hashmap_t *hm, K key) {                        \
+  V name##_hashmap_get(name##_hashmap_t *hm, K key) {                          \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
     unsigned index = __##name##_hm_lookup_for_reading(hm, key);                \
