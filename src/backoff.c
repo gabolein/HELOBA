@@ -6,6 +6,7 @@
 #include "backoff.h"
 #include "rssi.h"
 #include "packet.h"
+#include "lib/datastructures/generic/generic_priority_queue.h"
 
 #define TWO_PWR_OF(n)(1 << n)
 
@@ -41,21 +42,23 @@ bool collision_detection(backoff_struct* backoff){
   return true;
 }
 
-bool send_ready(queue* q) {
-  msg* current_msg = peek_queue(q)->val;
+bool send_ready(msg_priority_queue_t* q) {
+  if(msg_priority_queue_size(q) == 0)
+    return false;
+  msg* current_msg = msg_priority_queue_peek(q);
 
-  if(!current_msg || ((node_backoff.attempts > 0) && !check_backoff_timeout(&node_backoff)))
+  if((node_backoff.attempts > 0) && !check_backoff_timeout(&node_backoff))
     return false;
 
   if(!collision_detection(&node_backoff))
     return false;
 
-  send_packet((uint8_t*)&current_msg);
+  send_packet((uint8_t*)&current_msg->len);
 
   if(!collision_detection(&node_backoff))
     return false;
 
-  dequeue(q);
+  msg_priority_queue_pop(q);
   node_backoff.attempts = 0;
   return true;
 }

@@ -34,7 +34,7 @@ void listen(){
 }
 
 int main() {
-  queue* msg_queue = create_queue();
+  msg_priority_queue_t* msg_queue = msg_priority_queue_create();
   pthread_t user_input_thread;
   pthread_create(&user_input_thread, NULL, collect_user_input, NULL);
   while(!shutdown_flag) {

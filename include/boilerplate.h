@@ -4,26 +4,25 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <time.h>
+#include "lib/datastructures/generic/generic_priority_queue.h"
 
-typedef struct _queue_elem{
-  void* val;
-  struct _queue_elem* next;
-} queue_elem;
 
-typedef struct _queue{
-  queue_elem* first;
-  queue_elem* last;
-} queue;
+typedef enum _msg_prio{
+  MUTE,
+  LEADER,
+  CONTROL,
+  DATA
+} msg_prio;
 
 typedef struct _msg{
+  msg_prio prio; 
   uint8_t len;
   uint8_t data[255];
 } msg;
 
-queue* create_queue(void);
-void enqueue(queue*, queue_elem*);
-queue_elem* dequeue(queue*);
-queue_elem* peek_queue(queue*);
+MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(msg*, msg)
+
 msg* create_msg(size_t, char*);
+int cmp(msg*, msg*);
 
 #endif

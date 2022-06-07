@@ -12,6 +12,6 @@ typedef struct _backoff_struct{
   struct timespec start_backoff;
 } backoff_struct;
 
-bool send_ready(queue*);
+bool send_ready(msg_priority_queue_t*);
 
 #endif

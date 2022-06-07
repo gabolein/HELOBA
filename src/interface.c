@@ -3,16 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void insert_input(char* data, size_t* len, queue* q){
+void insert_input(char* data, size_t* len, msg_priority_queue_t* q){
     scanf("%255s%n", data, (uint32_t*)len); 
     msg* new_msg = create_msg(*len, data);
-    queue_elem* elem = malloc(sizeof(queue_elem));
-    elem->val = (void*)new_msg;
-    enqueue(q, elem);
+    msg_priority_queue_push(q, new_msg);
 }
 
 void* collect_user_input(void* args){
-  queue* q = (queue*)args;
+  msg_priority_queue_t* q = (msg_priority_queue_t*)args;
   char msg_data[256];
   msg_data[255] = '\n';
   size_t len = 0;

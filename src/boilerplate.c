@@ -1,40 +1,16 @@
 #include "boilerplate.h"
 #include <stdlib.h>
-#include "string.h"
+#include <string.h>
 
-queue* create_queue(){
-  return calloc(1,sizeof(queue));
+int cmp(msg* message1, msg* message2){
+  if (message1->prio > message2->prio)
+    return 1;
+  if (message1->prio < message2->prio)
+    return -1;
+  return 0;
 }
 
-void enqueue(queue* q, queue_elem* new_elem){
-  if(!q || !new_elem){
-    return;
-  }
-
-  if(!q->first){
-    q->first = new_elem;
-  } else {
-    q->last->next = new_elem;
-  }
-  q->last = new_elem;
-  new_elem->next = NULL;
-}
-
-queue_elem* dequeue(queue* q){
-  if(!q || !q->first)
-    return NULL;
-
-  if(q->first == q->last){
-    q->last = NULL;
-  }
-  queue_elem* elem = q->first;
-  q->first = q->first->next;
-  return elem;
-}
-
-queue_elem* peek_queue(queue* q){
-  return q->first;
-}
+MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(msg*, msg, cmp);
 
 msg* create_msg(size_t len, char* data){
   msg* new_msg = malloc(sizeof(msg));
