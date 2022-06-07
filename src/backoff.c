@@ -51,11 +51,11 @@ bool send_ready(queue* q) {
     return false;
 
   send_packet((uint8_t*)&current_msg);
-  node_backoff.attempts = 0;
 
   if(!collision_detection(&node_backoff))
     return false;
 
   dequeue(q);
+  node_backoff.attempts = 0;
   return true;
 }
