@@ -23,6 +23,6 @@ typedef struct _msg{
 MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(msg*, msg)
 
 msg* create_msg(size_t, char*);
-int cmp(msg*, msg*);
+int cmp_msg_prio(msg*, msg*);
 
 #endif

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int cmp(msg* message1, msg* message2){
+int cmp_msg_prio(msg* message1, msg* message2){
   if (message1->prio > message2->prio)
     return 1;
   if (message1->prio < message2->prio)
@@ -12,7 +12,7 @@ int cmp(msg* message1, msg* message2){
 }
 
 MAKE_SPECIFIC_VECTOR_SOURCE(msg*, msg);
-MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(msg*, msg, cmp);
+MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(msg*, msg, cmp_msg_prio);
 
 msg* create_msg(size_t len, char* data){
   msg* new_msg = malloc(sizeof(msg));
