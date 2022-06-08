@@ -1,4 +1,5 @@
 #include "boilerplate.h"
+#include "packet.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,8 +16,9 @@ MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(msg*, msg, cmp);
 
 msg* create_msg(size_t len, char* data){
   msg* new_msg = malloc(sizeof(msg));
+  assert(len <= MAX_PACKET_LENGTH);
   new_msg->len = len;
-  strncpy((char*)new_msg->data, data, 255);
+  strncpy((char*)new_msg->data, data, MAX_PACKET_LENGTH);
 
   return new_msg;
 }

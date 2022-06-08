@@ -1,22 +1,27 @@
 #include "interface.h"
 #include "boilerplate.h"
+#include "packet.h"
 #include <stdio.h>
+#include <stdio_ext.h>
 #include <stdlib.h>
 #include <assert.h>
 
 void insert_input(char* data, size_t* len, msg_priority_queue_t* q){
-  scanf("%255s%n", data, (uint32_t*)len); 
+  char user_input[MAX_PACKET_LENGTH+1];
+  fgets(user_input, MAX_PACKET_LENGTH+1, stdin);
+  sscanf(user_input, "%255s%n[^\n]", data, (uint32_t*)len); 
+  __fpurge(stdin);
   msg* new_msg = create_msg(*len, data);
   msg_priority_queue_push(q, new_msg);
 }
 
 void* collect_user_input(void* args){
   msg_priority_queue_t* q = (msg_priority_queue_t*)args;
-  char msg_data[256];
-  msg_data[255] = '\n';
+  char msg_data[MAX_PACKET_LENGTH+1];
+  msg_data[MAX_PACKET_LENGTH] = '\n';
   size_t len = 0;
 
-  while(1){
+  for(;;){
     insert_input(msg_data, &len, q);
   }
 }

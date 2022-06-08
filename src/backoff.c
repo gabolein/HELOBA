@@ -43,22 +43,32 @@ bool collision_detection(backoff_struct* backoff){
 }
 
 bool send_ready(msg_priority_queue_t* q) {
-  if(msg_priority_queue_size(q) == 0)
+  if(msg_priority_queue_size(q) == 0){
     return false;
+  }
+
   msg* current_msg = msg_priority_queue_peek(q);
+  printf("next msg to send: %s\n", current_msg->data);
 
-  if((node_backoff.attempts > 0) && !check_backoff_timeout(&node_backoff))
+  if((node_backoff.attempts > 0) && !check_backoff_timeout(&node_backoff)){
+    printf("Backoff timeout not expired yet.\n");
     return false;
+  }
 
-  if(!collision_detection(&node_backoff))
+  if(!collision_detection(&node_backoff)){
+    printf("First scan unsuccessful. Backing off\n");
     return false;
+  }
 
   send_packet((uint8_t*)&current_msg->len);
 
-  if(!collision_detection(&node_backoff))
+  if(!collision_detection(&node_backoff)){
+    printf("Second scan unsuccessful. Backing off\n");
     return false;
+  }
 
   msg_priority_queue_pop(q);
   node_backoff.attempts = 0;
+  printf("Trasmission successful.\n");
   return true;
 }

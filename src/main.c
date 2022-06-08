@@ -21,7 +21,7 @@ void kill_handler(int signo) {
 }
 
 void listen(){
-  uint8_t packet[255] = {0};
+  uint8_t packet[MAX_PACKET_LENGTH] = {0};
   if(detect_RSSI()){
 
     enable_preamble_detection();
@@ -64,5 +64,7 @@ int main() {
     }
     send_ready(msg_queue);
   }
+  spi_shutdown();
+  return 0;
 }
 
