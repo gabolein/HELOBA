@@ -54,7 +54,7 @@ int main() {
   msg_priority_queue_t* msg_queue = msg_priority_queue_create();
   assert(msg_queue != NULL);
   pthread_t user_input_thread;
-  pthread_create(&user_input_thread, NULL, collect_user_input, msg_queue);
+  int user_input_thread_id = pthread_create(&user_input_thread, NULL, collect_user_input, msg_queue);
 
   while(!shutdown_flag) {
     struct timespec start_time;
@@ -64,6 +64,7 @@ int main() {
     }
     send_ready(msg_queue);
   }
+  pthread_kill(&user_input_thread, 0);
   spi_shutdown();
   return 0;
 }

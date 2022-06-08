@@ -9,7 +9,7 @@
 void insert_input(char* data, size_t* len, msg_priority_queue_t* q){
   char user_input[MAX_PACKET_LENGTH+1];
   fgets(user_input, MAX_PACKET_LENGTH+1, stdin);
-  sscanf(user_input, "%255s%n[^\n]", data, (uint32_t*)len); 
+  sscanf(user_input, "%255s%n", data, (uint32_t*)len); 
   __fpurge(stdin);
   msg* new_msg = create_msg(*len, data);
   msg_priority_queue_push(q, new_msg);
