@@ -8,7 +8,7 @@
 
 typedef struct _backoff_struct{
   uint8_t attempts;
-  uint8_t backoff_ms;
+  uint32_t backoff_ms;
   struct timespec start_backoff;
 } backoff_struct;
 

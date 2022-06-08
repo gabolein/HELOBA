@@ -10,7 +10,7 @@
 
 #define TWO_PWR_OF(n)(1 << n)
 
-static backoff_struct node_backoff = {0, 0, 0};
+static backoff_struct node_backoff = {0, 0, {0}};
 
 size_t random_number_between(size_t min, size_t max) {
   assert(min <= max);

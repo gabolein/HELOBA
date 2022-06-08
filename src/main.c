@@ -59,7 +59,7 @@ int main() {
   while(!shutdown_flag) {
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-    while(!hit_timeout(10, &start_time)){
+    while(!hit_timeout(100, &start_time)){
       listen();
     }
     send_ready(msg_queue);
