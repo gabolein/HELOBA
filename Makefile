@@ -17,14 +17,14 @@ CC = gcc
 ifeq ($(MAKECMDGOALS),test)
 CFLAGS = -Wall -Wextra -ggdb -O0
 else
-CFLAGS = -Wall -Wextra -s -O2
+CFLAGS = -std=gnu11 -Wall -Wextra -s -O2 -DVIRTUAL 
 endif
 CPPFLAGS = -Iinclude
 
 ifeq ($(MAKECMDGOALS),test)
 LDFLAGS = -lcriterion -lm
 else
-LDFLAGS = -lspi -lprussdrvd -lm
+LDFLAGS = -lm
 endif
 
 $(OBJ):$(BUILD_DIR)/%.o: %.c

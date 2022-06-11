@@ -1,11 +1,14 @@
 #include "frequency.h"
+#ifndef VIRTUAL 
 #include "registers.h"
 #include <SPIv1.h>
+#endif
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
+#ifndef VIRTUAL
 #define CRYSTAL_FREQUENCY (40 * MHz)
 #define FREQ_OFF 0
 
@@ -95,12 +98,14 @@ uint32_t read_hardware_frequency_from_register() {
 
   return hw_freq;
 }
+#endif
 
-uint32_t current_frequency;
+uint32_t global_frequency = 840;
 void set_transceiver_frequency_virtual(uint32_t freq){
-  current_frequency = freq;
+  global_frequency = freq;
 }
 
+#ifndef VIRTUAL
 // NOTE: soll freq in Hz oder in MHz sein?
 void set_transceiver_frequency(uint32_t freq) {
   // NOTE: is es besser, einfach zu crashen oder sollten wir stattdessen einen
@@ -121,12 +126,14 @@ void set_transceiver_frequency(uint32_t freq) {
       ((uint64_t)freq * lo_divider << 16) / CRYSTAL_FREQUENCY - (FREQ_OFF >> 2);
   write_hardware_frequency_to_register(hw_freq);
 }
+#endif 
 
 void print_transceiver_frequency_virtual(){
   
-  printf("[INFO] Current Transceiver Frequency: %uMHz\n", current_frequency);
+  printf("[INFO] Current Transceiver Frequency: %uMHz\n", global_frequency);
 }
 
+#ifndef VIRTUAL
 void print_transceiver_frequency() {
   uint32_t hw_freq = read_hardware_frequency_from_register();
   uint32_t freq = ((hw_freq >> 16) + (FREQ_OFF >> 18)) * CRYSTAL_FREQUENCY /
@@ -134,3 +141,4 @@ void print_transceiver_frequency() {
 
   printf("[INFO] Current Transceiver Frequency: %uMHz\n", freq / MHz);
 }
+#endif

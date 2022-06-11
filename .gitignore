@@ -1,6 +1,7 @@
 .cache
 .vscode
 build
+*swp
 
 markdown.css
 compile_commands.json
