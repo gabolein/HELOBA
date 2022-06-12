@@ -18,9 +18,6 @@ typedef enum { REPORT, FIND, UPDATE, SWAP, TRANSFER, MUTE } message_type_t;
 #define FREQUENCY_ENCODED_SIZE sizeof(uint16_t)
 typedef uint16_t frequency_t;
 
-#define HEADER_ENCODED_MIN_SIZE                                                \
-  (sizeof(uint8_t) + 2 * ROUTING_ID_ENCODED_MIN_SIZE)
-
 typedef struct {
   message_action_t action;
   message_type_t type;
@@ -32,7 +29,6 @@ typedef struct {
   routing_id_t to_find;
 } find_payload_t;
 
-#define OPTMASK_ENCODED_SIZE sizeof(uint8_t)
 #define OPT_PARENT_SET (1 << 7)
 #define OPT_LHS_SET (1 << 6)
 #define OPT_RHS_SET (1 << 5)
