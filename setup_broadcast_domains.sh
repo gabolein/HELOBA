@@ -8,11 +8,10 @@ for ((ID=0;ID<N_NODES;ID++)); do
   sudo ip netns add $namespace
 done
 
-
-for freq in ${FREQUENCIES[@]}; do
+for freq in "${FREQUENCIES[@]}"; do
   bridge=br${freq}
-  sudo ip link add $bridge type bridge
-  sudo ip link set $bridge up
+  sudo ip link add "$bridge" type bridge
+  sudo ip link set "$bridge" up
   for ((ID=0;ID<N_NODES;ID++)); do
     interface=eth${freq}.${ID}
     echo "setting up interface $interface"
@@ -22,7 +21,6 @@ for freq in ${FREQUENCIES[@]}; do
     sudo ip link set "$interface" netns "$namespace"
     sudo ip netns exec "$namespace" ip link set dev "$interface" up
     sudo ip link set dev "$peer" up
-    sudo ip link set "$peer" master $bridge
+    sudo ip link set "$peer" master "$bridge"
   done
 done
-
