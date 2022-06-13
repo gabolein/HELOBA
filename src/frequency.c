@@ -1,6 +1,6 @@
-#include "frequency.h"
 #ifndef VIRTUAL 
-#include "registers.h"
+#include "src/frequency.h"
+#include "src/registers.h"
 #include <SPIv1.h>
 #endif
 #include <assert.h>
