@@ -29,3 +29,7 @@ bool receive_packet(uint8_t *buffer, unsigned *length) {
   return radio_receive_packet(buffer, length);
 #endif
 }
+
+// TODO: Funktion schreiben, die ID zurückgibt
+// für virtual: 6 random bytes
+// für radio: MAC Adresse
