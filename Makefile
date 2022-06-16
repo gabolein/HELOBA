@@ -7,19 +7,25 @@ else
 SRC = $(shell find src lib -name '*.c')
 endif
 
-OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
-
-# auto generated dep files
-DEP = $(OBJ:.o=.d)
-
-CC = gcc
-
 ifeq ($(MAKECMDGOALS),test)
 CFLAGS = -Wall -Wextra -ggdb -O0
 else
 CFLAGS = -std=gnu11 -Wall -Wextra -s -O2 -DVIRTUAL 
 endif
 CPPFLAGS = -Iinclude
+
+ifneq (,$(findstring -DVIRTUAL,$(CFLAGS)))
+SRC := $(filter-out src/beaglebone/%, $(SRC))
+else
+SRC := $(filter-out src/virtual_transport.c, $(SRC))
+endif
+
+OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
+
+# auto generated dep files
+DEP = $(OBJ:.o=.d)
+
+CC = gcc
 
 ifeq ($(MAKECMDGOALS),test)
 LDFLAGS = -lcriterion -lm
