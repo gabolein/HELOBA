@@ -3,7 +3,7 @@
 #if defined(VIRTUAL)
 #include "src/virtual_transport.h"
 #else
-#include "src/radio_transport.h"
+#include "src/beaglebone/radio_transport.h"
 #endif
 
 bool change_frequency(uint16_t frequency) {
