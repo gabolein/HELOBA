@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 199309L
-#include "src/time_util.h"
+#include "lib/time_util.h"
 #include <stdio.h>
 
 void sleep_ms(uint32_t to_sleep) {

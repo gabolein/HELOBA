@@ -1,6 +1,6 @@
-#include "src/rssi.h"
-#include "src/registers.h"
-#include "src/time_util.h"
+#include "src/beaglebone/rssi.h"
+#include "src/beaglebone/registers.h"
+#include "lib/time_util.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <limits.h>

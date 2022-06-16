@@ -1,4 +1,4 @@
-#include "src/registers.h"
+#include "src/beaglebone/registers.h"
 #include <SPIv1.h>
 #include <stddef.h>
 #include <stdint.h>

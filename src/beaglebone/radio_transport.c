@@ -1,8 +1,8 @@
-#include "src/radio_transport.h"
-#include "src/frequency.h"
-#include "src/registers.h"
-#include "src/rssi.h"
-#include "src/time_util.h"
+#include "src/beaglebone/radio_transport.h"
+#include "lib/time_util.h"
+#include "src/beaglebone/frequency.h"
+#include "src/beaglebone/registers.h"
+#include "src/beaglebone/rssi.h"
 #include <SPIv1.h>
 #include <stddef.h>
 #include <stdint.h>
