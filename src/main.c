@@ -32,11 +32,9 @@ int main(int argc, char *argv[]) {
     struct timespec start;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-    while (!hit_timeout(100, &start)) {
-      unsigned length = sizeof(receive_buffer);
-      if (receive_packet(receive_buffer, &length)) {
-        printf("%s\n", receive_buffer);
-      }
+    unsigned length = sizeof(receive_buffer);
+    if (receive_packet(receive_buffer, &length)) {
+      printf("%s\n", receive_buffer);
     }
 
     msg_number++;
