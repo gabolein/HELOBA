@@ -41,13 +41,21 @@ struct in_addr get_frequency_multicast_addr(uint16_t frequency) {
 struct ip_mreq mreq = {.imr_interface = {.s_addr = INADDR_ANY},
                        .imr_multiaddr = {0}};
 
+struct sockaddr_in comm_addr = {
+  // FIXME: braucht htons
+  .sin_port = 1337,
+  .sin_family = AF_INET,
+};
+
 bool virtual_change_frequency(uint16_t frequency) {
   assert(frequency_is_valid(frequency));
 
   if (mreq.imr_multiaddr.s_addr != 0)
     setsockopt(virt_fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
 
-  mreq.imr_multiaddr = get_frequency_multicast_addr(frequency);
+  struct in_addr addr = get_frequency_multicast_addr(frequency);
+  comm_addr.sin_addr = addr;
+  mreq.imr_multiaddr = addr;
 
   if (setsockopt(virt_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) <
       0) {
@@ -67,7 +75,7 @@ bool virtual_transport_initialize() {
     return false;
   }
 
-  if (setsockopt(virt_fd, IPPROTO_IP, IP_MULTICAST_LOOP, &(int){0},
+  if (setsockopt(virt_fd, IPPROTO_IP, IP_MULTICAST_LOOP, &(int){1},
                  sizeof(int)) < 0) {
     fprintf(stderr, "Couldn't enable multicast on loopback interface!\n");
     close(virt_fd);
@@ -80,13 +88,25 @@ bool virtual_transport_initialize() {
     return false;
   }
 
+  struct sockaddr_in sockaddr = {
+    .sin_family = AF_INET,
+    .sin_addr.s_addr = INADDR_ANY,
+    .sin_port = 1337,
+  };
+
+  if (bind(virt_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
+    perror("Couldn't bind socket");
+    close(virt_fd);
+    return false;
+  }
+
   // per Default starten alle auf Frequenz 850
   virtual_change_frequency(850);
   return true;
 }
 
 bool virtual_send_packet(uint8_t *buffer, unsigned length) {
-  if (send(virt_fd, buffer, length, 0) < 0) {
+  if (sendto(virt_fd, buffer, length, 0, (struct sockaddr*)&comm_addr, sizeof(comm_addr)) < 0) {
     fprintf(stderr, "Couldn't send %u bytes to fd=%i:\n", length, virt_fd);
     fprintf(stderr, "%s\n", strerror(errno));
     return false;
@@ -103,13 +123,13 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   // NOTE: Timeout sollte wahrscheinlich kleiner sein
   switch (poll(&fds, 1, 100)) {
   case -1:
-    fprintf(stderr, "Couldn't poll fd=%i:", virt_fd);
+    fprintf(stderr, "Couldn't poll fd=%i:\n", virt_fd);
     fprintf(stderr, "%s\n", strerror(errno));
     return false;
   case 0:
     return false;
   default:
-    if (recv(virt_fd, buffer, *length, 0) < 0) {
+    if (recvfrom(virt_fd, buffer, *length, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
     }
