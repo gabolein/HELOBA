@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define IPADDR_MAX_LEN 16
@@ -116,4 +117,10 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
     *length = buffer[0];
     return true;
   }
+}
+
+bool virtual_get_id(uint8_t *out) {
+  pid_t pid = getpid();
+  memcpy(out, &pid, sizeof(pid));
+  return true;
 }

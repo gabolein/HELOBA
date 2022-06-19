@@ -4,11 +4,15 @@
 #include "src/beaglebone/registers.h"
 #include "src/beaglebone/rssi.h"
 #include <SPIv1.h>
+#include <net/if.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <time.h>
+#include <unistd.h>
 
 #define PACKET_STATUS_LENGTH 2
 #define RXFIFO_ADDRESS 0x3F
@@ -94,5 +98,28 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
   }
 
   cc1200_cmd(STX);
+  return true;
+}
+
+// NOTE: muss angepasst werden, wenn das Default Interface auf dem Beaglebone
+// ein anderes ist
+#define ETH_INTERFACE "eth0"
+#define MAC_SIZE 6
+
+bool radio_get_id(uint8_t *out) {
+  struct ifreq ifr;
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_addr.sa_family = AF_INET;
+  strncpy(ifr.ifr_name, ETH_INTERFACE, IFNAMSIZ - 1);
+
+  int fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
+    perror("Couldn't read MAC Address from ethernet interface " ETH_INTERFACE);
+    return false;
+  }
+
+  memcpy(out, ifr.ifr_hwaddr.sa_data, MAC_SIZE);
+  close(fd);
+
   return true;
 }
