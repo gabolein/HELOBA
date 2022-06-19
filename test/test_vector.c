@@ -161,3 +161,18 @@ Test(vector, destroy_invalid, .signal = SIGABRT) {
   v->size = 9001;
   int_vector_destroy(v);
 }
+
+typedef struct test_struct{
+  int a;
+  void* b;
+  char d;
+} test_struct_vector;
+
+MAKE_SPECIFIC_VECTOR_HEADER(test_struct_vector, test_struct_vector)
+MAKE_SPECIFIC_VECTOR_SOURCE(test_struct_vector, test_struct_vector)
+
+Test(vector, generic_create) {
+  test_struct_vector_vector_t *v = test_struct_vector_vector_create();
+  cr_assert(test_struct_vector_vector_size(v) == 0);
+  test_struct_vector_vector_destroy(v);
+}
