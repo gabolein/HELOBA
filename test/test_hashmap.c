@@ -6,25 +6,8 @@
 // TODO: sollte in eine Traits Datei
 bool eq(int a, int b) { return a == b; }
 
-unsigned h1(int key) {
-  key = ((key >> 16) ^ key) * 0x45d9f3b;
-  key = ((key >> 16) ^ key) * 0x45d9f3b;
-  key = (key >> 16) ^ key;
-  return key;
-}
-
-unsigned h2(int key) {
-  key += ~(key << 15);
-  key ^= (key >> 10);
-  key += (key << 3);
-  key ^= (key >> 6);
-  key += ~(key << 11);
-  key ^= (key >> 16);
-  return key;
-}
-
 MAKE_SPECIFIC_HASHMAP_HEADER(int, int, ii);
-MAKE_SPECIFIC_HASHMAP_SOURCE(int, int, ii, h1, h2, eq)
+MAKE_SPECIFIC_HASHMAP_SOURCE(int, int, ii, eq)
 
 Test(hashmap, create) {
   ii_hashmap_t *hm = ii_hashmap_create();
@@ -81,7 +64,7 @@ Test(hashmap, get) {
 }
 
 Test(hashmap, get_invalid, .signal = SIGABRT) {
-  ii_hashmap_t *hm = ii_hashmap_create(eq, h1, h2);
+  ii_hashmap_t *hm = ii_hashmap_create();
 
   ii_hashmap_get(hm, 4200);
 
