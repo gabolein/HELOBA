@@ -164,16 +164,17 @@ unsigned __hm_lookup_for_reading(hashmap_t *hm, int key) {
     unsigned hash = (initial + x * delta) % size;
     hash_entry_t current = hashentry_vector_at(hm->entries, hash);
 
-    if (current.state == DELETED)
+    if (current.state == DELETED ||
+        (current.state == USED && !hm->eq(current.key, key)))
       continue;
 
-    if (current.state == USED && hm->eq(current.key, key))
-      return hash;
-    else
+    if (current.state == EMPTY)
       // Im Moment geben wir einfach einen OOB Index zurück, könnte
       // wahrscheinlich besser gemacht werden. Weil das hier aber interner
       // Library Code ist, ist das nicht so schlimm.
       return size;
+
+    return hash;
   }
 }
 

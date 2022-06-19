@@ -96,13 +96,14 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
       name##_hash_entry_t current =                                            \
           name##_hashentry_vector_at(hm->entries, hash);                       \
                                                                                \
-      if (current.state == __GHM_DELETED)                                      \
+      if (current.state == __GHM_DELETED ||                                    \
+          (current.state == __GHM_USED && !eq(current.key, key)))              \
         continue;                                                              \
                                                                                \
-      if (current.state == __GHM_USED && eq(current.key, key))                 \
-        return hash;                                                           \
-      else                                                                     \
+      if (current.state == __GHM_EMPTY)                                        \
         return size;                                                           \
+                                                                               \
+      return hash;                                                             \
     }                                                                          \
   }                                                                            \
                                                                                \
