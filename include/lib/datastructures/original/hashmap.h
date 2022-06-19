@@ -4,7 +4,6 @@
 #include "lib/datastructures/generic/generic_vector.h"
 
 typedef bool (*eq_t)(int, int);
-typedef unsigned (*hash_t)(int);
 
 typedef enum { DELETED, EMPTY, USED } hash_state_t;
 
@@ -31,12 +30,10 @@ MAKE_SPECIFIC_VECTOR_HEADER(hash_entry_t, hashentry)
 typedef struct {
   hashentry_vector_t *entries;
   eq_t eq;
-  hash_t h1;
-  hash_t h2;
   unsigned used_count;
 } hashmap_t;
 
-hashmap_t *hashmap_create(eq_t eq, hash_t h1, hash_t h2);
+hashmap_t *hashmap_create(eq_t eq);
 void hashmap_insert(hashmap_t *hm, int key, int value);
 void hashmap_delete(hashmap_t *hm, int key);
 bool hashmap_exists(hashmap_t *hm, int key);

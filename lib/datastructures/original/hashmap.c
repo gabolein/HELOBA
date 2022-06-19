@@ -2,24 +2,95 @@
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define LOAD_FACTOR_IN_PERCENT 75
+#define __HM_SEED1 0x378b0322
+#define __HM_SEED2 0x9fa770ba
 
 MAKE_SPECIFIC_VECTOR_SOURCE(hash_entry_t, hashentry)
 
+uint32_t __hm_murmur3(const void *key, int len, uint32_t seed);
 void __hm_sanity_check(hashmap_t *hm);
 unsigned __hm_next_prime(unsigned start);
 void __hm_rehash(hashmap_t *hm);
 unsigned __hm_lookup_for_reading(hashmap_t *hm, int key);
 unsigned __hm_lookup_for_writing(hashmap_t *hm, int key);
 
+// Murmur3 Implementierung kopiert von:
+// https://github.com/abrandoned/murmur3/blob/master/MurmurHash3.c
+
+static inline uint32_t rotl32(uint32_t x, int8_t r) {
+  return (x << r) | (x >> (32 - r));
+}
+
+static inline uint32_t getblock(const uint32_t *p, int i) { return p[i]; }
+
+static inline void bmix(uint32_t *h1, uint32_t *k1, uint32_t *c1,
+                        uint32_t *c2) {
+  *k1 *= *c1;
+  *k1 = rotl32(*k1, 15);
+  *k1 *= *c2;
+  *h1 ^= *k1;
+  *h1 = rotl32(*h1, 13);
+  *h1 = *h1 * 5 + 0xe6546b64;
+}
+
+static inline uint32_t fmix(uint32_t h) {
+  h ^= h >> 16;
+  h *= 0x85ebca6b;
+  h ^= h >> 13;
+  h *= 0xc2b2ae35;
+  h ^= h >> 16;
+  return h;
+}
+
+// FIXME: optimierte Version für 64bit Architektur benutzen
+// NOTE: ist es ok, den Typ von len zu unsigned zu ändern?
+uint32_t __hm_murmur3(const void *key, int len, uint32_t seed) {
+  const uint8_t *data = (const uint8_t *)key;
+  const int nblocks = len / 4;
+
+  uint32_t h1 = seed;
+  uint32_t c1 = 0xcc9e2d51;
+  uint32_t c2 = 0x1b873593;
+
+  const uint32_t *blocks = (const uint32_t *)(data + nblocks * 4);
+  for (int i = -nblocks; i; i++) {
+    uint32_t k1 = getblock(blocks, i);
+    bmix(&h1, &k1, &c1, &c2);
+  }
+
+  const uint8_t *tail = (const uint8_t *)(data + nblocks * 4);
+
+  uint32_t k1 = 0;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+  switch (len & 3) {
+  case 3:
+    k1 ^= tail[2] << 16;
+  case 2:
+    k1 ^= tail[1] << 8;
+  case 1:
+    k1 ^= tail[0];
+    k1 *= c1;
+    k1 = rotl32(k1, 16);
+    k1 *= c2;
+    h1 ^= k1;
+  };
+#pragma GCC diagnostic pop
+
+  h1 ^= len;
+  h1 = fmix(h1);
+  return h1;
+}
+
 void __hm_sanity_check(hashmap_t *hm) {
   assert(hm != NULL);
   assert(hm->eq != NULL);
-  assert(hm->h1 != NULL);
-  assert(hm->h2 != NULL);
 }
 
 bool __hm_is_prime(unsigned n) {
@@ -84,8 +155,8 @@ unsigned __hm_lookup_for_reading(hashmap_t *hm, int key) {
 
   // NOTE: muss hier % size gemacht werden?
   unsigned size = hashentry_vector_size(hm->entries);
-  unsigned initial = hm->h1(key);
-  unsigned delta = hm->h2(key);
+  uint32_t initial = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1);
+  uint32_t delta = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2);
   if (delta == 0)
     delta = 1;
 
@@ -123,8 +194,8 @@ unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
 
   // NOTE: muss hier % size gemacht werden?
   unsigned size = hashentry_vector_size(hm->entries);
-  unsigned initial = hm->h1(key);
-  unsigned delta = hm->h2(key);
+  uint32_t initial = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1);
+  uint32_t delta = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2);
   if (delta == 0)
     delta = 1;
 
@@ -137,15 +208,13 @@ unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
   }
 }
 
-hashmap_t *hashmap_create(eq_t eq, hash_t h1, hash_t h2) {
+hashmap_t *hashmap_create(eq_t eq) {
   hashmap_t *hm = malloc(sizeof(hashmap_t));
   assert(hm != NULL);
 
   hm->entries = hashentry_vector_create();
   hm->used_count = 0;
   hm->eq = eq;
-  hm->h1 = h1;
-  hm->h2 = h2;
 
   __hm_sanity_check(hm);
   __hm_rehash(hm);
