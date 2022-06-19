@@ -85,9 +85,9 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
                                                                                \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
     uint32_t initial =                                                         \
-        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1);           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1) % size;    \
     uint32_t delta =                                                           \
-        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2);           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2) % size;    \
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \
@@ -120,9 +120,9 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
                                                                                \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
     uint32_t initial =                                                         \
-        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1);           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1) % size;    \
     uint32_t delta =                                                           \
-        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2);           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2) % size;    \
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \

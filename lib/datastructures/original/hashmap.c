@@ -153,10 +153,11 @@ void __hm_rehash(hashmap_t *hm) {
 unsigned __hm_lookup_for_reading(hashmap_t *hm, int key) {
   __hm_sanity_check(hm);
 
-  // NOTE: muss hier % size gemacht werden?
   unsigned size = hashentry_vector_size(hm->entries);
-  uint32_t initial = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1);
-  uint32_t delta = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2);
+  uint32_t initial =
+      __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1) % size;
+  uint32_t delta =
+      __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2) % size;
   if (delta == 0)
     delta = 1;
 
@@ -193,10 +194,11 @@ unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
       hashentry_vector_size(hm->entries) * LOAD_FACTOR_IN_PERCENT)
     __hm_rehash(hm);
 
-  // NOTE: muss hier % size gemacht werden?
   unsigned size = hashentry_vector_size(hm->entries);
-  uint32_t initial = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1);
-  uint32_t delta = __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2);
+  uint32_t initial =
+      __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1) % size;
+  uint32_t delta =
+      __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED2) % size;
   if (delta == 0)
     delta = 1;
 
