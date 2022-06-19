@@ -114,10 +114,6 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     if (read_index < name##_hashentry_vector_size(hm->entries))                \
       return read_index;                                                       \
                                                                                \
-    if (__ghm_should_rehash(hm->used_count,                                    \
-                            name##_hashentry_vector_size(hm->entries)))        \
-      __##name##_hm_rehash(hm);                                                \
-                                                                               \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
     uint32_t initial =                                                         \
         __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1) % size;    \
@@ -161,6 +157,10 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     unsigned index = __##name##_hm_lookup_for_writing(hm, key);                \
     name##_hashentry_vector_insert_at(hm->entries, index, added);              \
     hm->used_count++;                                                          \
+                                                                               \
+    if (__ghm_should_rehash(hm->used_count,                                    \
+                            name##_hashentry_vector_size(hm->entries)))        \
+      __##name##_hm_rehash(hm);                                                \
   }                                                                            \
                                                                                \
   void name##_hashmap_delete(name##_hashmap_t *hm, K key) {                    \

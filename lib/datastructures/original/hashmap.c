@@ -190,10 +190,6 @@ unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
   if (read_index < hashentry_vector_size(hm->entries))
     return read_index;
 
-  if (hm->used_count * 100 >=
-      hashentry_vector_size(hm->entries) * LOAD_FACTOR_IN_PERCENT)
-    __hm_rehash(hm);
-
   unsigned size = hashentry_vector_size(hm->entries);
   uint32_t initial =
       __hm_murmur3((const void *)&key, sizeof(key), __HM_SEED1) % size;
@@ -237,6 +233,14 @@ void hashmap_insert(hashmap_t *hm, int key, int value) {
   unsigned index = __hm_lookup_for_writing(hm, key);
   hashentry_vector_insert_at(hm->entries, index, added);
   hm->used_count++;
+
+  // NOTE: Es ist sehr wichtig, nach jedem insert zu prüfen, ob die HashMap
+  // vergrößert werden muss. Ansonsten kann es passieren, dass die HashMap voll
+  // wird und wir beim nächsten Read Lookup in einer Endlosschleife landen, weil
+  // die Abbruchkondition (leerer Slot) nicht mehr erfüllt werden kann.
+  if (hm->used_count * 100 >=
+      hashentry_vector_size(hm->entries) * LOAD_FACTOR_IN_PERCENT)
+    __hm_rehash(hm);
 }
 
 void hashmap_delete(hashmap_t *hm, int key) {
