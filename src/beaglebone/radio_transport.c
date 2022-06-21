@@ -3,6 +3,7 @@
 #include "src/beaglebone/frequency.h"
 #include "src/beaglebone/registers.h"
 #include "src/beaglebone/rssi.h"
+#include "src/beaglebone/backoff.h"
 #include <SPIv1.h>
 #include <net/if.h>
 #include <stddef.h>
@@ -91,13 +92,32 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   return true;
 }
 
-// TODO: Exponential Backoff in dieser Funktion implementieren
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
+  if((get_backoff_attempts() > 0) && !check_backoff_timeout()){
+    printf("Backoff timeout not expired yet.\n");
+    return false;
+  }
+
+  if(!collision_detection()){
+    printf("First scan unsuccessful. Backing off\n");
+    return false;
+  }
+
   for (size_t i = 0; i < length; i++) {
     tx_fifo_push(buffer[i]);
   }
-
   cc1200_cmd(STX);
+
+  if(!collision_detection()){
+    printf("Second scan unsuccessful. Backing off\n");
+    return false;
+  }
+
+  //TODO in main
+  //msg_priority_queue_pop(q);
+
+  reset_backoff_attempts();
+  printf("Trasmission successful.\n");
   return true;
 }
 

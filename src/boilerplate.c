@@ -1,7 +1,8 @@
 #include "boilerplate.h"
-#include "packet.h"
 #include <stdlib.h>
 #include <string.h>
+
+#define MAX_PACKET_LENGTH 255
 
 int cmp_msg_prio(msg* message1, msg* message2){
   if (message1->prio > message2->prio)

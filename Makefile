@@ -28,9 +28,9 @@ DEP = $(OBJ:.o=.d)
 CC = gcc
 
 ifeq ($(MAKECMDGOALS),test)
-LDFLAGS = -lcriterion -lm
+LDFLAGS = -lcriterion -lm -lpthread
 else
-LDFLAGS = -lm
+LDFLAGS = -lm -lpthread
 endif
 
 $(OBJ):$(BUILD_DIR)/%.o: %.c

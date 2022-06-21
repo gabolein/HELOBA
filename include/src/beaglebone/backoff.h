@@ -13,7 +13,9 @@ typedef struct _backoff_struct{
 } backoff_struct;
 
 bool send_ready(msg_priority_queue_t*);
-void set_new_backoff(backoff_struct*);
-bool check_backoff_timeout(backoff_struct*);
+void set_new_backoff();
+bool check_backoff_timeout();
+uint8_t get_backoff_attempts();
+void reset_backoff_attempts();
 
 #endif
