@@ -15,23 +15,6 @@ void kill_handler(int signo) {
   shutdown_flag = true;
 }
 
-// TODO integrate into receive_packet
-/*void listen(){*/
-  /*uint8_t packet[MAX_PACKET_LENGTH] = {0};*/
-  /*if(detect_RSSI()){*/
-
-    /*enable_preamble_detection();*/
-
-    /*uint8_t recv_bytes;*/
-    /*if((recv_bytes = receive_packet(packet)) == 0) {*/
-      /*cc1200_cmd(SIDLE);*/
-      /*cc1200_cmd(SFRX);*/
-    /*}*/
-
-    /*disable_preamble_detection();*/
-  /*}*/
-/*}*/
-
 int main(int argc, char *argv[]) {
   // wohin? TODO init beaglebone
   /*if (spi_init() != 0) {*/
@@ -66,11 +49,8 @@ int main(int argc, char *argv[]) {
 
   int msg_number = 0;
   while (!shutdown_flag) {
-    struct timespec start;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-
     unsigned length = sizeof(receive_buffer);
-    if (receive_packet(receive_buffer, &length)) {
+    if (listen(receive_buffer, &length, 100)) {
       printf("%s\n", receive_buffer);
     }
 
@@ -82,14 +62,7 @@ int main(int argc, char *argv[]) {
   }
 
   // TODO merge beaglebone communication with virtual
-  /*while(!shutdown_flag) {*/
-    /*struct timespec start_time;*/
-    /*clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);*/
-    /*while(!hit_timeout(100, &start_time)){*/
-      /*listen();*/
-    /*}*/
     /*send_ready(msg_queue);*/
-  /*}*/
 
    /*TODO shutdown stuff*/
   /*pthread_kill(&user_input_thread, 0);*/

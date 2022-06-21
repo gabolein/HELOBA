@@ -23,6 +23,14 @@ bool send_packet(uint8_t *buffer, unsigned length) {
 #endif
 }
 
+bool listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
+#if defined(VIRTUAL)
+  return virtual_listen(buffer, length, listen_ms);
+#else
+  return radio_listen(buffer, length, listen_ms);
+#endif
+}
+
 bool receive_packet(uint8_t *buffer, unsigned *length) {
 #if defined(VIRTUAL)
   return virtual_receive_packet(buffer, length);

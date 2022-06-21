@@ -1,4 +1,5 @@
 #include "src/virtual_transport.h"
+#include "lib/time_util.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -114,6 +115,16 @@ bool virtual_send_packet(uint8_t *buffer, unsigned length) {
   }
 
   return true;
+}
+
+
+bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while(!hit_timeout(listen_ms, &start_time)){
+    virtual_receive_packet(buffer, length);
+  }
+  return length;
 }
 
 bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {

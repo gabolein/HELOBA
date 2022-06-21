@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "src/beaglebone/backoff.h"
 #include "src/beaglebone/rssi.h"
-#include "src/beaglebone/packet.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 
 #define TWO_PWR_OF(n)(1 << n)
@@ -19,19 +18,19 @@ size_t random_number_between(size_t min, size_t max) {
 }
 
 void set_new_backoff(){
-  node_backoff->attempts++;
-  node_backoff->backoff_ms = random_number_between(0, TWO_PWR_OF(node_backoff->attempts)-1);
-  clock_gettime(CLOCK_MONOTONIC_RAW, &node_backoff->start_backoff);
+  node_backoff.attempts++;
+  node_backoff.backoff_ms = random_number_between(0, TWO_PWR_OF(node_backoff.attempts)-1);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &node_backoff.start_backoff);
 }
 
 bool check_backoff_timeout(){
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC_RAW, &current);
 
-  size_t delta_ms = (current.tv_sec - node_backoff->start_backoff.tv_sec) * 1000 +
-    (current.tv_nsec - node_backoff->start_backoff.tv_nsec) / 1000000;
+  size_t delta_ms = (current.tv_sec - node_backoff.start_backoff.tv_sec) * 1000 +
+    (current.tv_nsec - node_backoff.start_backoff.tv_nsec) / 1000000;
 
-  return delta_ms >= node_backoff->backoff_ms;
+  return delta_ms >= node_backoff.backoff_ms;
 }
 
 bool collision_detection(){
@@ -43,9 +42,9 @@ bool collision_detection(){
 }
 
 uint8_t get_backoff_attempts(){
-  return node_backoff->attempts;
+  return node_backoff.attempts;
 }
 
 void reset_backoff_attempts(){
-  node_backoff->attempts = 0;
+  node_backoff.attempts = 0;
 }

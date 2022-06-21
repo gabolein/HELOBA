@@ -92,6 +92,36 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   return true;
 }
 
+/*Blocks for a certain timeout to listen to channel. 
+ * Returns true if packet was received, false if no rssi was heard or packet reception fails*/
+bool radio_listen(uint8_t *buffer, unsigned* length, unsigned listen_ms){
+  uint8_t recv_bytes = 0;
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while(!hit_timeout(listen_ms, &start_time)){
+    if(!detect_RSSI()){
+      continue;
+    }
+
+    enable_preamble_detection();
+
+    recv_bytes = radio_receive_packet(buffer, length);
+
+    disable_preamble_detection();
+
+    if(recv_bytes == 0) {
+      cc1200_cmd(SIDLE);
+      cc1200_cmd(SFRX);
+
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
   if((get_backoff_attempts() > 0) && !check_backoff_timeout()){
     printf("Backoff timeout not expired yet.\n");
