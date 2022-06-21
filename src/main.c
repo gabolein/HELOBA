@@ -16,17 +16,6 @@ void kill_handler(int signo) {
 }
 
 int main(int argc, char *argv[]) {
-  // wohin? TODO init beaglebone
-  /*if (spi_init() != 0) {*/
-    /*printf("ERROR: Initialization failed\n");*/
-    /*return -1;*/
-  /*}*/
-  /*cc1200_cmd(SRES);*/
-  /*write_default_register_configuration();*/
-  /*cc1200_cmd(SNOP);*/
-  /*printf("CC1200 Status: %s\n", get_status_cc1200_str());*/
-
-
   // TODO interface initialize
   msg_priority_queue_t* msg_queue = msg_priority_queue_create();
   assert(msg_queue != NULL);
@@ -34,12 +23,10 @@ int main(int argc, char *argv[]) {
   int user_input_thread_id = 
     pthread_create(&user_input_thread, NULL, collect_user_input, msg_queue);
   
-#if defined(VIRTUAL)
-  if (!virtual_transport_initialize()) {
-    fprintf(stderr, "Couldn't initialize the virtual transport.\n");
+  if (!transport_initialize()) {
+    fprintf(stderr, "Couldn't initialize transport.\n");
     exit(EXIT_FAILURE);
   }
-#endif
 
   struct sigaction sa;
   sa.sa_handler = kill_handler;

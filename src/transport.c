@@ -7,6 +7,14 @@
 #include "src/beaglebone/radio_transport.h"
 #endif
 
+bool transport_initialize() {
+#if defined(VIRTUAL)
+  return virtual_transport_initialize();
+#else
+  return radio_transport_initialize();
+#endif
+}
+
 bool change_frequency(uint16_t frequency) {
 #if defined(VIRTUAL)
   return virtual_change_frequency(frequency);

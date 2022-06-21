@@ -151,6 +151,17 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
   return true;
 }
 
+bool radio_transport_initialize(){
+  if (spi_init() != 0) {
+    printf("ERROR: SPI initialization failed\n");
+    return false;
+  }
+  cc1200_cmd(SRES);
+  write_default_register_configuration();
+  cc1200_cmd(SNOP);
+  printf("CC1200 Status: %s\n", get_status_cc1200_str());
+}
+
 // NOTE: muss angepasst werden, wenn das Default Interface auf dem Beaglebone
 // ein anderes ist
 #define ETH_INTERFACE "eth0"
