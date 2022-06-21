@@ -143,9 +143,6 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     return false;
   }
 
-  //TODO in main
-  //msg_priority_queue_pop(q);
-
   reset_backoff_attempts();
   printf("Trasmission successful.\n");
   return true;

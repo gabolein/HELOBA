@@ -1,5 +1,5 @@
-#include "interface.h"
-#include "boilerplate.h"
+#include "src/interface/interface.h"
+#include "src/interface/boilerplate.h"
 #include <stdio.h>
 #include <stdio_ext.h>
 #include <stdlib.h>

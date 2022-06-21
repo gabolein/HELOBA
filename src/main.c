@@ -1,8 +1,8 @@
 #include "lib/time_util.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
-#include "boilerplate.h"
-#include "interface.h"
+#include "src/interface/boilerplate.h"
+#include "src/interface/interface.h"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,26 +32,20 @@ int main(int argc, char *argv[]) {
   sa.sa_handler = kill_handler;
   sigaction(SIGINT, &sa, NULL);
   uint8_t receive_buffer[255];
-  uint8_t send_buffer[255];
 
-  int msg_number = 0;
   while (!shutdown_flag) {
     unsigned length = sizeof(receive_buffer);
     if (listen(receive_buffer, &length, 100)) {
       printf("%s\n", receive_buffer);
     }
-
-    msg_number++;
-    snprintf((char *)send_buffer, 255,
-             "Hello bröther this is node ID_TBD with msg number %d",
-             msg_number);
-    send_packet(send_buffer, strlen((char *)send_buffer));
+    
+    msg* next_message = msg_priority_queue_peek(msg_queue);
+    if(send_packet(next_message->data, next_message->len)){
+      msg_priority_queue_pop(msg_queue);
+    }
   }
 
-  // TODO merge beaglebone communication with virtual
-    /*send_ready(msg_queue);*/
-
-   /*TODO shutdown stuff*/
+  /*TODO shutdown stuff*/
   /*pthread_kill(&user_input_thread, 0);*/
   /*spi_shutdown();*/
   return 0;
