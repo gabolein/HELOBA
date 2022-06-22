@@ -117,7 +117,6 @@ bool virtual_send_packet(uint8_t *buffer, unsigned length) {
   return true;
 }
 
-
 bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
@@ -126,7 +125,7 @@ bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
       return true;
     }
   }
-  return false;
+  return length;
 }
 
 bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
