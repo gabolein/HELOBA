@@ -84,7 +84,7 @@ bool virtual_transport_initialize() {
     return false;
   }
 
-  if (setsockopt(virt_fd, IPPROTO_IP, SO_REUSEADDR, &(int){1}, sizeof(int))) {
+  if (setsockopt(virt_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int))) {
     fprintf(stderr, "Couldn't set SO_REUSEADDR for socket.\n");
     close(virt_fd);
     return false;
