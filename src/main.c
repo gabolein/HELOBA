@@ -39,11 +39,9 @@ int main(int argc, char *argv[]) {
       printf("%s\n", receive_buffer);
     }
     
-    if(msg_priority_queue_size(msg_queue)){
-      msg* next_message = msg_priority_queue_peek(msg_queue);
-      if(send_packet(next_message->data, next_message->len)){
-        msg_priority_queue_pop(msg_queue);
-      }
+    msg* next_message = msg_priority_queue_peek(msg_queue);
+    if(send_packet(next_message->data, next_message->len)){
+      msg_priority_queue_pop(msg_queue);
     }
   }
 

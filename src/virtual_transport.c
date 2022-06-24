@@ -121,9 +121,7 @@ bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   while(!hit_timeout(listen_ms, &start_time)){
-    if(virtual_receive_packet(buffer, length)){
-      return true;
-    }
+    virtual_receive_packet(buffer, length);
   }
   return length;
 }
@@ -142,8 +140,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   case 0:
     return false;
   default:
-    // TODO import definition of packet length from somewhere else, remove magic number
-    if (recvfrom(virt_fd, buffer, 255, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
+    if (recvfrom(virt_fd, buffer, *length, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
     }
