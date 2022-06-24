@@ -42,15 +42,15 @@ unsigned __gpq_parent(unsigned i);
     unsigned largest_index = root_index;                                       \
                                                                                \
     if (__gpq_lhs(root_index) < name##_vector_size(q->items)) {                \
-      int root = name##_vector_at(q->items, root_index);                       \
-      int lhs = name##_vector_at(q->items, __gpq_lhs(root_index));             \
+      T root = name##_vector_at(q->items, root_index);                         \
+      T lhs = name##_vector_at(q->items, __gpq_lhs(root_index));               \
       largest_index =                                                          \
           cmp(root, lhs) == 1 ? root_index : __gpq_lhs(root_index);            \
     }                                                                          \
                                                                                \
     if (__gpq_rhs(root_index) < name##_vector_size(q->items)) {                \
-      int largest = name##_vector_at(q->items, largest_index);                 \
-      int rhs = name##_vector_at(q->items, __gpq_rhs(root_index));             \
+      T largest = name##_vector_at(q->items, largest_index);                   \
+      T rhs = name##_vector_at(q->items, __gpq_rhs(root_index));               \
       largest_index =                                                          \
           cmp(largest, rhs) == 1 ? largest_index : __gpq_rhs(root_index);      \
     }                                                                          \
@@ -75,20 +75,20 @@ unsigned __gpq_parent(unsigned i);
     return name##_vector_size(q->items);                                       \
   }                                                                            \
                                                                                \
-  int name##_priority_queue_peek(name##_priority_queue_t *q) {                 \
+  T name##_priority_queue_peek(name##_priority_queue_t *q) {                   \
     __##name##_pq_sanity_check(q);                                             \
     return name##_vector_at(q->items, 0);                                      \
   }                                                                            \
                                                                                \
-  void name##_priority_queue_push(name##_priority_queue_t *q, int item) {      \
+  void name##_priority_queue_push(name##_priority_queue_t *q, T item) {        \
     __##name##_pq_sanity_check(q);                                             \
                                                                                \
     name##_vector_append(q->items, item);                                      \
                                                                                \
     for (unsigned i = name##_vector_size(q->items) - 1; i > 0;                 \
          i = __gpq_parent(i)) {                                                \
-      int parent = name##_vector_at(q->items, __gpq_parent(i));                \
-      int current = name##_vector_at(q->items, i);                             \
+      T parent = name##_vector_at(q->items, __gpq_parent(i));                  \
+      T current = name##_vector_at(q->items, i);                               \
                                                                                \
       if (cmp(parent, current) == 1)                                           \
         return;                                                                \
@@ -97,10 +97,10 @@ unsigned __gpq_parent(unsigned i);
     }                                                                          \
   }                                                                            \
                                                                                \
-  int name##_priority_queue_pop(name##_priority_queue_t *q) {                  \
+  T name##_priority_queue_pop(name##_priority_queue_t *q) {                    \
     __##name##_pq_sanity_check(q);                                             \
                                                                                \
-    int removed = name##_vector_remove(q->items, 0);                           \
+    T removed = name##_vector_remove(q->items, 0);                             \
     __##name##_pq_heapify(q, 0);                                               \
     return removed;                                                            \
   }                                                                            \

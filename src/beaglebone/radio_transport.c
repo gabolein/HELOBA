@@ -3,12 +3,17 @@
 #include "src/beaglebone/frequency.h"
 #include "src/beaglebone/registers.h"
 #include "src/beaglebone/rssi.h"
+#include "src/beaglebone/backoff.h"
 #include <SPIv1.h>
+#include <net/if.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <time.h>
+#include <unistd.h>
 
 #define PACKET_STATUS_LENGTH 2
 #define RXFIFO_ADDRESS 0x3F
@@ -87,12 +92,92 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   return true;
 }
 
-// TODO: Exponential Backoff in dieser Funktion implementieren
+/*Blocks for a certain timeout to listen to channel. 
+ * Returns true if packet was received, false if no rssi was heard or packet reception fails*/
+bool radio_listen(uint8_t *buffer, unsigned* length, unsigned listen_ms){
+  uint8_t recv_bytes = 0;
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while(!hit_timeout(listen_ms, &start_time)){
+    if(!detect_RSSI()){
+      continue;
+    }
+
+    enable_preamble_detection();
+
+    recv_bytes = radio_receive_packet(buffer, length);
+
+    disable_preamble_detection();
+
+    if(recv_bytes == 0) {
+      cc1200_cmd(SIDLE);
+      cc1200_cmd(SFRX);
+
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
+  if((get_backoff_attempts() > 0) && !check_backoff_timeout()){
+    printf("Backoff timeout not expired yet.\n");
+    return false;
+  }
+
+  if(!collision_detection()){
+    printf("First scan unsuccessful. Backing off\n");
+    return false;
+  }
+
   for (size_t i = 0; i < length; i++) {
     tx_fifo_push(buffer[i]);
   }
-
   cc1200_cmd(STX);
+
+  if(!collision_detection()){
+    printf("Second scan unsuccessful. Backing off\n");
+    return false;
+  }
+
+  reset_backoff_attempts();
+  printf("Trasmission successful.\n");
+  return true;
+}
+
+bool radio_transport_initialize(){
+  if (spi_init() != 0) {
+    printf("ERROR: SPI initialization failed\n");
+    return false;
+  }
+  cc1200_cmd(SRES);
+  write_default_register_configuration();
+  cc1200_cmd(SNOP);
+  printf("CC1200 Status: %s\n", get_status_cc1200_str());
+}
+
+// NOTE: muss angepasst werden, wenn das Default Interface auf dem Beaglebone
+// ein anderes ist
+#define ETH_INTERFACE "eth0"
+#define MAC_SIZE 6
+
+bool radio_get_id(uint8_t *out) {
+  struct ifreq ifr;
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_addr.sa_family = AF_INET;
+  strncpy(ifr.ifr_name, ETH_INTERFACE, IFNAMSIZ - 1);
+
+  int fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
+    perror("Couldn't read MAC Address from ethernet interface " ETH_INTERFACE);
+    return false;
+  }
+
+  memcpy(out, ifr.ifr_hwaddr.sa_data, MAC_SIZE);
+  close(fd);
+
   return true;
 }

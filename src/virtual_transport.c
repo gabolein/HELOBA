@@ -1,4 +1,5 @@
 #include "src/virtual_transport.h"
+#include "lib/time_util.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
@@ -17,6 +18,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define IPADDR_MAX_LEN 16
@@ -115,6 +117,17 @@ bool virtual_send_packet(uint8_t *buffer, unsigned length) {
   return true;
 }
 
+bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while(!hit_timeout(listen_ms, &start_time)){
+    if(virtual_receive_packet(buffer, length)){
+      return true;
+    }
+  }
+  return false;
+}
+
 bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   struct pollfd fds;
   fds.fd = virt_fd;
@@ -129,11 +142,18 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   case 0:
     return false;
   default:
-    if (recvfrom(virt_fd, buffer, *length, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
+    // TODO import definition of packet length from somewhere else, remove magic number
+    if (recvfrom(virt_fd, buffer, 255, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
     }
     *length = buffer[0];
     return true;
   }
+}
+
+bool virtual_get_id(uint8_t *out) {
+  pid_t pid = getpid();
+  memcpy(out, &pid, sizeof(pid));
+  return true;
 }

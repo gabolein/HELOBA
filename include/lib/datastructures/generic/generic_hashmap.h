@@ -5,11 +5,16 @@
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum { DELETED, EMPTY, USED } hash_state_t;
+typedef enum { __GHM_DELETED, __GHM_EMPTY, __GHM_USED } __ghm_hash_state_t;
 
+#define __GHM_SEED1 0x378b0322
+#define __GHM_SEED2 0x9fa770ba
+
+uint32_t __ghm_murmur3(const void *key, int len, uint32_t seed);
 unsigned __ghm_next_prime(unsigned start);
 bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
 
@@ -17,7 +22,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   typedef struct {                                                             \
     K key;                                                                     \
     V value;                                                                   \
-    hash_state_t state;                                                        \
+    __ghm_hash_state_t state;                                                  \
   } name##_hash_entry_t;                                                       \
                                                                                \
   MAKE_SPECIFIC_VECTOR_HEADER(name##_hash_entry_t, name##_hashentry)           \
@@ -31,10 +36,10 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   void name##_hashmap_insert(name##_hashmap_t *hm, K key, V value);            \
   void name##_hashmap_delete(name##_hashmap_t *hm, K key);                     \
   bool name##_hashmap_exists(name##_hashmap_t *hm, K key);                     \
-  int name##_hashmap_get(name##_hashmap_t *hm, K key);                         \
+  V name##_hashmap_get(name##_hashmap_t *hm, K key);                           \
   void name##_hashmap_destroy(name##_hashmap_t *hm);
 
-#define MAKE_SPECIFIC_HASHMAP_SOURCE(K, V, name, h1, h2, eq)                   \
+#define MAKE_SPECIFIC_HASHMAP_SOURCE(K, V, name, eq)                           \
   MAKE_SPECIFIC_VECTOR_SOURCE(name##_hash_entry_t, name##_hashentry)           \
                                                                                \
   void __##name##_hm_sanity_check(name##_hashmap_t *hm);                       \
@@ -49,7 +54,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   void __##name##_hm_rehash(name##_hashmap_t *hm) {                            \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
-    name##_hash_entry_t init = {.state = EMPTY};                               \
+    name##_hash_entry_t init = {.state = __GHM_EMPTY};                         \
     name##_hashentry_vector_t *old =                                           \
         name##_hashentry_vector_clone(hm->entries);                            \
                                                                                \
@@ -66,7 +71,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     for (unsigned i = 0; i < name##_hashentry_vector_size(old); i++) {         \
       name##_hash_entry_t current = name##_hashentry_vector_at(old, i);        \
                                                                                \
-      if (current.state != USED)                                               \
+      if (current.state != __GHM_USED)                                         \
         continue;                                                              \
                                                                                \
       name##_hashmap_insert(hm, current.key, current.value);                   \
@@ -79,8 +84,10 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
-    unsigned initial = h1(key);                                                \
-    unsigned delta = h2(key);                                                  \
+    uint32_t initial =                                                         \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1) % size;    \
+    uint32_t delta =                                                           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2) % size;    \
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \
@@ -89,13 +96,14 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
       name##_hash_entry_t current =                                            \
           name##_hashentry_vector_at(hm->entries, hash);                       \
                                                                                \
-      if (current.state == DELETED)                                            \
+      if (current.state == __GHM_DELETED ||                                    \
+          (current.state == __GHM_USED && !eq(current.key, key)))              \
         continue;                                                              \
                                                                                \
-      if (current.state == USED && eq(current.key, key))                       \
-        return hash;                                                           \
-      else                                                                     \
+      if (current.state == __GHM_EMPTY)                                        \
         return size;                                                           \
+                                                                               \
+      return hash;                                                             \
     }                                                                          \
   }                                                                            \
                                                                                \
@@ -106,13 +114,11 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     if (read_index < name##_hashentry_vector_size(hm->entries))                \
       return read_index;                                                       \
                                                                                \
-    if (__ghm_should_rehash(hm->used_count,                                    \
-                            name##_hashentry_vector_size(hm->entries)))        \
-      __##name##_hm_rehash(hm);                                                \
-                                                                               \
     unsigned size = name##_hashentry_vector_size(hm->entries);                 \
-    unsigned initial = h1(key);                                                \
-    unsigned delta = h2(key);                                                  \
+    uint32_t initial =                                                         \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED1) % size;    \
+    uint32_t delta =                                                           \
+        __ghm_murmur3((const void *)&key, sizeof(key), __GHM_SEED2) % size;    \
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \
@@ -121,7 +127,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
                                                                                \
       name##_hash_entry_t current =                                            \
           name##_hashentry_vector_at(hm->entries, hash);                       \
-      if (current.state == EMPTY || current.state == DELETED)                  \
+      if (current.state == __GHM_EMPTY || current.state == __GHM_DELETED)      \
         return hash;                                                           \
     }                                                                          \
   }                                                                            \
@@ -145,12 +151,16 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     name##_hash_entry_t added = {                                              \
         .key = key,                                                            \
         .value = value,                                                        \
-        .state = USED,                                                         \
+        .state = __GHM_USED,                                                   \
     };                                                                         \
                                                                                \
     unsigned index = __##name##_hm_lookup_for_writing(hm, key);                \
     name##_hashentry_vector_insert_at(hm->entries, index, added);              \
     hm->used_count++;                                                          \
+                                                                               \
+    if (__ghm_should_rehash(hm->used_count,                                    \
+                            name##_hashentry_vector_size(hm->entries)))        \
+      __##name##_hm_rehash(hm);                                                \
   }                                                                            \
                                                                                \
   void name##_hashmap_delete(name##_hashmap_t *hm, K key) {                    \
@@ -160,7 +170,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     if (index == name##_hashentry_vector_size(hm->entries))                    \
       return;                                                                  \
                                                                                \
-    name##_hash_entry_t del = {.state = DELETED};                              \
+    name##_hash_entry_t del = {.state = __GHM_DELETED};                        \
     name##_hashentry_vector_insert_at(hm->entries, index, del);                \
     hm->used_count--;                                                          \
   }                                                                            \
@@ -172,7 +182,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     return index < name##_hashentry_vector_size(hm->entries);                  \
   }                                                                            \
                                                                                \
-  int name##_hashmap_get(name##_hashmap_t *hm, K key) {                        \
+  V name##_hashmap_get(name##_hashmap_t *hm, K key) {                          \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
     unsigned index = __##name##_hm_lookup_for_reading(hm, key);                \
