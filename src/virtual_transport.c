@@ -43,11 +43,7 @@ struct in_addr get_frequency_multicast_addr(uint16_t frequency) {
 struct ip_mreq mreq = {.imr_interface = {.s_addr = INADDR_ANY},
                        .imr_multiaddr = {0}};
 
-struct sockaddr_in comm_addr = {
-  // FIXME: braucht htons
-  .sin_port = 1337,
-  .sin_family = AF_INET,
-};
+struct sockaddr_in comm_addr;
 
 bool virtual_change_frequency(uint16_t frequency) {
   assert(frequency_is_valid(frequency));
@@ -72,7 +68,7 @@ bool virtual_change_frequency(uint16_t frequency) {
 }
 
 bool virtual_transport_initialize() {
-  if ((virt_fd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
+  if ((virt_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     fprintf(stderr, "Couldn't create virtual socket!\n");
     return false;
   }
@@ -90,17 +86,22 @@ bool virtual_transport_initialize() {
     return false;
   }
 
-  struct sockaddr_in sockaddr = {
-    .sin_family = AF_INET,
-    .sin_addr.s_addr = INADDR_ANY,
-    .sin_port = 1337,
-  };
+  struct sockaddr_in sockaddr;
+  memset(&sockaddr, 0, sizeof(sockaddr));
+  sockaddr.sin_family = AF_INET;
+  sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  sockaddr.sin_port = htons(1337);
 
   if (bind(virt_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
     perror("Couldn't bind socket");
     close(virt_fd);
     return false;
   }
+  
+  // init comm_addr
+  memset(&comm_addr, 0, sizeof(comm_addr));
+  comm_addr.sin_family = AF_INET;
+  comm_addr.sin_port = htons(1337);
 
   // per Default starten alle auf Frequenz 850
   virtual_change_frequency(850);
@@ -143,7 +144,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
     return false;
   default:
     // TODO import definition of packet length from somewhere else, remove magic number
-    if (recvfrom(virt_fd, buffer, 255, 0, (struct sockaddr*)&comm_addr, &(socklen_t){sizeof(comm_addr)}) < 0) {
+    if (recv(virt_fd, buffer, 255, 0) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
     }

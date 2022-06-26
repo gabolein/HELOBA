@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   uint8_t receive_buffer[255];
 
   while (!shutdown_flag) {
-    unsigned length = sizeof(receive_buffer);
+    unsigned length;
     if (listen(receive_buffer, &length, 100)) {
       printf("%s\n", receive_buffer);
     }
