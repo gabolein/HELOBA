@@ -2,6 +2,7 @@
 .vscode
 *swp
 build
+*swp
 
 markdown.css
 compile_commands.json

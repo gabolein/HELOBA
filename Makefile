@@ -7,6 +7,19 @@ else
 SRC = $(shell find src lib -name '*.c')
 endif
 
+ifeq ($(MAKECMDGOALS),test)
+CFLAGS = -Wall -Wextra -ggdb -O0
+else
+CFLAGS = -std=gnu11 -Wall -Wextra -s -O2 -DVIRTUAL 
+endif
+CPPFLAGS = -Iinclude
+
+ifneq (,$(findstring -DVIRTUAL,$(CFLAGS)))
+SRC := $(filter-out src/beaglebone/%, $(SRC))
+else
+SRC := $(filter-out src/virtual_transport.c, $(SRC))
+endif
+
 OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 
 # auto generated dep files
@@ -15,16 +28,9 @@ DEP = $(OBJ:.o=.d)
 CC = gcc
 
 ifeq ($(MAKECMDGOALS),test)
-CFLAGS = -Wall -Wextra -ggdb -O0
+LDFLAGS = -lcriterion -lm -lpthread
 else
-CFLAGS = -Wall -Wextra -s -O2
-endif
-CPPFLAGS = -Iinclude
-
-ifeq ($(MAKECMDGOALS),test)
-LDFLAGS = -lcriterion -lm
-else
-LDFLAGS = -lspi -lprussdrvd -lm
+LDFLAGS = -lm -lpthread
 endif
 
 $(OBJ):$(BUILD_DIR)/%.o: %.c
