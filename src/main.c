@@ -31,35 +31,26 @@ int main(int argc, char *argv[]) {
 
   struct sigaction sa;
   sa.sa_handler = kill_handler;
-
-  uint8_t id[6];
-  get_id(id);
-  printf("sizeof pid: %u\n", sizeof(pid_t));
-  printf("Node id: ");
-  for(size_t i = 0; i < 6; i++){
-    printf("%u ", id[i]);
-  }
-  putchar('\n');
   sigaction(SIGINT, &sa, NULL);
-  /*uint8_t receive_buffer[255];*/
-  /*uint16_t freqs[2] = {850, 920};*/
-  /*unsigned freq_idx = 0;*/
+  uint8_t receive_buffer[255];
+  uint16_t freqs[2] = {850, 920};
+  unsigned freq_idx = 0;
 
-  /*while (!shutdown_flag) {*/
-    /*unsigned length;*/
-    /*if (listen(receive_buffer, &length, 100)) {*/
-      /*printf("%s\n", receive_buffer);*/
-      /*change_frequency(freqs[++freq_idx % 2]);*/
-    /*}*/
+  while (!shutdown_flag) {
+    unsigned length;
+    if (listen(receive_buffer, &length, 100)) {
+      printf("%s\n", receive_buffer);
+      change_frequency(freqs[++freq_idx % 2]);
+    }
     
-    /*if(msg_priority_queue_size(msg_queue)){*/
-      /*msg* next_message = msg_priority_queue_peek(msg_queue);*/
-      /*if(send_packet(next_message->data, next_message->len)){*/
-        /*msg_priority_queue_pop(msg_queue);*/
-        /*change_frequency(freqs[++freq_idx % 2]);*/
-      /*}*/
-    /*}*/
-  /*}*/
+    if(msg_priority_queue_size(msg_queue)){
+      msg* next_message = msg_priority_queue_peek(msg_queue);
+      if(send_packet(next_message->data, next_message->len)){
+        msg_priority_queue_pop(msg_queue);
+        change_frequency(freqs[++freq_idx % 2]);
+      }
+    }
+  }
 
   /*TODO shutdown stuff*/
   /*pthread_kill(&user_input_thread, 0);*/
