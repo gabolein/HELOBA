@@ -157,8 +157,13 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   }
 }
 
+// TODO include from protocol
+#define ADDR_LEN 6
+
 bool virtual_get_id(uint8_t *out) {
+  assert(sizeof(pid_t) <= ADDR_LEN);
   pid_t pid = getpid();
   memcpy(out, &pid, sizeof(pid));
+  memset(out+sizeof(pid), 0, ADDR_LEN-sizeof(pid_t));
   return true;
 }
