@@ -157,6 +157,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   }
 }
 
+// FIXME pid is integer, MAC address is 6 bytes
 bool virtual_get_id(uint8_t *out) {
   pid_t pid = getpid();
   memcpy(out, &pid, sizeof(pid));
