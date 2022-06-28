@@ -1,0 +1,8 @@
+receiving:
+for me? need way to know if leader or not -> is valid -> msg priority -> put in queue
+
+sending:
+check if message makes sense considering current state -> create response -> send
+
+backoff: 
+keep track of backoffs -> depending on action, try to leave
