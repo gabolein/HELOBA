@@ -9,9 +9,12 @@
 
 bool transport_initialize() {
 #if defined(VIRTUAL)
-  return virtual_transport_initialize();
+  return virtual_change_frequency(850);
 #else
-  return radio_transport_initialize();
+  if (!radio_transport_initialize()) {
+    return false;
+  }
+  return radio_change_frequency(850);
 #endif
 }
 
