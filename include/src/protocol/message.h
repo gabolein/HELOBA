@@ -61,6 +61,7 @@ typedef struct {
 
 message_action_t message_action(message_t *msg);
 message_type_t message_type(message_t *msg);
+bool message_from_leader(message_t *msg);
 bool message_is_valid(message_t *msg);
 
 #endif
