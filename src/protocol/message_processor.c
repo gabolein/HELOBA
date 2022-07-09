@@ -1,5 +1,6 @@
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "src/protocol/message.h"
+#include "src/transport.h"
 
 /*int message_cmp(message_t *a, message_t *b);*/
 
@@ -65,6 +66,28 @@ bool message_is_valid(message_t *msg) {
   }
 
   return true;
+}
+
+bool message_is_for_node(message_t *msg){
+  message_header_t header = msg->header;
+  routing_id_t self_id;
+  get_id(self_id.optional_MAC);
+
+  // Unless registered, we only expect messages from the leader specifically to us
+  // TODO get registered information from somewhere else
+  if(true){ 
+  /*if(!(global_flags & REGISTERED)){ */
+    return header.sender_id.layer == leader 
+        && header.receiver_id.layer == specific 
+        && routing_id_MAC_equal(self_id, header.receiver_id);
+  }
+
+  return header.receiver_id.layer == everyone 
+      || routing_id_MAC_equal(self_id, header.receiver_id);
+}
+
+bool process_message(message_t *msg){
+  return message_is_valid(msg) && message_is_for_node(msg);
 }
 
 // TODO: Score Formel schreiben, die Wichtigkeit von Nachrichten im Netzwerk
