@@ -26,6 +26,7 @@ typedef struct {
 } message_header_t;
 
 // NOTE for now, we only expect two frequencies as answer to a DO FIND
+// TODO also parent relevant
 typedef struct {
   frequency_t lhs;
   frequency_t rhs;
