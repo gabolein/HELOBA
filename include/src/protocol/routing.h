@@ -2,6 +2,7 @@
 #define ROUTING_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define MAC_SIZE 6
 #define ROUTING_ID_ENCODED_MIN_SIZE 1
@@ -18,5 +19,7 @@ typedef struct {
   routing_layer_t layer;
   uint8_t optional_MAC[MAC_SIZE];
 } routing_id_t;
+
+bool routing_id_MAC_equal(routing_id_t, routing_id_t);
 
 #endif
