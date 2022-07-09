@@ -321,9 +321,8 @@ bool handle_do_find(message_t *msg) {
 
   // leader informs where node might be found
   if(!searching_for_self){
-    //TODO
-    /*reply_msg.payload.find.frequencies.lhs = lhs;*/
-    /*reply_msg.payload.find.frequencies.rhs = rhs;*/
+    reply_msg.payload.find.frequencies.lhs = global_tree_state.lhs;
+    reply_msg.payload.find.frequencies.rhs = global_tree_state.rhs;
   }
 
   message_priority_queue_push(to_send, reply_msg);
