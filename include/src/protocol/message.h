@@ -25,8 +25,17 @@ typedef struct {
   routing_id_t receiver_id;
 } message_header_t;
 
+// NOTE for now, we only expect two frequencies as answer to a DO FIND
 typedef struct {
-  routing_id_t to_find;
+  frequency_t lhs;
+  frequency_t rhs;
+} find_response_t; 
+
+typedef struct {
+  union {
+    routing_id_t to_find;
+    find_response_t frequencies;
+  };
 } find_payload_t;
 
 #define OPT_PARENT_SET (1 << 7)
