@@ -171,7 +171,7 @@ bool handle_do_swap(message_t *msg) {
     // einen SWAP macht? Es braucht auf jeden Fall ein System, um die Änderungen
     // nacheinander ohne Konflikte auszuführen.
     transport_change_frequency(global_tree_state.parent);
-    send_message(&update_msg);
+    transport_send_message(&update_msg);
   }
 
   // 3) Activity Score für eigene aktuelle Frequenz berechnen (kann

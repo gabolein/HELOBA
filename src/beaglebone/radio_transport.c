@@ -156,6 +156,7 @@ bool radio_transport_initialize(){
   write_default_register_configuration();
   cc1200_cmd(SNOP);
   printf("CC1200 Status: %s\n", get_status_cc1200_str());
+  return true;
 }
 
 // NOTE: muss angepasst werden, wenn das Default Interface auf dem Beaglebone
