@@ -1,14 +1,15 @@
 #ifndef TRANSPORT_H
 #define TRANSPORT_H
 
+#include "src/protocol/message.h"
+#include "src/protocol/message_parser.h"
 #include <stdbool.h>
 #include <stdint.h>
 
 bool transport_initialize(void);
-bool change_frequency(uint16_t frequency);
-bool send_packet(uint8_t *buffer, unsigned length);
-bool receive_packet(uint8_t *buffer, unsigned *length);
-bool listen(uint8_t *buffer, unsigned *length, unsigned listen_ms);
+bool transport_change_frequency(uint16_t frequency);
+bool transport_send_message(message_t *msg);
+bool transport_receive_message(message_t *msg);
 bool get_id(uint8_t *buffer);
 
 #endif

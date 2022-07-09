@@ -80,7 +80,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
     threshold = threshold + (f_rssi - threshold) / ++samples;
   }
 
-  printf("[INFO] Collected %u samples, %u errors\n", samples, errors);
+  printf("[INFO] Collected %lu samples, %lu errors\n", samples, errors);
 
   if (errors > samples)
     return false;

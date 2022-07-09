@@ -63,6 +63,26 @@ void pack_header(u8_vector_t *v, message_header_t *header) {
   pack_routing_id(v, &header->receiver_id);
 }
 
+void pack_local_tree(u8_vector_t *v, local_tree_t *tree) {
+  u8_vector_append(v, tree->opt);
+
+  if (tree->opt & OPT_SELF) {
+    pack_frequency(v, tree->self);
+  }
+
+  if (tree->opt & OPT_PARENT) {
+    pack_frequency(v, tree->parent);
+  }
+
+  if (tree->opt & OPT_LHS) {
+    pack_frequency(v, tree->lhs);
+  }
+
+  if (tree->opt & OPT_RHS) {
+    pack_frequency(v, tree->rhs);
+  }
+}
+
 void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
   pack_routing_id(v, &payload->to_find);
 }
@@ -73,7 +93,7 @@ void pack_update_payload(u8_vector_t *v, update_payload_t *payload) {
 }
 
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload) {
-  pack_frequency(v, payload->source);
+  pack_local_tree(v, &payload->tree);
   u8_vector_append(v, payload->activity_score);
 }
 
@@ -147,6 +167,34 @@ message_header_t unpack_header(uint8_t *buffer, unsigned length,
   return d;
 }
 
+local_tree_t unpack_local_tree(uint8_t *buffer, unsigned length,
+                                   unsigned *decoded) {
+  assert(*decoded <= length);
+  assert(length - *decoded >= sizeof(uint8_t));
+  
+  local_tree_t tree;
+  tree.opt = buffer[0];
+  (*decoded)++;
+
+  if (tree.opt & OPT_SELF) {
+    tree.self = unpack_frequency(buffer, length, decoded);
+  }
+
+  if (tree.opt & OPT_PARENT) {
+    tree.parent = unpack_frequency(buffer, length, decoded);
+  }
+
+  if (tree.opt & OPT_LHS) {
+    tree.lhs = unpack_frequency(buffer, length, decoded);
+  }
+
+  if (tree.opt & OPT_RHS) {
+    tree.rhs = unpack_frequency(buffer, length, decoded);
+  }
+
+  return tree;
+}
+
 find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded) {
   find_payload_t d;
@@ -166,7 +214,7 @@ swap_payload_t unpack_swap_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded) {
   swap_payload_t d;
 
-  d.source = unpack_frequency(buffer, length, decoded);
+  d.tree = unpack_local_tree(buffer, length, decoded);
 
   assert(length - *decoded >= sizeof(uint8_t));
   d.activity_score = buffer[*decoded++];

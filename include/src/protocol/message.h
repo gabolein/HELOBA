@@ -25,12 +25,25 @@ typedef struct {
   routing_id_t receiver_id;
 } message_header_t;
 
+#define OPT_SELF (1 << 7)
+#define OPT_PARENT (1 << 6)
+#define OPT_LHS (1 << 5)
+#define OPT_RHS (1 << 4)
+
+typedef struct {
+  uint8_t opt;
+  frequency_t self;
+  frequency_t parent;
+  frequency_t lhs;
+  frequency_t rhs;
+} local_tree_t;
+
 // NOTE for now, we only expect two frequencies as answer to a DO FIND
 // TODO also parent relevant
 typedef struct {
   frequency_t lhs;
   frequency_t rhs;
-} find_response_t; 
+} find_response_t;
 
 typedef struct {
   union {
@@ -39,17 +52,13 @@ typedef struct {
   };
 } find_payload_t;
 
-#define OPT_PARENT_SET (1 << 7)
-#define OPT_LHS_SET (1 << 6)
-#define OPT_RHS_SET (1 << 5)
-
 typedef struct {
   frequency_t old;
   frequency_t updated;
 } update_payload_t;
 
 typedef struct {
-  frequency_t source;
+  local_tree_t tree;
   uint8_t activity_score;
 } swap_payload_t;
 
