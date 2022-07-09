@@ -102,9 +102,9 @@ Test(priority_queue, destroy_invalid, .signal = SIGABRT) {
   int_priority_queue_destroy(q);
 }
 
-typedef struct test_struct{
+typedef struct test_struct {
   int a;
-  void* b;
+  void *b;
   char d;
 } test_struct;
 
@@ -120,7 +120,7 @@ MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(test_struct, test_struct)
 MAKE_SPECIFIC_VECTOR_SOURCE(test_struct, test_struct)
 MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(test_struct, test_struct, cmp_test_struct)
 
-Test(priority_queue, generic_create){
+Test(priority_queue, generic_create) {
   test_struct_priority_queue_t *q = test_struct_priority_queue_create();
   cr_assert(test_struct_priority_queue_size(q) == 0);
   test_struct_priority_queue_destroy(q);

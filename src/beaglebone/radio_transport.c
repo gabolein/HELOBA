@@ -1,9 +1,9 @@
 #include "src/beaglebone/radio_transport.h"
 #include "lib/time_util.h"
+#include "src/beaglebone/backoff.h"
 #include "src/beaglebone/frequency.h"
 #include "src/beaglebone/registers.h"
 #include "src/beaglebone/rssi.h"
-#include "src/beaglebone/backoff.h"
 #include <SPIv1.h>
 #include <net/if.h>
 #include <stddef.h>
@@ -60,7 +60,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
-  while(!hit_timeout(100, &start_time)){
+  while (!hit_timeout(100, &start_time)) {
     detected_rssi = detect_RSSI();
     if (detected_rssi) {
       break;
@@ -104,7 +104,8 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
     }
   }
 
-  // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall überhaupt nicht erst angenommen?
+  // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
+  // überhaupt nicht erst angenommen?
   fprintf(stderr,
           "Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u\n",
           recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
@@ -113,21 +114,21 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   *length = recv_length;
   ret = true;
 
-  cleanup:
-    disable_preamble_detection();
-    // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
-    cc1200_cmd(SIDLE);
-    cc1200_cmd(SFRX);
-    return ret;
+cleanup:
+  disable_preamble_detection();
+  // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
+  cc1200_cmd(SIDLE);
+  cc1200_cmd(SFRX);
+  return ret;
 }
 
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
-  if((get_backoff_attempts() > 0) && !check_backoff_timeout()){
+  if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
     printf("Backoff timeout not expired yet.\n");
     return false;
   }
 
-  if(!collision_detection()){
+  if (!collision_detection()) {
     printf("First scan unsuccessful. Backing off\n");
     return false;
   }
@@ -137,7 +138,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
   }
   cc1200_cmd(STX);
 
-  if(!collision_detection()){
+  if (!collision_detection()) {
     printf("Second scan unsuccessful. Backing off\n");
     return false;
   }
@@ -147,7 +148,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
   return true;
 }
 
-bool radio_transport_initialize(){
+bool radio_transport_initialize() {
   if (spi_init() != 0) {
     printf("ERROR: SPI initialization failed\n");
     return false;

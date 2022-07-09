@@ -168,10 +168,10 @@ message_header_t unpack_header(uint8_t *buffer, unsigned length,
 }
 
 local_tree_t unpack_local_tree(uint8_t *buffer, unsigned length,
-                                   unsigned *decoded) {
+                               unsigned *decoded) {
   assert(*decoded <= length);
   assert(length - *decoded >= sizeof(uint8_t));
-  
+
   local_tree_t tree;
   tree.opt = buffer[0];
   (*decoded)++;

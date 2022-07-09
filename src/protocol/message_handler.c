@@ -33,7 +33,8 @@ typedef enum {
   REGISTERED = 1 << 5
 } flags_t;
 
-// FIXME: HashMap mit allen IDs auf der Frequenz sollte auslangen, einfach dann davon die size nehmen
+// FIXME: HashMap mit allen IDs auf der Frequenz sollte auslangen, einfach dann
+// davon die size nehmen
 uint8_t activity_score;
 flags_t flags = {0};
 local_tree_t ts = {0};
@@ -51,7 +52,6 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
     [WILL][FIND] = handle_will_find};
-
 
 int message_cmp(message_t a, message_t b);
 
@@ -94,18 +94,24 @@ bool handle_do_update(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == UPDATE);
 
-  update_single_tree_node(&ts, msg->payload.update.old, msg->payload.update.updated);
+  update_single_tree_node(&ts, msg->payload.update.old,
+                          msg->payload.update.updated);
 
   return true;
 }
 
 frequency_t tree_select(local_tree_t *t, uint8_t m) {
   switch (m) {
-    case OPT_SELF: return t->self;
-    case OPT_PARENT: return t->parent;
-    case OPT_LHS: return t->lhs;
-    case OPT_RHS: return t->rhs;
-    default: assert(false);
+  case OPT_SELF:
+    return t->self;
+  case OPT_PARENT:
+    return t->parent;
+  case OPT_LHS:
+    return t->lhs;
+  case OPT_RHS:
+    return t->rhs;
+  default:
+    assert(false);
   }
 }
 
@@ -113,7 +119,8 @@ bool tree_node_equals(local_tree_t *t, uint8_t m, frequency_t f) {
   return (t->opt & m) && tree_select(t, m) == f;
 }
 
-void update_single_tree_node(local_tree_t *t, frequency_t old, frequency_t new) {
+void update_single_tree_node(local_tree_t *t, frequency_t old,
+                             frequency_t new) {
   if (tree_node_equals(t, OPT_SELF, old)) {
     t->self = new;
   }
@@ -136,7 +143,7 @@ void swap_tree_state(local_tree_t *t) {
   assert(t->opt & OPT_SELF);
 
   ts.opt = t->opt;
-  
+
   if (tree_node_equals(t, OPT_PARENT, ts.self)) {
     update_single_tree_node(&ts, ts.parent, t->self);
     update_single_tree_node(&ts, ts.lhs, t->lhs);
@@ -223,13 +230,13 @@ bool handle_do_swap(message_t *msg) {
   }
 
   if (!(msg->payload.swap.tree.opt & OPT_SELF)) {
-    fprintf(stderr, "Received DO SWAP doesn't have source frequency set, ignoring.\n");
+    fprintf(stderr,
+            "Received DO SWAP doesn't have source frequency set, ignoring.\n");
     return false;
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != ts.parent && source != ts.lhs &&
-      source != ts.rhs) {
+  if (source != ts.parent && source != ts.lhs && source != ts.rhs) {
     fprintf(stderr, "Received DO SWAP from a frequency that is not part of my "
                     "local tree, ignoring.\n");
     return false;
@@ -237,10 +244,8 @@ bool handle_do_swap(message_t *msg) {
 
   // NOTE: eigener Activity Score muss immer noch irgendwo berechnet werden.
   uint8_t score = msg->payload.swap.activity_score;
-  if ((score <= activity_score &&
-       source != ts.parent) ||
-      (score >= activity_score &&
-       source == ts.parent)) {
+  if ((score <= activity_score && source != ts.parent) ||
+      (score >= activity_score && source == ts.parent)) {
     fprintf(stderr,
             "Tree Order is still preserved, I see no reason to swap!\n");
     reject_do_swap();
@@ -258,7 +263,9 @@ bool handle_will_swap(message_t *msg) {
   assert(message_type(msg) == SWAP);
 
   if (!(flags & TREE_SWAPPING)) {
-    fprintf(stderr, "Received SWAP confirmation, but didn't initiate myself, ignoring.\n");
+    fprintf(
+        stderr,
+        "Received SWAP confirmation, but didn't initiate myself, ignoring.\n");
     return false;
   }
 
@@ -268,16 +275,16 @@ bool handle_will_swap(message_t *msg) {
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != ts.parent && source != ts.lhs &&
-      source != ts.rhs) {
-    fprintf(stderr, "Received WILL SWAP from a frequency that is not part of my "
-                    "local tree, ignoring.\n");
+  if (source != ts.parent && source != ts.lhs && source != ts.rhs) {
+    fprintf(stderr,
+            "Received WILL SWAP from a frequency that is not part of my "
+            "local tree, ignoring.\n");
     return false;
   }
 
   update_local_frequencies(ts.self, source);
   swap_tree_state(&msg->payload.swap.tree);
-  
+
   flags &= ~TREE_SWAPPING;
   return true;
 }
@@ -335,7 +342,7 @@ bool handle_will_report(message_t *msg) {
 bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == TRANSFER);
-  
+
   routing_id_t sender = msg->header.sender_id;
   assert(sender.layer == leader);
 
@@ -354,8 +361,8 @@ bool handle_will_transfer(message_t *msg) {
   return true;
 }
 
-inline bool set_sender_id_layer(routing_id_t* sender_id){
-  if(flags & LEADER){
+inline bool set_sender_id_layer(routing_id_t *sender_id) {
+  if (flags & LEADER) {
     sender_id->layer = leader;
   } else {
     sender_id->layer = nonleader;
@@ -364,7 +371,8 @@ inline bool set_sender_id_layer(routing_id_t* sender_id){
   return true;
 }
 
-inline message_header_t will_find_assemble_header(routing_id_t sender_id, routing_id_t receiver_id){
+inline message_header_t will_find_assemble_header(routing_id_t sender_id,
+                                                  routing_id_t receiver_id) {
   return (message_header_t){WILL, FIND, sender_id, receiver_id};
 }
 
@@ -378,7 +386,7 @@ bool handle_do_find(message_t *msg) {
   bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
   // TODO possible case: node is looking for me but I am not registered
-  if(!leader && !searching_for_self){
+  if (!leader && !searching_for_self) {
     return false;
   }
 
@@ -387,7 +395,7 @@ bool handle_do_find(message_t *msg) {
   reply_msg.header = will_find_assemble_header(self_id, msg->header.sender_id);
 
   // leader informs where node might be found
-  if(!searching_for_self){
+  if (!searching_for_self) {
     reply_msg.payload.find.frequencies.lhs = ts.lhs;
     reply_msg.payload.find.frequencies.rhs = ts.rhs;
   }
@@ -404,7 +412,7 @@ bool handle_will_find(message_t *msg) {
 
   routing_id_t sender = msg->header.sender_id;
 
-  if(routing_id_MAC_equal(sender, get_to_find())){
+  if (routing_id_MAC_equal(sender, get_to_find())) {
     search_concluded();
     // TODO register in frequency
     return true;

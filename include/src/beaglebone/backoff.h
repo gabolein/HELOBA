@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 
-typedef struct _backoff_struct{
+typedef struct _backoff_struct {
   uint8_t attempts;
   uint32_t backoff_ms;
   struct timespec start_backoff;

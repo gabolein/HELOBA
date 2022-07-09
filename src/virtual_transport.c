@@ -1,6 +1,6 @@
 #include "src/virtual_transport.h"
-#include "lib/time_util.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
+#include "lib/time_util.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>
@@ -54,14 +54,14 @@ bool virtual_change_frequency(uint16_t frequency) {
   assert(frequency_is_valid(frequency));
 
   if (mreq.imr_multiaddr.s_addr != 0) {
-    if (setsockopt(virt_fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+    if (setsockopt(virt_fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
+                   sizeof(mreq)) < 0) {
       perror("setsockopt");
       return false;
     }
 
     close(virt_fd);
   }
-
 
   if ((virt_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     fprintf(stderr, "Couldn't create virtual socket!\n");
@@ -86,12 +86,12 @@ bool virtual_change_frequency(uint16_t frequency) {
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   sockaddr.sin_port = get_frequency_multicast_port(frequency);
-  if (bind(virt_fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
+  if (bind(virt_fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0) {
     perror("Couldn't bind socket");
     close(virt_fd);
     return false;
   }
-  
+
   // init comm_addr
   memset(&comm_addr, 0, sizeof(comm_addr));
   comm_addr.sin_family = AF_INET;
@@ -111,7 +111,8 @@ bool virtual_change_frequency(uint16_t frequency) {
 }
 
 bool virtual_send_packet(uint8_t *buffer, unsigned length) {
-  if (sendto(virt_fd, buffer, length, 0, (struct sockaddr*)&comm_addr, sizeof(comm_addr)) < 0) {
+  if (sendto(virt_fd, buffer, length, 0, (struct sockaddr *)&comm_addr,
+             sizeof(comm_addr)) < 0) {
     fprintf(stderr, "Couldn't send %u bytes to fd=%i:\n", length, virt_fd);
     fprintf(stderr, "%s\n", strerror(errno));
     return false;
@@ -135,7 +136,8 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   case 0:
     return false;
   default:
-    // TODO import definition of packet length from somewhere else, remove magic number
+    // TODO import definition of packet length from somewhere else, remove magic
+    // number
     if (recv(virt_fd, buffer, 255, 0) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
@@ -152,6 +154,6 @@ bool virtual_get_id(uint8_t *out) {
   assert(sizeof(pid_t) <= ADDR_LEN);
   pid_t pid = getpid();
   memcpy(out, &pid, sizeof(pid));
-  memset(out+sizeof(pid), 0, ADDR_LEN-sizeof(pid_t));
+  memset(out + sizeof(pid), 0, ADDR_LEN - sizeof(pid_t));
   return true;
 }

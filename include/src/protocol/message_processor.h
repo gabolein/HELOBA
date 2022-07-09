@@ -3,6 +3,6 @@
 
 #include "message.h"
 
-bool process_message(message_t*);
+bool process_message(message_t *);
 
 #endif

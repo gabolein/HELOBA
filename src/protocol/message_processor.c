@@ -68,25 +68,26 @@ bool message_is_valid(message_t *msg) {
   return true;
 }
 
-bool message_is_for_node(message_t *msg){
+bool message_is_for_node(message_t *msg) {
   message_header_t header = msg->header;
   routing_id_t self_id;
   get_id(self_id.optional_MAC);
 
-  // Unless registered, we only expect messages from the leader specifically to us
+  // Unless registered, we only expect messages from the leader specifically to
+  // us
   // TODO get registered information from somewhere else
-  if(false){ 
-  /*if(!(global_flags & REGISTERED)){ */
-    return header.sender_id.layer == leader 
-        && header.receiver_id.layer == specific 
-        && routing_id_MAC_equal(self_id, header.receiver_id);
+  if (false) {
+    /*if(!(global_flags & REGISTERED)){ */
+    return header.sender_id.layer == leader &&
+           header.receiver_id.layer == specific &&
+           routing_id_MAC_equal(self_id, header.receiver_id);
   }
 
-  return header.receiver_id.layer == everyone 
-      || routing_id_MAC_equal(self_id, header.receiver_id);
+  return header.receiver_id.layer == everyone ||
+         routing_id_MAC_equal(self_id, header.receiver_id);
 }
 
-bool process_message(message_t *msg){
+bool process_message(message_t *msg) {
   return message_is_valid(msg) && message_is_for_node(msg);
 }
 
@@ -117,13 +118,13 @@ int message_cmp(message_t *a, message_t *b) {
 }
 
 /*void message_processor_initialize() {*/
-  /*messages = message_priority_queue_create();*/
+/*messages = message_priority_queue_create();*/
 /*}*/
 
 /*bool has_pending_received_messages() {*/
-  /*return message_priority_queue_size(messages) > 0;*/
+/*return message_priority_queue_size(messages) > 0;*/
 /*}*/
 
 /*message_t *next_pending_received_message() {*/
-  /*return message_priority_queue_pop(messages);*/
+/*return message_priority_queue_pop(messages);*/
 /*}*/

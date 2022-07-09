@@ -162,9 +162,9 @@ Test(vector, destroy_invalid, .signal = SIGABRT) {
   int_vector_destroy(v);
 }
 
-typedef struct test_struct{
+typedef struct test_struct {
   int a;
-  void* b;
+  void *b;
   char d;
 } test_struct_vector;
 

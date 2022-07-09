@@ -1,8 +1,8 @@
 #ifndef ROUTING_H
 #define ROUTING_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define MAC_SIZE 6
 #define ROUTING_ID_ENCODED_MIN_SIZE 1

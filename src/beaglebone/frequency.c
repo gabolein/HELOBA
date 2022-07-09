@@ -1,6 +1,6 @@
 #include "src/beaglebone/frequency.h"
-#include "src/beaglebone/registers.h"
 #include "src/beaglebone/backoff.h"
+#include "src/beaglebone/registers.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <stdbool.h>

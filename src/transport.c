@@ -12,7 +12,7 @@
 
 // FIXME: entweder beides buffer oder beides vector, aber nicht gemischt.
 uint8_t recv_buffer[UINT8_MAX];
-u8_vector_t* send_vec;
+u8_vector_t *send_vec;
 
 bool transport_initialize() {
   send_vec = u8_vector_create();

@@ -1,6 +1,6 @@
 #include "src/beaglebone/rssi.h"
-#include "src/beaglebone/registers.h"
 #include "lib/time_util.h"
+#include "src/beaglebone/registers.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <limits.h>
@@ -15,7 +15,7 @@
 static int8_t global_rssi_threshold = 0;
 static bool global_rssi_threshold_valid = false;
 
-bool detect_RSSI(){
+bool detect_RSSI() {
   struct timespec start;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   while (!hit_timeout(10, &start)) {
