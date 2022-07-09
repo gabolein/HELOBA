@@ -64,7 +64,7 @@ bool transport_receive_message(message_t *msg) {
   return true;
 }
 
-bool get_id(uint8_t *out) {
+bool transport_get_id(uint8_t *out) {
 #if defined(VIRTUAL)
   return virtual_get_id(out);
 #else

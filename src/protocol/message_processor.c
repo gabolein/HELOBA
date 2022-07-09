@@ -71,7 +71,7 @@ bool message_is_valid(message_t *msg) {
 bool message_is_for_node(message_t *msg) {
   message_header_t header = msg->header;
   routing_id_t self_id;
-  get_id(self_id.optional_MAC);
+  transport_get_id(self_id.optional_MAC);
 
   // Unless registered, we only expect messages from the leader specifically to
   // us

@@ -345,13 +345,22 @@ bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == TRANSFER);
 
-  routing_id_t sender = msg->header.sender_id;
-  assert(sender.layer == leader);
+  if (msg->header.sender_id.layer != leader) {
+    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
+    return false;
+  }
 
   frequency_t destination_frequency = msg->payload.transfer.to;
-
   transport_change_frequency(destination_frequency);
-  // TODO go into state where newly joined a frequency
+  message_t join_request;
+  join_request.header.action = WILL;
+  join_request.header.type = TRANSFER;
+  join_request.header.sender_id.layer = specific;
+  transport_get_id(join_request.header.sender_id.optional_MAC);
+  join_request.header.receiver_id.layer = leader;
+  join_request.payload.transfer.to = destination_frequency;
+
+  transport_send_message(&join_request);
 
   return true;
 }
@@ -384,7 +393,7 @@ bool handle_do_find(message_t *msg) {
 
   routing_id_t to_find = msg->payload.find.to_find;
   routing_id_t self_id;
-  get_id(self_id.optional_MAC);
+  transport_get_id(self_id.optional_MAC);
   bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
   // TODO possible case: node is looking for me but I am not registered

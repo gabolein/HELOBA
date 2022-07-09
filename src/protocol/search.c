@@ -49,7 +49,7 @@ bool send_do_find() {
   routing_id_t self_id;
   self_id.layer = nonleader;
   routing_id_t receiver_id = {.layer = everyone};
-  get_id(self_id.optional_MAC);
+  transport_get_id(self_id.optional_MAC);
   message_t do_find_msg = {.header = {DO, FIND, self_id, receiver_id},
                            .payload.find.to_find =
                                global_search_state.to_find_id};
