@@ -1,5 +1,5 @@
-#include "boilerplate.h"
-#include "interface.h"
+#include "src/interface/boilerplate.h"
+#include "src/interface/interface.h"
 #include <criterion/criterion.h>
 #include <pty.h>
 #include <sys/socket.h>

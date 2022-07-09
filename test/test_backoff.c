@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
-#include "backoff.h"
-#include "boilerplate.h"
+#include "src/beaglebone/backoff.h"
+#include "src/interface/boilerplate.h"
 #include <criterion/criterion.h>
 #include <time.h>
 #include <unistd.h>
