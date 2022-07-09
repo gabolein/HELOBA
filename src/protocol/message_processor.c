@@ -1,12 +1,12 @@
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "src/protocol/message.h"
 
-int message_cmp(message_t *a, message_t *b);
+/*int message_cmp(message_t *a, message_t *b);*/
 
-MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(message_t *, message)
-MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(message_t *, message, message_cmp)
+/*MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(message_t *, message)*/
+/*MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(message_t *, message, message_cmp)*/
 
-static message_priority_queue_t *messages;
+/*static message_priority_queue_t *messages;*/
 
 #define CHANNEL_CONTROL_PRIORITY 3
 #define TREE_OPERATION_PRIORITY 2
@@ -93,14 +93,14 @@ int message_cmp(message_t *a, message_t *b) {
   return 0;
 }
 
-void message_processor_initialize() {
-  messages = message_priority_queue_create();
-}
+/*void message_processor_initialize() {*/
+  /*messages = message_priority_queue_create();*/
+/*}*/
 
-bool has_pending_received_messages() {
-  return message_priority_queue_size(messages) > 0;
-}
+/*bool has_pending_received_messages() {*/
+  /*return message_priority_queue_size(messages) > 0;*/
+/*}*/
 
-message_t *next_pending_received_message() {
-  return message_priority_queue_pop(messages);
-}
+/*message_t *next_pending_received_message() {*/
+  /*return message_priority_queue_pop(messages);*/
+/*}*/
