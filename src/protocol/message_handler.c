@@ -235,7 +235,7 @@ bool handle_do_find(message_t *msg) {
 
   routing_id_t to_find = msg->payload.find.to_find;
   routing_id_t self_id;
-  get_id(&self_id.optional_MAC);
+  get_id(self_id.optional_MAC);
   bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
   // TODO possible case: node is looking for me but I am not registered

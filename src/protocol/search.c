@@ -2,7 +2,7 @@
 
 static search_state_t global_search_state;
 
-int frequency_cmp(frequency_t a, frequency_t b){
+int frequency_cmp(__attribute__((unused))frequency_t a, __attribute__((unused))frequency_t b){
   return 0;
 }
 
