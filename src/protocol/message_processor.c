@@ -75,7 +75,7 @@ bool message_is_for_node(message_t *msg){
 
   // Unless registered, we only expect messages from the leader specifically to us
   // TODO get registered information from somewhere else
-  if(true){ 
+  if(false){ 
   /*if(!(global_flags & REGISTERED)){ */
     return header.sender_id.layer == leader 
         && header.receiver_id.layer == specific 

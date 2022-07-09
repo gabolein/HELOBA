@@ -50,7 +50,7 @@ bool send_do_find(){
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   while(!hit_timeout(DO_FIND_SEND_TIMEOUT, &start_time)){
-    if(transport_send_message(do_find_msg)){
+    if(transport_send_message(&do_find_msg)){
       return true;
     }
   }
@@ -83,7 +83,7 @@ bool search_for(routing_id_t to_find){
     // TODO what if node is not anywhere? would be stuck in frequency
     if(search_frequencies_priority_queue_size(global_search_state.search_frequencies)){
       frequency_t next_frequency = search_frequencies_priority_queue_pop(global_search_state.search_frequencies);
-      change_frequency(next_frequency);
+      transport_change_frequency(next_frequency);
     }
 
     if(!send_do_find()){

@@ -8,7 +8,7 @@
 
 
 typedef enum _msg_prio{
-  MUTE,
+//  MUTE,
   LEADER,
   CONTROL,
   DATA
