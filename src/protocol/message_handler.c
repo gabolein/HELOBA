@@ -28,6 +28,7 @@ typedef enum {
   MUTED = 1 << 2,
   TRANSFERING = 1 << 3,
   SEARCHING = 1 << 4,
+  REGISTERED = 1 << 5
 } flags_t;
 
 typedef struct {
