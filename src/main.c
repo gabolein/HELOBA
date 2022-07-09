@@ -16,7 +16,7 @@ void kill_handler(int signo) {
   shutdown_flag = true;
 }
 
-int main(int argc, char *argv[]) {
+int main(){
   // TODO interface initialize
   msg_priority_queue_t* msg_queue = msg_priority_queue_create();
   assert(msg_queue != NULL);

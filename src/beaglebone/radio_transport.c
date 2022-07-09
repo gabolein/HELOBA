@@ -164,7 +164,7 @@ bool radio_transport_initialize(){
 #define ETH_INTERFACE "eth0"
 #define MAC_SIZE 6
 
-bool radio_get_id(uint8_t *out) {
+bool radio_get_id(uint8_t out[MAC_SIZE]) {
   struct ifreq ifr;
   memset(&ifr, 0, sizeof(ifr));
   ifr.ifr_addr.sa_family = AF_INET;

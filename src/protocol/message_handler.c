@@ -1,5 +1,7 @@
 #include "src/protocol/message_handler.h"
 #include "src/protocol/message.h"
+#include "src/protocol/routing.h"
+#include "src/protocol/search.h"
 #include "src/transport.h"
 #include <assert.h>
 #include <stdint.h>
@@ -48,6 +50,15 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
     [WILL][FIND] = handle_will_find};
+
+
+int message_cmp(message_t a, message_t b);
+
+MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(message_t, message)
+MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message);
+MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(message_t, message, message_cmp)
+
+static message_priority_queue_t *to_send;
 
 bool handle_do_mute(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -323,6 +334,14 @@ bool handle_will_report(message_t *msg) {
 bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == TRANSFER);
+  
+  routing_id_t sender = msg->header.sender_id;
+  assert(sender.layer == leader);
+
+  frequency_t destination_frequency = msg->payload.transfer.to;
+
+  transport_change_frequency(destination_frequency);
+  // TODO go into state where newly joined a frequency
 
   return true;
 }
@@ -334,9 +353,45 @@ bool handle_will_transfer(message_t *msg) {
   return true;
 }
 
+inline bool set_sender_id_layer(routing_id_t* sender_id){
+  if(flags & LEADER){
+    sender_id->layer = leader;
+  } else {
+    sender_id->layer = nonleader;
+  }
+
+  return true;
+}
+
+inline message_header_t will_find_assemble_header(routing_id_t sender_id, routing_id_t receiver_id){
+  return (message_header_t){WILL, FIND, sender_id, receiver_id};
+}
+
 bool handle_do_find(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == FIND);
+
+  routing_id_t to_find = msg->payload.find.to_find;
+  routing_id_t self_id;
+  get_id(self_id.optional_MAC);
+  bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
+
+  // TODO possible case: node is looking for me but I am not registered
+  if(!leader && !searching_for_self){
+    return false;
+  }
+
+  message_t reply_msg;
+  set_sender_id_layer(&self_id);
+  reply_msg.header = will_find_assemble_header(self_id, msg->header.sender_id);
+
+  // leader informs where node might be found
+  if(!searching_for_self){
+    reply_msg.payload.find.frequencies.lhs = ts.lhs;
+    reply_msg.payload.find.frequencies.rhs = ts.rhs;
+  }
+
+  message_priority_queue_push(to_send, reply_msg);
 
   return true;
 }
@@ -344,6 +399,19 @@ bool handle_do_find(message_t *msg) {
 bool handle_will_find(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == FIND);
+  assert(flags & SEARCHING);
+
+  routing_id_t sender = msg->header.sender_id;
+
+  if(routing_id_MAC_equal(sender, get_to_find())){
+    search_concluded();
+    // TODO register in frequency
+    return true;
+  } else {
+    assert(sender.layer == leader);
+    search_frequencies_queue_add(msg->payload.find.frequencies.lhs);
+    search_frequencies_queue_add(msg->payload.find.frequencies.rhs);
+  }
 
   return true;
 }
