@@ -54,72 +54,71 @@ bool radio_change_frequency(uint16_t frequency) {
 }
 
 bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
+  bool ret = false;
+  bool detected_rssi = false;
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+
+  // FIXME: timeout sollte irgendwo mit #define gesetzt werden
+  while(!hit_timeout(100, &start_time)){
+    detected_rssi = detect_RSSI();
+    if (detected_rssi) {
+      break;
+    }
+  }
+
+  if (!detected_rssi) {
+    return false;
+  }
+
+  enable_preamble_detection();
   start_receiver_blocking();
 
-  if (!fifo_wait(FIRST_BYTE_WAIT_TIME))
-    return false;
+  if (!fifo_wait(FIRST_BYTE_WAIT_TIME)) {
+    ret = false;
+    goto cleanup;
+  }
 
-  uint8_t packet_length = rx_fifo_pop();
-  if (packet_length > *length) {
+  uint8_t recv_length = rx_fifo_pop();
+  if (recv_length > *length) {
     fprintf(
         stderr,
         "Buffer with size=%u is too small to receive packet with size=%u.\n",
-        *length, packet_length);
+        *length, recv_length);
     return false;
   }
 
   uint8_t status[PACKET_STATUS_LENGTH];
-  for (size_t i = 0; i < packet_length + PACKET_STATUS_LENGTH; i++) {
+  for (size_t i = 0; i < recv_length + PACKET_STATUS_LENGTH; i++) {
     if (!fifo_wait(NEXT_BYTE_WAIT_TIME)) {
       fprintf(stderr, "Expected to receive %u bytes, only got %lu.\n",
-              packet_length, i);
-      return false;
+              recv_length, i);
+      ret = false;
+      goto cleanup;
     }
 
-    if (i < packet_length) {
+    if (i < recv_length) {
       buffer[i] = rx_fifo_pop();
     } else {
-      status[i - packet_length] = rx_fifo_pop();
+      status[i - recv_length] = rx_fifo_pop();
     }
   }
 
+  // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall überhaupt nicht erst angenommen?
   fprintf(stderr,
-          "Received packet. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u\n",
-          packet_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
+          "Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u\n",
+          recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
           status[1] & ~(1 << 7));
 
-  *length = packet_length;
-  return true;
-}
+  *length = recv_length;
+  ret = true;
 
-/*Blocks for a certain timeout to listen to channel. 
- * Returns true if packet was received, false if no rssi was heard or packet reception fails*/
-bool radio_listen(uint8_t *buffer, unsigned* length, unsigned listen_ms){
-  uint8_t recv_bytes = 0;
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while(!hit_timeout(listen_ms, &start_time)){
-    if(!detect_RSSI()){
-      continue;
-    }
-
-    enable_preamble_detection();
-
-    recv_bytes = radio_receive_packet(buffer, length);
-
+  cleanup:
     disable_preamble_detection();
-
-    if(recv_bytes == 0) {
-      cc1200_cmd(SIDLE);
-      cc1200_cmd(SFRX);
-
-      return false;
-    }
-
-    return true;
-  }
-
-  return false;
+    // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
+    cc1200_cmd(SIDLE);
+    cc1200_cmd(SFRX);
+    return ret;
 }
 
 bool radio_send_packet(uint8_t *buffer, unsigned length) {

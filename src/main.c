@@ -36,19 +36,12 @@ int main(int argc, char *argv[]) {
   uint16_t freqs[2] = {850, 920};
   unsigned freq_idx = 0;
 
+  message_t msg;
+
   while (!shutdown_flag) {
-    unsigned length;
-    if (listen(receive_buffer, &length, 100)) {
-      printf("%s\n", receive_buffer);
-      change_frequency(freqs[++freq_idx % 2]);
-    }
-    
-    if(msg_priority_queue_size(msg_queue)){
-      msg* next_message = msg_priority_queue_peek(msg_queue);
-      if(send_packet(next_message->data, next_message->len)){
-        msg_priority_queue_pop(msg_queue);
-        change_frequency(freqs[++freq_idx % 2]);
-      }
+    if (transport_receive_message(&msg)) {
+      printf("Received message!\n");
+      transport_change_frequency(freqs[++freq_idx % 2]);
     }
   }
 

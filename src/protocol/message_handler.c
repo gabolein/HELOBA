@@ -1,5 +1,4 @@
 #include "src/protocol/message_handler.h"
-#include "src/protocol/message.h"
 #include "src/transport.h"
 #include <assert.h>
 #include <stdint.h>
@@ -158,8 +157,7 @@ bool handle_do_swap(message_t *msg) {
   global_flags |= TREE_SWAPPING;
 
   // NOTE: so bekommen nur die umliegenden Knoten die Änderungen mit, aber nicht
-  // die zwei tauschenden Knoten. Irgendwie muss dafür eine Lösung gefunden
-  // werden.
+  // die zwei tauschenden Knoten. Zur Lösung sollte SWAP den gesamten lokalen Baumzustand mitschicken.
   message_t update_msg;
   update_msg.header.action = DO;
   update_msg.header.type = UPDATE;
@@ -168,10 +166,13 @@ bool handle_do_swap(message_t *msg) {
   update_msg.payload.update.old = global_tree_state.own;
   update_msg.payload.update.updated = source;
 
-  // NOTE: was soll passieren, wenn Leader auf anderer Frequenz auch aktuell
-  // einen SWAP macht? Es braucht auf jeden Fall ein System, um die Änderungen
-  // nacheinander ohne Konflikte auszuführen.
-  change_frequency(global_tree_state.parent);
+  if (source != global_tree_state.parent) {
+    // NOTE: was soll passieren, wenn Leader auf anderer Frequenz auch aktuell
+    // einen SWAP macht? Es braucht auf jeden Fall ein System, um die Änderungen
+    // nacheinander ohne Konflikte auszuführen.
+    transport_change_frequency(global_tree_state.parent);
+    send_message(&update_msg);
+  }
 
   // 3) Activity Score für eigene aktuelle Frequenz berechnen (kann
   // vielleicht auch fortlaufend in anderen Handlern gemacht werden?)

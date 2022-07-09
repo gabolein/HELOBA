@@ -121,18 +121,6 @@ bool virtual_send_packet(uint8_t *buffer, unsigned length) {
   return true;
 }
 
-bool virtual_listen(uint8_t *buffer, unsigned *length, unsigned listen_ms) {
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while(!hit_timeout(listen_ms, &start_time)){
-    if(virtual_receive_packet(buffer, length)){
-      fprintf(stderr, "Received packet.\n");
-      return true;
-    }
-  }
-  return false;
-}
-
 bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   struct pollfd fds;
   fds.fd = virt_fd;
