@@ -186,6 +186,8 @@ void update_local_frequencies(frequency_t old, frequency_t new) {
     transport_change_frequency(ts.parent);
     transport_send_message(&update_msg);
   }
+
+  transport_change_frequency(ts.self);
 }
 
 void reject_do_swap() {
