@@ -68,16 +68,8 @@ void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
 }
 
 void pack_update_payload(u8_vector_t *v, update_payload_t *payload) {
-  u8_vector_append(v, payload->optmask);
-
-  if (payload->optmask & OPT_PARENT_SET)
-    pack_frequency(v, payload->parent);
-
-  if (payload->optmask & OPT_LHS_SET)
-    pack_frequency(v, payload->lhs);
-
-  if (payload->optmask & OPT_RHS_SET)
-    pack_frequency(v, payload->rhs);
+  pack_frequency(v, payload->old);
+  pack_frequency(v, payload->updated);
 }
 
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload) {
@@ -164,21 +156,9 @@ find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
 
 update_payload_t unpack_update_payload(uint8_t *buffer, unsigned length,
                                        unsigned *decoded) {
-  assert(*decoded <= length);
-  assert(length - *decoded >= sizeof(uint8_t));
-
   update_payload_t d;
-  d.optmask = buffer[*decoded++];
-
-  if (d.optmask & OPT_PARENT_SET)
-    d.parent = unpack_frequency(buffer, length, decoded);
-
-  if (d.optmask & OPT_LHS_SET)
-    d.lhs = unpack_frequency(buffer, length, decoded);
-
-  if (d.optmask & OPT_RHS_SET)
-    d.rhs = unpack_frequency(buffer, length, decoded);
-
+  d.old = unpack_frequency(buffer, length, decoded);
+  d.updated = unpack_frequency(buffer, length, decoded);
   return d;
 }
 

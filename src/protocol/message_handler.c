@@ -1,6 +1,8 @@
 #include "src/protocol/message_handler.h"
 #include "src/protocol/message.h"
+#include "src/transport.h"
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 
 typedef bool (*handler_f)(message_t *msg);
@@ -26,7 +28,16 @@ typedef enum {
   SEARCHING = 1 << 4,
 } flags_t;
 
+typedef struct {
+  frequency_t own;
+  frequency_t parent;
+  frequency_t lhs;
+  frequency_t rhs;
+  uint8_t activity_score;
+} tree_state_t;
+
 flags_t global_flags = {0};
+tree_state_t global_tree_state = {0};
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = handle_do_mute,
@@ -71,35 +82,97 @@ bool handle_dont_mute(message_t *msg) {
   return true;
 }
 
-// FIXME: muss Möglichkeit geben, Antwort als zweiten Parameter aus Funktion zu
-// geben.
 bool handle_do_update(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == UPDATE);
 
-  // TODO:
-  // WILL UPDATE aus Funktion zurückgeben.
-  // überlegen, ob man in Antwort noch weitere Informationen zurückgeben
-  // könnte oder ob ein einfaches "Pong" ausreicht.
+  // es ist vielleicht eine gute Idee, die Frequenz Teil der ID zu machen, das
+  // ist bestimmt auch in vielen anderen Fällen nützlich
+  frequency_t old = msg->payload.update.old;
+  frequency_t updated = msg->payload.update.updated;
+
+  if (global_tree_state.parent == old) {
+    global_tree_state.parent = updated;
+  } else if (global_tree_state.lhs == old) {
+    global_tree_state.lhs = updated;
+  } else if (global_tree_state.rhs == old) {
+    global_tree_state.rhs = updated;
+  } else {
+    fprintf(stderr, "Received DO UPDATE from frequency that is not part of my "
+                    "local tree. Global tree may be in an undefined state!\n");
+    return false;
+  }
 
   return true;
 }
 
-// FIXME: braucht globales struct, in dem parent, lhs und rhs stehen.
 // FIXME: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
 bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);
 
+  if (!(global_flags & LEADER)) {
+    fprintf(stderr, "Only leaders should be able to swap, ignoring.\n");
+    return false;
+  }
+
   // FIXME: hier müssen irgendwo noch alle nonleader gemutet werden. Macht das
   // der Antragssteller, nachdem er auf Frequenz wechselt oder macht man das
   // selbst?
-  // TODO:
-  // 1) prüfen ob Nachricht von Leader
-  // 2) prüfen ob Frequenz lhs oder rhs ist (DO SWAP sollte nur an im Baum höher
-  // liegende Frequenzen gesendet werden)
-  // 2.1) wenn nein => WONT SWAP als Antwort
+
+  // NOTE: sollte hier ein WONT SWAP zurückgeschickt oder einfach ignoriert
+  // werden? Im Moment ignorieren wir einfach, weil es erstmal einfacher ist :D
+  if (global_flags & TREE_SWAPPING) {
+    fprintf(stderr, "Received DO SWAP while in the middle of another tree "
+                    "operation, ignoring.\n");
+    return false;
+  }
+
+  if (msg->header.sender_id.layer != leader) {
+    fprintf(stderr, "Received DO SWAP from non-leader, ignoring.\n");
+    return false;
+  }
+
+  frequency_t source = msg->payload.swap.source;
+  if (source != global_tree_state.parent && source != global_tree_state.lhs &&
+      source != global_tree_state.rhs) {
+    fprintf(stderr, "Received DO SWAP from a frequency that is not part of my "
+                    "local tree, ignoring.\n");
+    return false;
+  }
+
+  // NOTE: eigener Activity Score muss immer noch irgendwo berechnet werden.
+  uint8_t score = msg->payload.swap.activity_score;
+  if ((score <= global_tree_state.activity_score &&
+       source != global_tree_state.parent) ||
+      (score >= global_tree_state.activity_score &&
+       source == global_tree_state.parent)) {
+    fprintf(stderr,
+            "Tree Order is still preserved, I see no reason to swap!\n");
+    // NOTE: sollte hier WONT SWAP zurückgesendet werden, oder langt das
+    // Nicht-Senden einer Antwort auch?
+    return true;
+  }
+
+  global_flags |= TREE_SWAPPING;
+
+  // NOTE: so bekommen nur die umliegenden Knoten die Änderungen mit, aber nicht
+  // die zwei tauschenden Knoten. Irgendwie muss dafür eine Lösung gefunden
+  // werden.
+  message_t update_msg;
+  update_msg.header.action = DO;
+  update_msg.header.type = UPDATE;
+  update_msg.header.receiver_id.layer = leader;
+  update_msg.header.sender_id.layer = leader;
+  update_msg.payload.update.old = global_tree_state.own;
+  update_msg.payload.update.updated = source;
+
+  // NOTE: was soll passieren, wenn Leader auf anderer Frequenz auch aktuell
+  // einen SWAP macht? Es braucht auf jeden Fall ein System, um die Änderungen
+  // nacheinander ohne Konflikte auszuführen.
+  change_frequency(global_tree_state.parent);
+
   // 3) Activity Score für eigene aktuelle Frequenz berechnen (kann
   // vielleicht auch fortlaufend in anderen Handlern gemacht werden?)
   // 4) eigenen Activity Score mit gesendetem Activity Score vergleichen

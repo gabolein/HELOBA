@@ -34,10 +34,8 @@ typedef struct {
 #define OPT_RHS_SET (1 << 5)
 
 typedef struct {
-  uint8_t optmask;
-  frequency_t parent;
-  frequency_t lhs;
-  frequency_t rhs;
+  frequency_t old;
+  frequency_t updated;
 } update_payload_t;
 
 typedef struct {
