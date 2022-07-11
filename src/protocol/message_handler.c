@@ -402,7 +402,7 @@ bool handle_will_transfer(message_t *msg) {
   return true;
 }
 
-inline bool set_sender_id_layer(routing_id_t *sender_id) {
+bool set_sender_id_layer(routing_id_t *sender_id) {
   if (flags & LEADER) {
     sender_id->layer = leader;
   } else {
@@ -412,8 +412,8 @@ inline bool set_sender_id_layer(routing_id_t *sender_id) {
   return true;
 }
 
-inline message_header_t will_find_assemble_header(routing_id_t sender_id,
-                                                  routing_id_t receiver_id) {
+message_header_t will_find_assemble_header(routing_id_t sender_id,
+                                           routing_id_t receiver_id) {
   return (message_header_t){WILL, FIND, sender_id, receiver_id};
 }
 

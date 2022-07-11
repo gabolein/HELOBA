@@ -50,7 +50,7 @@ inline bool message_from_leader(message_t *msg) {
   return msg->header.sender_id.layer == leader;
 }
 
-inline bool message_is_command(message_t *msg) {
+bool message_is_command(message_t *msg) {
   return message_action(msg) == DO || message_action(msg) == DONT;
 }
 
