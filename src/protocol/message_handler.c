@@ -1,4 +1,5 @@
 #include "src/protocol/message_handler.h"
+#include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
@@ -33,9 +34,21 @@ typedef enum {
   REGISTERED = 1 << 5
 } flags_t;
 
+typedef struct {
+  uint8_t previous;
+  uint8_t current;
+} score_state_t;
+
 // FIXME: HashMap mit allen IDs auf der Frequenz sollte auslangen, einfach dann
 // davon die size nehmen
-uint8_t activity_score;
+
+bool freq_eq(frequency_t a, frequency_t b) { return a == b; }
+MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, club)
+MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, club, freq_eq)
+
+club_hashmap_t *members;
+score_state_t scores;
+routing_id_t my_id;
 flags_t flags = {0};
 local_tree_t ts = {0};
 
@@ -199,7 +212,7 @@ void reject_do_swap() {
   answer.header.receiver_id.layer = leader;
   answer.header.sender_id.layer = leader;
   answer.payload.swap.tree = ts;
-  answer.payload.swap.activity_score = activity_score;
+  answer.payload.swap.activity_score = scores.current;
 
   transport_send_message(&answer);
 }
@@ -246,8 +259,8 @@ bool handle_do_swap(message_t *msg) {
 
   // NOTE: eigener Activity Score muss immer noch irgendwo berechnet werden.
   uint8_t score = msg->payload.swap.activity_score;
-  if ((score <= activity_score && source != ts.parent) ||
-      (score >= activity_score && source == ts.parent)) {
+  if ((score <= scores.current && source != ts.parent) ||
+      (score >= scores.current && source == ts.parent)) {
     fprintf(stderr,
             "Tree Order is still preserved, I see no reason to swap!\n");
     reject_do_swap();
@@ -368,6 +381,23 @@ bool handle_do_transfer(message_t *msg) {
 bool handle_will_transfer(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == TRANSFER);
+
+  // TODO: my_id muss irgendwo noch initialisiert werden
+  if (my_id.layer == leader) {
+    frequency_t f = msg->payload.transfer.to;
+
+    if (tree_node_equals(&ts, OPT_SELF, f)) {
+      if (!club_hashmap_exists(members, f)) {
+        return false;
+      }
+
+      club_hashmap_delete(members, f);
+    } else {
+      club_hashmap_insert(members, f, true);
+    }
+  }
+
+  // TODO: Cache Handling
 
   return true;
 }
