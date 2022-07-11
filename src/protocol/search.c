@@ -37,7 +37,23 @@ bool search_concluded() {
       global_search_state.search_frequencies);
   global_search_state.search_frequencies =
       search_frequencies_priority_queue_create();
+  // TODO register in frequency
   return true;
+}
+
+void expand_search_queue(local_tree_t tree){
+  if(tree.opt & OPT_PARENT){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies,
+        tree.parent);
+  }
+
+  if(tree.opt & OPT_LHS){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies, tree.lhs);
+  }
+
+  if(tree.opt & OPT_RHS){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies, tree.rhs);
+  }
 }
 
 routing_id_t get_to_find() {
@@ -71,6 +87,7 @@ bool wait_will_do() {
   while (!hit_timeout(DO_FIND_SEND_TIMEOUT, &start_time)) {
     if (transport_receive_message(&msg) && process_message(&msg)) {
       // NOTE assuming we enter the will find handler here
+      // TODO set state variables such that process message can filter wrong message type
       handle_message(&msg);
       return true;
     }

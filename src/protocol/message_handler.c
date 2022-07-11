@@ -407,8 +407,7 @@ bool handle_do_find(message_t *msg) {
 
   // leader informs where node might be found
   if (!searching_for_self) {
-    reply_msg.payload.find.frequencies.lhs = ts.lhs;
-    reply_msg.payload.find.frequencies.rhs = ts.rhs;
+    reply_msg.payload.find.frequencies = ts;
   }
 
   message_priority_queue_push(to_send, reply_msg);
@@ -425,12 +424,10 @@ bool handle_will_find(message_t *msg) {
 
   if (routing_id_MAC_equal(sender, get_to_find())) {
     search_concluded();
-    // TODO register in frequency
     return true;
   } else {
     assert(sender.layer == leader);
-    search_frequencies_queue_add(msg->payload.find.frequencies.lhs);
-    search_frequencies_queue_add(msg->payload.find.frequencies.rhs);
+    expand_search_queue(msg->payload.find.frequencies);
   }
 
   return true;
