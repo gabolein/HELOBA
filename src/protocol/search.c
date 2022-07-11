@@ -70,7 +70,7 @@ bool send_do_find() {
                            .payload.find.to_find =
                                global_search_state.to_find_id};
 
-  return transport_send_message;
+  return transport_send_message(&do_find_msg);
 }
 
 bool wait_will_do() {
@@ -93,10 +93,8 @@ bool search_for(routing_id_t to_find) {
   global_search_state.searching = true;
   global_search_state.to_find_id = to_find;
   // TODO unregister from frequency
-
-  while (global_search_state.searching) {
-
-    // TODO what if node is not anywhere? would be stuck in frequency
+  bool found;
+  do {
     if (search_frequencies_priority_queue_size(
             global_search_state.search_frequencies)) {
       frequency_t next_frequency = search_frequencies_priority_queue_pop(
@@ -105,14 +103,25 @@ bool search_for(routing_id_t to_find) {
     }
 
     if (!send_do_find()) {
-      return false;
+      goto failure;
     }
 
     if (!wait_will_do()) {
-      search_concluded();
-      return false;
+      goto failure;
     }
-  }
 
-  return true;
+  } while ((found = global_search_state.searching) 
+      && search_frequencies_priority_queue_size(
+        global_search_state.search_frequencies));
+  
+
+  if(found){
+    return true;
+  } else {
+    goto failure;
+  }
+  
+failure:
+  search_concluded();
+  return false;
 }
