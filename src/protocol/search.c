@@ -70,14 +70,7 @@ bool send_do_find() {
                            .payload.find.to_find =
                                global_search_state.to_find_id};
 
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while (!hit_timeout(DO_FIND_SEND_TIMEOUT, &start_time)) {
-    if (transport_send_message(&do_find_msg)) {
-      return true;
-    }
-  }
-  return false;
+  return transport_send_message;
 }
 
 bool wait_will_do() {

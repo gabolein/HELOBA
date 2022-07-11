@@ -410,7 +410,7 @@ bool handle_do_find(message_t *msg) {
     reply_msg.payload.find.frequencies = ts;
   }
 
-  message_priority_queue_push(to_send, reply_msg);
+  transport_send_message(&reply_msg);
 
   return true;
 }
