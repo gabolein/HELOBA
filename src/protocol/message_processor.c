@@ -61,7 +61,15 @@ bool message_is_valid(message_t *msg) {
   }
 
   if (message_allowlist[message_action(msg)][message_type(msg)] == false) {
-    fprintf(stderr, "[WARNING] Message has invalid ACTION/TYPE sequence.\n");
+    fprintf(stderr, "[WARNING] Message has invalid ACTION/TYPE combination.\n");
+    return false;
+  }
+
+  // FIXME: Nachrichten vom Leader würden im Moment als nicht valid angesehen
+  // werden. Es sollte am besten so gemacht werden, dass leader ein weiteres Bit
+  // ist, welches man separat von specific setzen kann.
+  if (msg->header.sender_id.layer != specific) {
+    fprintf(stderr, "[WARNING] Message sender field is not set.\n");
     return false;
   }
 
