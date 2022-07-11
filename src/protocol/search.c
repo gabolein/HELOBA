@@ -37,7 +37,23 @@ bool search_concluded() {
       global_search_state.search_frequencies);
   global_search_state.search_frequencies =
       search_frequencies_priority_queue_create();
+  // TODO register in frequency
   return true;
+}
+
+void expand_search_queue(local_tree_t tree){
+  if(tree.opt & OPT_PARENT){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies,
+        tree.parent);
+  }
+
+  if(tree.opt & OPT_LHS){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies, tree.lhs);
+  }
+
+  if(tree.opt & OPT_RHS){
+    search_frequencies_priority_queue_push(global_search_state.search_frequencies, tree.rhs);
+  }
 }
 
 routing_id_t get_to_find() {
@@ -54,14 +70,7 @@ bool send_do_find() {
                            .payload.find.to_find =
                                global_search_state.to_find_id};
 
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while (!hit_timeout(DO_FIND_SEND_TIMEOUT, &start_time)) {
-    if (transport_send_message(&do_find_msg)) {
-      return true;
-    }
-  }
-  return false;
+  return transport_send_message(&do_find_msg);
 }
 
 bool wait_will_do() {
@@ -71,6 +80,7 @@ bool wait_will_do() {
   while (!hit_timeout(DO_FIND_SEND_TIMEOUT, &start_time)) {
     if (transport_receive_message(&msg) && process_message(&msg)) {
       // NOTE assuming we enter the will find handler here
+      // TODO set state variables such that process message can filter wrong message type
       handle_message(&msg);
       return true;
     }
@@ -83,10 +93,8 @@ bool search_for(routing_id_t to_find) {
   global_search_state.searching = true;
   global_search_state.to_find_id = to_find;
   // TODO unregister from frequency
-
-  while (global_search_state.searching) {
-
-    // TODO what if node is not anywhere? would be stuck in frequency
+  bool found;
+  do {
     if (search_frequencies_priority_queue_size(
             global_search_state.search_frequencies)) {
       frequency_t next_frequency = search_frequencies_priority_queue_pop(
@@ -95,14 +103,25 @@ bool search_for(routing_id_t to_find) {
     }
 
     if (!send_do_find()) {
-      return false;
+      goto failure;
     }
 
     if (!wait_will_do()) {
-      search_concluded();
-      return false;
+      goto failure;
     }
-  }
 
-  return true;
+  } while ((found = global_search_state.searching) 
+      && search_frequencies_priority_queue_size(
+        global_search_state.search_frequencies));
+  
+
+  if(found){
+    return true;
+  } else {
+    goto failure;
+  }
+  
+failure:
+  search_concluded();
+  return false;
 }

@@ -21,6 +21,7 @@
 #define MAX_PACKET_LENGTH 0xFF
 #define FIRST_BYTE_WAIT_TIME 2
 #define NEXT_BYTE_WAIT_TIME 1
+#define SEND_PACKET_TIMEOUT 300 // 8 (?) backoffs + buffer
 
 uint8_t rx_fifo_length() {
   int recv_bytes;
@@ -123,29 +124,37 @@ cleanup:
 }
 
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
-  if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
-    printf("Backoff timeout not expired yet.\n");
-    return false;
+
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+
+  while (!hit_timeout(SEND_PACKET_TIMEOUT, &start_time)) {
+    if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
+      printf("Backoff timeout not expired yet.\n");
+      continue;
+    }
+
+    if (!collision_detection()) {
+      printf("First scan unsuccessful. Backing off\n");
+      continue;
+    }
+
+    for (size_t i = 0; i < length; i++) {
+      tx_fifo_push(buffer[i]);
+    }
+    cc1200_cmd(STX);
+
+    if (!collision_detection()) {
+      printf("Second scan unsuccessful. Backing off\n");
+      continue;
+    }
+
+    reset_backoff_attempts();
+    printf("Trasmission successful.\n");
+    return true;
   }
 
-  if (!collision_detection()) {
-    printf("First scan unsuccessful. Backing off\n");
-    return false;
-  }
-
-  for (size_t i = 0; i < length; i++) {
-    tx_fifo_push(buffer[i]);
-  }
-  cc1200_cmd(STX);
-
-  if (!collision_detection()) {
-    printf("Second scan unsuccessful. Backing off\n");
-    return false;
-  }
-
-  reset_backoff_attempts();
-  printf("Trasmission successful.\n");
-  return true;
+  return false;
 }
 
 bool radio_transport_initialize() {

@@ -128,6 +128,7 @@ frequency_t unpack_frequency(uint8_t *buffer, unsigned length,
                              unsigned *decoded) {
   assert(length - *decoded >= FREQUENCY_ENCODED_SIZE);
 
+  // NOTE undefined behavior
   uint16_t d = buffer[(*decoded)++] << 8 | buffer[(*decoded)++];
   return (frequency_t)d;
 }
