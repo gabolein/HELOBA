@@ -128,8 +128,8 @@ frequency_t unpack_frequency(uint8_t *buffer, unsigned length,
                              unsigned *decoded) {
   assert(length - *decoded >= FREQUENCY_ENCODED_SIZE);
 
-  // NOTE undefined behavior
-  uint16_t d = buffer[(*decoded)++] << 8 | buffer[(*decoded)++];
+  uint16_t d = buffer[*decoded] << 8 | buffer[*decoded + 1];
+  *decoded += 2;
   return (frequency_t)d;
 }
 
@@ -141,11 +141,13 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
     assert(length - *decoded >= sizeof(uint8_t) + MAC_SIZE);
 
   routing_id_t d;
-  d.layer = buffer[*decoded++];
+  d.layer = buffer[*decoded];
+  (*decoded)++;
 
   if (d.layer == specific) {
     for (size_t i = 0; i < MAC_SIZE; i++) {
-      d.optional_MAC[i] = buffer[*decoded++];
+      d.optional_MAC[i] = buffer[*decoded];
+      (*decoded)++;
     }
   }
 
@@ -174,7 +176,7 @@ local_tree_t unpack_local_tree(uint8_t *buffer, unsigned length,
   assert(length - *decoded >= sizeof(uint8_t));
 
   local_tree_t tree;
-  tree.opt = buffer[0];
+  tree.opt = buffer[*decoded];
   (*decoded)++;
 
   if (tree.opt & OPT_SELF) {
@@ -218,7 +220,8 @@ swap_payload_t unpack_swap_payload(uint8_t *buffer, unsigned length,
   d.tree = unpack_local_tree(buffer, length, decoded);
 
   assert(length - *decoded >= sizeof(uint8_t));
-  d.activity_score = buffer[*decoded++];
+  d.activity_score = buffer[*decoded];
+  (*decoded)++;
 
   return d;
 }
