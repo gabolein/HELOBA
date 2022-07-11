@@ -2,20 +2,20 @@ BUILD_DIR = build
 
 # FIXME: bessere Lösung dafür finden
 ifeq ($(MAKECMDGOALS),test)
-SRC = $(shell find test lib -name '*.c')
+SRC = $(shell find test src lib -name '*.c')
 else
 SRC = $(shell find src lib -name '*.c')
 endif
 
 ifeq ($(MAKECMDGOALS),test)
-CFLAGS = -Wall -Wextra -ggdb -O0
+CFLAGS = -Wall -Wextra -ggdb -O0 -DVIRTUAL
 else
 CFLAGS = -std=gnu11 -Wall -Wextra -s -O2 -DVIRTUAL 
 endif
 CPPFLAGS = -Iinclude
 
 ifneq (,$(findstring -DVIRTUAL,$(CFLAGS)))
-SRC := $(filter-out src/beaglebone/%, $(SRC))
+SRC := $(filter-out src/beaglebone/% src/main.c, $(SRC))
 else
 SRC := $(filter-out src/virtual_transport.c, $(SRC))
 endif
@@ -50,7 +50,6 @@ run: build
 	./$(BUILD_DIR)/program
 
 build: $(BUILD_DIR)/program
-	@echo $(SRC)
 
 clean:
 	rm -rf $(BUILD_DIR)
