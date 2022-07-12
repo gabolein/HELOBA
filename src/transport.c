@@ -2,6 +2,8 @@
 #include "lib/datastructures/u8_vector.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
+#include "src/protocol/message_processor.h"
+#include "src/state.h"
 #include <stdint.h>
 
 #if defined(VIRTUAL)
@@ -61,7 +63,8 @@ bool transport_receive_message(message_t *msg) {
   }
 
   *msg = unpack_message(recv_buffer, length);
-  return true;
+
+  return message_is_valid(msg) && message_addressed_to(msg, gs.id);
 }
 
 bool transport_get_id(uint8_t *out) {

@@ -377,9 +377,9 @@ bool handle_will_transfer(message_t *msg) {
 
 bool set_sender_id_layer(routing_id_t *sender_id) {
   if (gs.flags & LEADER) {
-    sender_id->layer = leader;
+    sender_id->layer |= leader;
   } else {
-    sender_id->layer = nonleader;
+    sender_id->layer &= ~leader;
   }
 
   return true;

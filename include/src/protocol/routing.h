@@ -9,10 +9,9 @@
 #define ROUTING_ID_ENCODED_MAX_SIZE 6
 
 typedef enum {
-  everyone,
-  leader,
-  nonleader,
-  specific,
+  everyone = 1 << 0,
+  leader = 1 << 1,
+  specific = 1 << 2,
 } routing_layer_t;
 
 typedef struct {
