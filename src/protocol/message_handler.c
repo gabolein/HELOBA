@@ -56,7 +56,7 @@ bool handle_do_mute(message_t *msg) {
     return false;
   }
 
-  flags |= MUTED;
+  gs.flags |= MUTED;
 
   return true;
 }
@@ -71,7 +71,7 @@ bool handle_dont_mute(message_t *msg) {
     return false;
   }
 
-  flags &= ~MUTED;
+  gs.flags &= ~MUTED;
 
   return true;
 }
@@ -80,7 +80,7 @@ bool handle_do_update(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == UPDATE);
 
-  update_single_tree_node(&ts, msg->payload.update.old,
+  update_single_tree_node(&gs.tree, msg->payload.update.old,
                           msg->payload.update.updated);
 
   return true;
@@ -112,36 +112,36 @@ void update_single_tree_node(local_tree_t *t, frequency_t old,
   }
 
   if (tree_node_equals(t, OPT_PARENT, old)) {
-    ts.parent = new;
+    t->parent = new;
   }
 
   if (tree_node_equals(t, OPT_LHS, old)) {
-    ts.lhs = new;
+    t->lhs = new;
   }
 
   if (tree_node_equals(t, OPT_RHS, old)) {
-    ts.rhs = new;
+    t->rhs = new;
   }
 }
 
 void swap_tree_state(local_tree_t *t) {
-  assert(ts.opt & OPT_SELF);
+  assert(gs.tree.opt & OPT_SELF);
   assert(t->opt & OPT_SELF);
 
-  ts.opt = t->opt;
+  gs.tree.opt = t->opt;
 
-  if (tree_node_equals(t, OPT_PARENT, ts.self)) {
-    update_single_tree_node(&ts, ts.parent, t->self);
-    update_single_tree_node(&ts, ts.lhs, t->lhs);
-    update_single_tree_node(&ts, ts.rhs, t->rhs);
-  } else if (tree_node_equals(t, OPT_LHS, ts.self)) {
-    update_single_tree_node(&ts, ts.parent, t->parent);
-    update_single_tree_node(&ts, ts.lhs, t->self);
-    update_single_tree_node(&ts, ts.rhs, t->rhs);
-  } else if (tree_node_equals(t, OPT_RHS, ts.self)) {
-    update_single_tree_node(&ts, ts.parent, t->parent);
-    update_single_tree_node(&ts, ts.lhs, t->lhs);
-    update_single_tree_node(&ts, ts.rhs, t->self);
+  if (tree_node_equals(t, OPT_PARENT, gs.tree.self)) {
+    update_single_tree_node(&gs.tree, gs.tree.parent, t->self);
+    update_single_tree_node(&gs.tree, gs.tree.lhs, t->lhs);
+    update_single_tree_node(&gs.tree, gs.tree.rhs, t->rhs);
+  } else if (tree_node_equals(t, OPT_LHS, gs.tree.self)) {
+    update_single_tree_node(&gs.tree, gs.tree.parent, t->parent);
+    update_single_tree_node(&gs.tree, gs.tree.lhs, t->self);
+    update_single_tree_node(&gs.tree, gs.tree.rhs, t->rhs);
+  } else if (tree_node_equals(t, OPT_RHS, gs.tree.self)) {
+    update_single_tree_node(&gs.tree, gs.tree.parent, t->parent);
+    update_single_tree_node(&gs.tree, gs.tree.lhs, t->lhs);
+    update_single_tree_node(&gs.tree, gs.tree.rhs, t->self);
   }
 }
 
@@ -154,26 +154,26 @@ void update_local_frequencies(frequency_t old, frequency_t new) {
   update_msg.payload.update.old = old;
   update_msg.payload.update.updated = new;
 
-  if (new != ts.parent) {
+  if (new != gs.tree.parent) {
     // NOTE: was soll passieren, wenn Leader auf anderer Frequenz auch aktuell
     // einen SWAP macht? Es braucht auf jeden Fall ein System, um die Änderungen
     // nacheinander ohne Konflikte auszuführen. Wir machen es uns jetzt erstmal
     // einfach, indem wir sagen, dass diese Fälle nicht passieren.
-    transport_change_frequency(ts.parent);
+    transport_change_frequency(gs.tree.parent);
     transport_send_message(&update_msg);
   }
 
-  if (new != ts.lhs) {
-    transport_change_frequency(ts.parent);
+  if (new != gs.tree.lhs) {
+    transport_change_frequency(gs.tree.parent);
     transport_send_message(&update_msg);
   }
 
-  if (new != ts.rhs) {
-    transport_change_frequency(ts.parent);
+  if (new != gs.tree.rhs) {
+    transport_change_frequency(gs.tree.parent);
     transport_send_message(&update_msg);
   }
 
-  transport_change_frequency(ts.self);
+  transport_change_frequency(gs.tree.self);
 }
 
 void reject_do_swap() {
@@ -184,8 +184,8 @@ void reject_do_swap() {
   // kann es sonst sein, dass wir unsere eigene Nachricht bekommen.
   answer.header.receiver_id.layer = leader;
   answer.header.sender_id.layer = leader;
-  answer.payload.swap.tree = ts;
-  answer.payload.swap.activity_score = scores.current;
+  answer.payload.swap.tree = gs.tree;
+  answer.payload.swap.activity_score = gs.scores.current;
 
   transport_send_message(&answer);
 }
@@ -196,7 +196,7 @@ bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);
 
-  if (!(flags & LEADER)) {
+  if (!(gs.flags & LEADER)) {
     fprintf(stderr, "Only leaders should be able to swap, ignoring.\n");
     return false;
   }
@@ -204,7 +204,7 @@ bool handle_do_swap(message_t *msg) {
   // FIXME: hier müssen irgendwo noch alle nonleader gemutet werden. Macht das
   // der Antragssteller, nachdem er auf Frequenz wechselt oder macht man das
   // selbst?
-  if (flags & TREE_SWAPPING) {
+  if (gs.flags & TREE_SWAPPING) {
     fprintf(stderr, "Received DO SWAP while in the middle of another tree "
                     "operation, ignoring.\n");
     reject_do_swap();
@@ -224,7 +224,7 @@ bool handle_do_swap(message_t *msg) {
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != ts.parent && source != ts.lhs && source != ts.rhs) {
+  if (source != gs.tree.parent && source != gs.tree.lhs && source != gs.tree.rhs) {
     fprintf(stderr, "Received DO SWAP from a frequency that is not part of my "
                     "local tree, ignoring.\n");
     return false;
@@ -232,8 +232,8 @@ bool handle_do_swap(message_t *msg) {
 
   // NOTE: eigener Activity Score muss immer noch irgendwo berechnet werden.
   uint8_t score = msg->payload.swap.activity_score;
-  if ((score <= scores.current && source != ts.parent) ||
-      (score >= scores.current && source == ts.parent)) {
+  if ((score <= gs.scores.current && source != gs.tree.parent) ||
+      (score >= gs.scores.current && source == gs.tree.parent)) {
     fprintf(stderr,
             "Tree Order is still preserved, I see no reason to swap!\n");
     reject_do_swap();
@@ -241,7 +241,7 @@ bool handle_do_swap(message_t *msg) {
   }
 
   // FIXME: Diese Funktionen sollten auf jeden Fall klarer benannt werden
-  update_local_frequencies(ts.self, source);
+  update_local_frequencies(gs.tree.self, source);
   swap_tree_state(&msg->payload.swap.tree);
   return true;
 }
@@ -250,7 +250,7 @@ bool handle_will_swap(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == SWAP);
 
-  if (!(flags & TREE_SWAPPING)) {
+  if (!(gs.flags & TREE_SWAPPING)) {
     fprintf(
         stderr,
         "Received SWAP confirmation, but didn't initiate myself, ignoring.\n");
@@ -263,17 +263,17 @@ bool handle_will_swap(message_t *msg) {
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != ts.parent && source != ts.lhs && source != ts.rhs) {
+  if (source != gs.tree.parent && source != gs.tree.lhs && source != gs.tree.rhs) {
     fprintf(stderr,
             "Received WILL SWAP from a frequency that is not part of my "
             "local tree, ignoring.\n");
     return false;
   }
 
-  update_local_frequencies(ts.self, source);
+  update_local_frequencies(gs.tree.self, source);
   swap_tree_state(&msg->payload.swap.tree);
 
-  flags &= ~TREE_SWAPPING;
+  gs.flags &= ~TREE_SWAPPING;
   return true;
 }
 
@@ -281,7 +281,7 @@ bool handle_wont_swap(message_t *msg) {
   assert(message_action(msg) == WONT);
   assert(message_type(msg) == SWAP);
 
-  flags &= ~TREE_SWAPPING;
+  gs.flags &= ~TREE_SWAPPING;
   return true;
 }
 
@@ -356,17 +356,17 @@ bool handle_will_transfer(message_t *msg) {
   assert(message_type(msg) == TRANSFER);
 
   // TODO: my_id muss irgendwo noch initialisiert werden
-  if (my_id.layer == leader) {
+  if (gs.id.layer == leader) {
     frequency_t f = msg->payload.transfer.to;
 
-    if (tree_node_equals(&ts, OPT_SELF, f)) {
-      if (!club_hashmap_exists(members, f)) {
+    if (tree_node_equals(&gs.tree, OPT_SELF, f)) {
+      if (!club_hashmap_exists(gs.members, f)) {
         return false;
       }
 
-      club_hashmap_delete(members, f);
+      club_hashmap_delete(gs.members, f);
     } else {
-      club_hashmap_insert(members, f, true);
+      club_hashmap_insert(gs.members, f, true);
     }
   }
 
@@ -376,7 +376,7 @@ bool handle_will_transfer(message_t *msg) {
 }
 
 bool set_sender_id_layer(routing_id_t *sender_id) {
-  if (flags & LEADER) {
+  if (gs.flags & LEADER) {
     sender_id->layer = leader;
   } else {
     sender_id->layer = nonleader;
@@ -410,7 +410,7 @@ bool handle_do_find(message_t *msg) {
 
   // leader informs where node might be found
   if (!searching_for_self) {
-    reply_msg.payload.find.frequencies = ts;
+    reply_msg.payload.find.frequencies = gs.tree;
   }
 
   transport_send_message(&reply_msg);
@@ -421,7 +421,11 @@ bool handle_do_find(message_t *msg) {
 bool handle_will_find(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == FIND);
-  assert(flags & SEARCHING);
+  
+  if (!(gs.flags & SEARCHING)) {
+    fprintf(stderr, "Got WILL FIND, but didn't start search.\n");
+    return false;
+  }
 
   routing_id_t sender = msg->header.sender_id;
 
