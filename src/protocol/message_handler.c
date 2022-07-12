@@ -1,9 +1,9 @@
 #include "src/protocol/message_handler.h"
-#include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
 #include "src/transport.h"
+#include "src/state.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,33 +24,6 @@ bool handle_do_find(message_t *msg);
 bool handle_will_find(message_t *msg);
 
 void update_single_tree_node(local_tree_t *t, frequency_t old, frequency_t new);
-
-typedef enum {
-  LEADER = 1 << 0,
-  TREE_SWAPPING = 1 << 1,
-  MUTED = 1 << 2,
-  TRANSFERING = 1 << 3,
-  SEARCHING = 1 << 4,
-  REGISTERED = 1 << 5
-} flags_t;
-
-typedef struct {
-  uint8_t previous;
-  uint8_t current;
-} score_state_t;
-
-// FIXME: HashMap mit allen IDs auf der Frequenz sollte auslangen, einfach dann
-// davon die size nehmen
-
-bool freq_eq(frequency_t a, frequency_t b) { return a == b; }
-MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, club)
-MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, club, freq_eq)
-
-club_hashmap_t *members;
-score_state_t scores;
-routing_id_t my_id;
-flags_t flags = {0};
-local_tree_t ts = {0};
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = handle_do_mute,
