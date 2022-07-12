@@ -3,6 +3,7 @@
 
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
+#include "src/protocol/search.h"
 
 MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, club)
 
@@ -26,6 +27,7 @@ typedef struct {
   routing_id_t id;
   flags_t flags;
   local_tree_t tree;
+  search_state_t search;
 } state_t;
 
 state_t gs;

@@ -11,7 +11,6 @@ typedef uint16_t frequency_t;
 MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(frequency_t, search_frequencies)
 
 typedef struct {
-  bool searching;
   routing_id_t to_find_id;
   search_frequencies_priority_queue_t *search_frequencies;
 } search_state_t;

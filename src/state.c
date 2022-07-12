@@ -11,6 +11,7 @@ void initialize_global_state(){
   gs.members = club_hashmap_create();
   transport_get_id(gs.id.optional_MAC);
   gs.tree.opt = 0;
+  search_state_initialize();
 }
 
 
