@@ -13,7 +13,7 @@ typedef enum { DO, DONT, WILL, WONT } message_action_t;
 #define MESSAGE_TYPE_COUNT 6
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
-typedef enum { FIND, UPDATE, SWAP, TRANSFER, MUTE } message_type_t;
+typedef enum { FIND, SWAP, TRANSFER, MUTE } message_type_t;
 
 #define FREQUENCY_ENCODED_SIZE sizeof(uint16_t)
 typedef uint16_t frequency_t;
@@ -25,23 +25,11 @@ typedef struct {
   routing_id_t receiver_id;
 } message_header_t;
 
-#define OPT_SELF (1 << 7)
-#define OPT_PARENT (1 << 6)
-#define OPT_LHS (1 << 5)
-#define OPT_RHS (1 << 4)
-
 typedef struct {
-  uint8_t opt;
-  frequency_t self;
-  frequency_t parent;
-  frequency_t lhs;
-  frequency_t rhs;
-} local_tree_t;
-
-typedef struct {
+  // FIXME: unions sollten zu einem Minimum gehalten werden
   union {
     routing_id_t to_find;
-    local_tree_t frequencies;
+    frequency_t cached;
   };
 } find_payload_t;
 
@@ -51,8 +39,8 @@ typedef struct {
 } update_payload_t;
 
 typedef struct {
-  local_tree_t tree;
-  uint8_t activity_score;
+  frequency_t with;
+  uint8_t score;
 } swap_payload_t;
 
 typedef struct {

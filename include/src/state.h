@@ -26,7 +26,7 @@ typedef struct {
   score_state_t scores;
   routing_id_t id;
   flags_t flags;
-  local_tree_t tree;
+  frequency_t frequency;
   search_state_t search;
 } state_t;
 

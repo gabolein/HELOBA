@@ -7,7 +7,6 @@
 static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = true,
     [DONT][MUTE] = true,
-    [DO][UPDATE] = true,
     [DO][SWAP] = true,
     [WILL][SWAP] = true,
     [WONT][SWAP] = true,

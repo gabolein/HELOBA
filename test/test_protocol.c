@@ -48,26 +48,6 @@ bool id_equal(routing_id_t id1, routing_id_t id2) {
          memcmp(id1.optional_MAC, id2.optional_MAC, MAC_SIZE) == 0;
 }
 
-bool local_tree_equal(local_tree_t t1, local_tree_t t2) {
-  if (t1.opt != t2.opt) {
-    return false;
-  }
-
-  if ((t1.opt & OPT_SELF) && t1.self != t2.self)
-    return false;
-
-  if ((t1.opt & OPT_PARENT) && t1.parent != t2.parent)
-    return false;
-
-  if ((t1.opt & OPT_LHS) && t1.lhs != t2.lhs)
-    return false;
-
-  if ((t1.opt & OPT_RHS) && t1.rhs != t2.rhs)
-    return false;
-
-  return true;
-}
-
 bool message_equal(message_t *m1, message_t *m2) {
   if (m1->header.action != m2->header.action ||
       m1->header.type != m2->header.type ||
@@ -79,12 +59,9 @@ bool message_equal(message_t *m1, message_t *m2) {
   switch (m1->header.type) {
   case FIND:
     return id_equal(m1->payload.find.to_find, m2->payload.find.to_find);
-  case UPDATE:
-    return m1->payload.update.old == m2->payload.update.old &&
-           m1->payload.update.updated == m2->payload.update.updated;
   case SWAP:
-    return m1->payload.swap.activity_score == m2->payload.swap.activity_score &&
-           local_tree_equal(m1->payload.swap.tree, m2->payload.swap.tree);
+    return m1->payload.swap.score == m2->payload.swap.score &&
+           m1->payload.swap.with == m2->payload.swap.with;
   case TRANSFER:
     return m1->payload.transfer.to == m2->payload.transfer.to;
   default:
@@ -105,31 +82,11 @@ Test(protocol, find_message) {
   cr_assert(message_equal(&msg, &unpacked));
 }
 
-Test(protocol, update_message) {
-  message_t msg = create_basic_test_message(DO, UPDATE);
-  msg.payload.update = (update_payload_t){
-      .old = 1337,
-      .updated = 9001,
-  };
-
-  u8_vector_t *v = u8_vector_create();
-  pack_message(v, &msg);
-  message_t unpacked = unpack_message(v->data, u8_vector_size(v));
-
-  cr_assert(message_equal(&msg, &unpacked));
-}
-
 Test(protocol, swap_message) {
   message_t msg = create_basic_test_message(WILL, SWAP);
   msg.payload.swap = (swap_payload_t){
-      .activity_score = 13,
-      .tree =
-          {
-              .opt = OPT_SELF | OPT_PARENT | OPT_LHS,
-              .self = 345,
-              .parent = 177,
-              .lhs = 45,
-          },
+      .score = 13,
+      .with = 865,
   };
 
   u8_vector_t *v = u8_vector_create();
