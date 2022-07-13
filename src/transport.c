@@ -2,7 +2,6 @@
 #include "lib/datastructures/u8_vector.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
-#include "src/protocol/message_processor.h"
 #include "src/state.h"
 #include <stdint.h>
 

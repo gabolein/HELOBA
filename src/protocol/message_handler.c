@@ -293,10 +293,15 @@ bool handle_will_find(message_t *msg) {
 
   if (routing_id_MAC_equal(sender, get_to_find())) {
     search_concluded();
-    return true;
+    gs.search.found = true;
   } else {
-    assert(sender.layer == leader);
-    // expand_search_queue(msg->payload.find.cached);
+    // FIXME: sollte vielleicht direkt im Paket gesendet werden.
+    search_hint_t hint = {
+        .type = CACHE,
+        .f = msg->payload.find.cached,
+    };
+
+    search_queue_add(hint);
   }
 
   return true;
