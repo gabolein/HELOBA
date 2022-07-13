@@ -1,8 +1,8 @@
-#include "lib/datastructures/generic/generic_priority_queue.h"
 #include "src/protocol/message.h"
+#include "lib/datastructures/generic/generic_priority_queue.h"
 #include "src/protocol/routing.h"
-#include "src/transport.h"
 #include "src/state.h"
+#include "src/transport.h"
 
 static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = true,
@@ -11,12 +11,6 @@ static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][SWAP] = true,
     [WILL][SWAP] = true,
     [WONT][SWAP] = true,
-    [DO][REPORT] = true,
-    //  NOTE: WILL ist hier ziemlich komisch, dieser Typ bedeutet nur die
-    //  Antwort auf ein DO, entweder man findet einen Weg den Typ besser zu
-    //  benennen, oder wir fügen noch ein ACK hinzu, um solche Fälle
-    //  abzudecken.
-    [WILL][REPORT] = true,
     // NOTE: WONT TRANSFER wäre eigentlich auch ganz hilfreich, um TRANSFER
     // zu einer schon zu großen Gruppe zu verhindern. In dem Fall könnte die
     // Gruppe nach dem TRANSFER aber auch einfach in 2 geteilt werden.
@@ -70,9 +64,11 @@ bool message_addressed_to(message_t *msg, routing_id_t id) {
     return true;
   }
 
-  if ((msg->header.receiver_id.layer & specific) && memcmp(msg->header.receiver_id.optional_MAC, id.optional_MAC, MAC_SIZE) == 0) {
+  if ((msg->header.receiver_id.layer & specific) &&
+      memcmp(msg->header.receiver_id.optional_MAC, id.optional_MAC, MAC_SIZE) ==
+          0) {
     return true;
   }
-  
+
   return false;
 }

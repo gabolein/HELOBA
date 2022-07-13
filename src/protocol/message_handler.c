@@ -2,8 +2,8 @@
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
-#include "src/transport.h"
 #include "src/state.h"
+#include "src/transport.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,8 +16,6 @@ bool handle_do_update(message_t *msg);
 bool handle_do_swap(message_t *msg);
 bool handle_will_swap(message_t *msg);
 bool handle_wont_swap(message_t *msg);
-bool handle_do_report(message_t *msg);
-bool handle_will_report(message_t *msg);
 bool handle_do_transfer(message_t *msg);
 bool handle_will_transfer(message_t *msg);
 bool handle_do_find(message_t *msg);
@@ -32,20 +30,10 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][SWAP] = handle_do_swap,
     [WILL][SWAP] = handle_will_swap,
     [WONT][SWAP] = handle_wont_swap,
-    [DO][REPORT] = handle_do_report,
-    [WILL][REPORT] = handle_will_report,
     [DO][TRANSFER] = handle_do_transfer,
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
     [WILL][FIND] = handle_will_find};
-
-int message_cmp(message_t a, message_t b);
-
-MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(message_t, message)
-MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message);
-MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(message_t, message, message_cmp)
-
-static message_priority_queue_t *to_send;
 
 bool handle_do_mute(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -224,7 +212,8 @@ bool handle_do_swap(message_t *msg) {
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != gs.tree.parent && source != gs.tree.lhs && source != gs.tree.rhs) {
+  if (source != gs.tree.parent && source != gs.tree.lhs &&
+      source != gs.tree.rhs) {
     fprintf(stderr, "Received DO SWAP from a frequency that is not part of my "
                     "local tree, ignoring.\n");
     return false;
@@ -263,7 +252,8 @@ bool handle_will_swap(message_t *msg) {
   }
 
   frequency_t source = msg->payload.swap.tree.self;
-  if (source != gs.tree.parent && source != gs.tree.lhs && source != gs.tree.rhs) {
+  if (source != gs.tree.parent && source != gs.tree.lhs &&
+      source != gs.tree.rhs) {
     fprintf(stderr,
             "Received WILL SWAP from a frequency that is not part of my "
             "local tree, ignoring.\n");
@@ -282,48 +272,6 @@ bool handle_wont_swap(message_t *msg) {
   assert(message_type(msg) == SWAP);
 
   gs.flags &= ~TREE_SWAPPING;
-  return true;
-}
-
-// FIXME: braucht globale Report Timestamp
-// wenn es normalerweise alle N Zeitschritte ein DO REPORT gibt, kann man
-// eigentlich davon ausgehen, dass der Leader nach 1.5 * N + random()
-// Zeitschritten inaktiv ist. In dem Fall sollte ein neuer Leader gewählt
-// werden. Sobald bei einem Node dieser Fall eintritt, sollte er die folgenden
-// Schritte ausführen:
-// 1) LEADER Flag setzen
-// 2) DO REPORT an alle verschicken
-// 3) Next Scheduled Report Timestamp auf aktuelle Timestamp + N setzen
-//
-// FIXME: Was ist wenn sich mehrere Nodes gleichzeitig zum Leader ernennen?
-// Um das Problem zu lösen, kann 1.5 * N + random() mit dem DO REPORT Paket
-// verschickt werden. Wer den kleinsten Wert hat, wird zum Leader (wir gehen
-// hier mal davon aus, dass die verschwindend kleine Chance, dass die beiden
-// Werte gleich sind, nicht vorkommt). Das ist auch cool, weil dann variabel
-// gesteuert werden kann, wie oft ein REPORT verschickt wird.
-// Das würde ungefähr so ablaufen:
-// 1) Leader verschickt Report mit N = 10000, setzt Next Interval auf N = 10000
-// 2) Nodes setzen Next Interval auf 1.5 * N + random() = 15000 + random()
-// 3) Leader verschickt danach Report mit N = 5000
-// 4) Nodes setzen Next Interval auf 1.5 * N + random() = 7500 + random()
-// Der Leader kann so das Report Interval selbst festlegen, ohne Gefahr zu
-// laufen, dass er deswegen gestürzt wird ;)
-bool handle_do_report(message_t *msg) {
-  assert(message_action(msg) == DO);
-  assert(message_type(msg) == REPORT);
-
-  // TODO:
-  // 1) Next Interval zurücksetzen (aktuelle Zeit + 1.5 * N +
-  // random())
-  // 2) Mit WILL REPORT antworten
-
-  return true;
-}
-
-bool handle_will_report(message_t *msg) {
-  assert(message_action(msg) == WILL);
-  assert(message_type(msg) == REPORT);
-
   return true;
 }
 
@@ -394,7 +342,7 @@ bool handle_do_find(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == FIND);
 
-  if (!(gs.flags & REGISTERED)){
+  if (!(gs.flags & REGISTERED)) {
     return false;
   }
 
@@ -424,7 +372,7 @@ bool handle_do_find(message_t *msg) {
 bool handle_will_find(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == FIND);
-  
+
   if (!(gs.flags & SEARCHING)) {
     fprintf(stderr, "Got WILL FIND, but didn't start search.\n");
     return false;
