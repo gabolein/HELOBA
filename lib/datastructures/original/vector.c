@@ -54,6 +54,11 @@ unsigned vector_size(vector_t *v) {
   return v->size;
 }
 
+bool vector_empty(vector_t *v) {
+  __v_sanity_check(v);
+  return v->size == 0;
+}
+
 bool vector_full(vector_t *v) {
   __v_sanity_check(v);
   return v->size == v->capacity;

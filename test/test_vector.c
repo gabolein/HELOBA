@@ -86,6 +86,22 @@ Test(vector, swap) {
   int_vector_destroy(v);
 }
 
+Test(vector, empty) {
+  int items[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int_vector_t *v = int_vector_create();
+  cr_assert(int_vector_empty(v));
+
+  for (unsigned i = 0; i < 10; i++) {
+    int_vector_append(v, items[i]);
+    cr_assert(!int_vector_empty(v));
+  }
+
+  int_vector_clear(v);
+  cr_assert(int_vector_empty(v));
+
+  int_vector_destroy(v);
+}
+
 Test(vector, full) {
   int items[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   int_vector_t *v = int_vector_create_with_capacity(10);
@@ -162,9 +178,9 @@ Test(vector, destroy_invalid, .signal = SIGABRT) {
   int_vector_destroy(v);
 }
 
-typedef struct test_struct{
+typedef struct test_struct {
   int a;
-  void* b;
+  void *b;
   char d;
 } test_struct_vector;
 

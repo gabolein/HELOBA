@@ -64,7 +64,13 @@ void priority_queue_set_comparator(priority_queue_t *q, cmp_t cmp) {
 }
 
 unsigned priority_queue_size(priority_queue_t *q) {
+  __pq_sanity_check(q);
   return int_vector_size(q->items);
+}
+
+bool priority_queue_empty(priority_queue_t *q) {
+  __pq_sanity_check(q);
+  return int_vector_size(q->items) == 0;
 }
 
 int priority_queue_peek(priority_queue_t *q) {
@@ -94,6 +100,11 @@ int priority_queue_pop(priority_queue_t *q) {
   int removed = int_vector_remove(q->items, 0);
   __pq_heapify(q, 0);
   return removed;
+}
+
+void priority_queue_clear(priority_queue_t *q) {
+  __pq_sanity_check(q);
+  int_vector_clear(q->items);
 }
 
 void priority_queue_destroy(priority_queue_t *q) {
