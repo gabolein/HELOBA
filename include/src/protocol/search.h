@@ -33,5 +33,6 @@ void search_queue_add(search_hint_t hint);
 void search_state_initialize(void);
 bool search_concluded(void);
 routing_id_t get_to_find(void);
+bool search_for(routing_id_t);
 
 #endif

@@ -29,7 +29,6 @@ int main() {
   struct sigaction sa;
   sa.sa_handler = kill_handler;
   sigaction(SIGINT, &sa, NULL);
-  uint8_t receive_buffer[255];
 
   while (!shutdown_flag) {
     sleep_ms(1000);
