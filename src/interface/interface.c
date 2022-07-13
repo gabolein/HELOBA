@@ -1,117 +1,20 @@
 #define _GNU_SOURCE
+#include "src/interface/command.h"
 #include "src/interface/interface.h"
-#include "src/protocol/message.h"
-#include "src/state.h"
-#include "src/transport.h"
-#include "src/protocol/search.h"
-#include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/time_util.h"
-#include <poll.h>
 #include <assert.h>
 #include <stdio.h>
-#include <stdio_ext.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 #include <limits.h>
+#include <string.h>
 
-#define INTERFACE_COMMAND_COUNT 8
 #define MAX_ARGC 3
 
-typedef enum {
-  SEARCHFOR,
-  SEND,
-  FREQ,
-  LIST,
-  GOTO,
-  SPLIT,
-  ID,
-  UNKNOWN
-} interface_commands;
-
-typedef union {
-  frequency_t freq;
-  routing_id_t to_find;
-} command_param_t;
-
-typedef struct {
-  bool set;
-  interface_commands type;
-  command_param_t command_param;
-} interface_command_t;
-
 interface_command_t command = {.set = false};
-pthread_mutex_t interface_lock;
-
-typedef bool (*interface_handler_f)(command_param_t param);
-
-bool handle_freq(
-    __attribute__ ((unused))command_param_t param){
-  // FIXME where should frequency be set??
-  printf("Current frequency: %u\n", gs.frequency);
-  return true;
-}
-
-bool handle_list(
-    __attribute__ ((unused))command_param_t param){
-  // TODO get all nodes from hashmap and print them
-  // need keys function for hashmap
-  if (!(gs.flags & LEADER)) {
-    printf("Node is not a leader and therefore has no list of nodes.\n");
-    return false;
-  }
-  return true;
-}
-
-bool handle_id(
-    __attribute__ ((unused))command_param_t param){
-  // TODO does this work this way?
-  printf("Node ID: %lx\n", (unsigned long) gs.id.optional_MAC);
-  return true;
-}
-
-bool handle_split(
-    __attribute__ ((unused))command_param_t param){
-  // TODO call function that makes node split
-  if (!(gs.flags & LEADER)) {
-    printf("Node is not a leader and therefore cannot perform split.\n");
-    return false;
-  }
-  return true;
-}
-
-bool handle_searchfor(command_param_t param){
-  return search_for(param.to_find);
-}
-
-bool handle_goto(command_param_t param){
-  // TODO unregister
-  transport_change_frequency(param.freq);
-  // TODO register
-  return true;
-}
-
-bool handle_send(command_param_t param){
-  // TODO
-  printf("Send currently not supported.\n");
-  return false;
-}
-
-static interface_handler_f interface_handlers[INTERFACE_COMMAND_COUNT-1] = {
-  [SEARCHFOR] = handle_searchfor,
-  [SEND] = handle_send,
-  [FREQ] = handle_freq,
-  [LIST] = handle_list,
-  [GOTO] = handle_goto,
-  [SPLIT] = handle_split,
-  [ID] = handle_id};
-
-bool handle_interface_command(interface_commands command, 
-    command_param_t param){
-
-  return interface_handlers[command](param);
-}
+static pthread_mutex_t interface_lock;
 
 bool strtol_check_error(long number){
   if (errno == ERANGE && number == LONG_MIN){
@@ -134,7 +37,8 @@ bool strtol_check_error(long number){
 
 bool parse_goto (char* freq_str, frequency_t* freq) {
   long temp_freq;
-  if (!strtol_check_error(temp_freq = strtol(freq_str, NULL, 10)))
+  if (!strtol_check_error(
+        temp_freq = strtol(freq_str, NULL, 10)))
     return false;
   
   if (temp_freq < 800 || 950 < temp_freq) 
@@ -144,73 +48,44 @@ bool parse_goto (char* freq_str, frequency_t* freq) {
   return true;
 }
 
-bool parse_searchfor (char* to_find_str, routing_id_t* to_find){
-  long temp_to_find;
+bool parse_searchfor (char* to_find_str, routing_id_t* to_find) {
 
-  if (!strtol_check_error(
-        temp_to_find = strtol(to_find_str, NULL, 16)))
+  if (sscanf(to_find_str, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+        &to_find->optional_MAC[0], 
+        &to_find->optional_MAC[1], 
+        &to_find->optional_MAC[2], 
+        &to_find->optional_MAC[3], 
+        &to_find->optional_MAC[4], 
+        &to_find->optional_MAC[5]) != 6)
     return false;
 
-  if (temp_to_find > 0xFFFFFFFFFFFF)
-    return false;
-
-  memcpy(to_find->optional_MAC, (uint8_t*)&temp_to_find, 6);
   return true;
 }
 
 int input_to_array(char* input, char* args[MAX_ARGC]) {
   args[0] = input;
   int argc = 1;
-  while (*input != '\0' && argc < MAX_ARGC) {
+  while (*input != '\n' && argc < MAX_ARGC) {
     if (*input == ' ') {
       args[argc] = input+1;
       argc++;
       *input = '\0';
     }
     input++;
-    if (*input == '\n')
-      *input = '\0';
   }
+  // getline does not sever linefeed
+  if (*input == '\n')
+  *input = '\0';
   return argc;
 }
 
-interface_commands get_command(char* command) {
-  assert(command != NULL);
-
-  if (strcmp(command, "searchfor") == 0) 
-    return SEARCHFOR;
-
-  if (strcmp(command, "send") == 0)
-    return SEND;
-
-  if (strcmp(command, "freq") == 0)
-    return FREQ;
-
-  if (strcmp(command, "list") == 0)
-    return LIST;
-
-  if (strcmp(command, "goto") == 0)
-    return GOTO;
-
-  if (strcmp(command, "split") == 0)
-    return SPLIT;
-
-  if (strcmp(command, "id") == 0)
-    return ID;
-
-  return UNKNOWN;
-}
-
 void wait_command_fetched(){
-  for(;;){
-    sleep_ms(1000);
+  bool not_fetched = true;
+  while (not_fetched) {
+    sleep_ms(300);
     pthread_mutex_lock(&interface_lock);
-    if (command.set) {
-      pthread_mutex_unlock(&interface_lock);
-      continue;
-    }
+    not_fetched = command.set;
     pthread_mutex_unlock(&interface_lock);
-    return;
   }
 }
 
@@ -228,6 +103,7 @@ void* interface_collect_user_input(void* arg) {
     if (argc <= 0 || MAX_ARGC < argc)
       continue;
 
+    // TODO refactor
     switch (get_command(args[0])) {
         case ID:
           pthread_mutex_lock(&interface_lock);
@@ -282,7 +158,7 @@ void* interface_collect_user_input(void* arg) {
           break;
 
         case SEARCHFOR:{
-          routing_id_t to_find;
+          routing_id_t to_find = {0, {0}};
           if (parse_searchfor(args[1], &to_find)) {
 
             pthread_mutex_lock(&interface_lock);
@@ -292,8 +168,8 @@ void* interface_collect_user_input(void* arg) {
             pthread_mutex_unlock(&interface_lock);
             wait_command_fetched();
           } else {
-            printf("Invalid address input. \
-                Try a 6 Byte MAC address.\n");
+            printf("Invalid address input." 
+                " Try a 6 Byte MAC address.\n");
           }
           break;}
 
@@ -303,11 +179,11 @@ void* interface_collect_user_input(void* arg) {
     }
     printf("\nInsert command\n");
   }
+  free(line);
   return NULL;
 }
 
 bool interface_do_action(){
-
   if (pthread_mutex_trylock(&interface_lock) != 0) {
     return false;
   }

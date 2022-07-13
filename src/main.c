@@ -31,7 +31,7 @@ int main() {
   sigaction(SIGINT, &sa, NULL);
 
   while (!shutdown_flag) {
-    sleep_ms(1000);
+    sleep_ms(400);
     interface_do_action();
   }
 
