@@ -32,6 +32,23 @@ Test(priority_queue, size) {
   int_priority_queue_destroy(q);
 }
 
+Test(priority_queue, empty) {
+  int_priority_queue_t *q = int_priority_queue_create();
+  cr_assert(int_priority_queue_empty(q));
+
+  for (unsigned i = 0; i < 5; i++) {
+    int_priority_queue_push(q, i);
+    cr_assert(!int_priority_queue_empty(q));
+  }
+
+  for (unsigned i = 0; i < 5; i++) {
+    int_priority_queue_pop(q);
+  }
+  cr_assert(int_priority_queue_empty(q));
+
+  int_priority_queue_destroy(q);
+}
+
 Test(priority_queue, peek) {
   int_priority_queue_t *q = int_priority_queue_create();
 
@@ -87,6 +104,19 @@ Test(priority_queue, pop_invalid, .signal = SIGABRT) {
   int_priority_queue_pop(q);
   int_priority_queue_pop(q);
   int_priority_queue_pop(q);
+
+  int_priority_queue_destroy(q);
+}
+
+Test(priority_queue, clear) {
+  int_priority_queue_t *q = int_priority_queue_create();
+
+  for (unsigned i = 0; i < 10; i++) {
+    int_priority_queue_push(q, i);
+  }
+
+  int_priority_queue_clear(q);
+  cr_assert(int_priority_queue_empty(q));
 
   int_priority_queue_destroy(q);
 }

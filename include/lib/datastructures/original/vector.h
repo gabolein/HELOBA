@@ -12,6 +12,7 @@ typedef struct {
 vector_t *vector_create();
 vector_t *vector_create_with_capacity(unsigned capacity);
 unsigned vector_size(vector_t *v);
+bool vector_empty(vector_t *v);
 bool vector_full(vector_t *v);
 int vector_at(vector_t *v, unsigned index);
 void vector_ensure_capacity(vector_t *v, unsigned capacity);

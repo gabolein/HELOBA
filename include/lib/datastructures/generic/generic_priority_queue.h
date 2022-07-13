@@ -21,9 +21,11 @@ unsigned __gpq_parent(unsigned i);
                                                                                \
   name##_priority_queue_t *name##_priority_queue_create();                     \
   unsigned name##_priority_queue_size(name##_priority_queue_t *q);             \
+  bool name##_priority_queue_empty(name##_priority_queue_t *q);                \
   T name##_priority_queue_peek(name##_priority_queue_t *q);                    \
   void name##_priority_queue_push(name##_priority_queue_t *q, T item);         \
   T name##_priority_queue_pop(name##_priority_queue_t *q);                     \
+  void name##_priority_queue_clear(name##_priority_queue_t *q);                \
   void name##_priority_queue_destroy(name##_priority_queue_t *q);
 
 #define MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(T, name, cmp)                      \
@@ -72,7 +74,13 @@ unsigned __gpq_parent(unsigned i);
   }                                                                            \
                                                                                \
   unsigned name##_priority_queue_size(name##_priority_queue_t *q) {            \
+    __##name##_pq_sanity_check(q);                                             \
     return name##_vector_size(q->items);                                       \
+  }                                                                            \
+                                                                               \
+  bool name##_priority_queue_empty(name##_priority_queue_t *q) {               \
+    __##name##_pq_sanity_check(q);                                             \
+    return name##_vector_size(q->items) == 0;                                  \
   }                                                                            \
                                                                                \
   T name##_priority_queue_peek(name##_priority_queue_t *q) {                   \
@@ -103,6 +111,11 @@ unsigned __gpq_parent(unsigned i);
     T removed = name##_vector_remove(q->items, 0);                             \
     __##name##_pq_heapify(q, 0);                                               \
     return removed;                                                            \
+  }                                                                            \
+                                                                               \
+  void name##_priority_queue_clear(name##_priority_queue_t *q) {               \
+    __##name##_pq_sanity_check(q);                                             \
+    name##_vector_clear(q->items);                                             \
   }                                                                            \
                                                                                \
   void name##_priority_queue_destroy(name##_priority_queue_t *q) {             \

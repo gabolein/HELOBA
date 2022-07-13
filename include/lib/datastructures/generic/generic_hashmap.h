@@ -33,10 +33,13 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   } name##_hashmap_t;                                                          \
                                                                                \
   name##_hashmap_t *name##_hashmap_create();                                   \
+  unsigned name##_hashmap_size(name##_hashmap_t *hm);                          \
   void name##_hashmap_insert(name##_hashmap_t *hm, K key, V value);            \
-  void name##_hashmap_delete(name##_hashmap_t *hm, K key);                     \
+  void name##_hashmap_remove(name##_hashmap_t *hm, K key);                     \
   bool name##_hashmap_exists(name##_hashmap_t *hm, K key);                     \
+  K##_vector_t *name##_hashmap_keys(name##_hashmap_t *hm);                     \
   V name##_hashmap_get(name##_hashmap_t *hm, K key);                           \
+  void name##_hashmap_clear(name##_hashmap_t *hm);                             \
   void name##_hashmap_destroy(name##_hashmap_t *hm);
 
 #define MAKE_SPECIFIC_HASHMAP_SOURCE(K, V, name, eq)                           \
@@ -145,6 +148,11 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     return hm;                                                                 \
   }                                                                            \
                                                                                \
+  unsigned name##_hashmap_size(name##_hashmap_t *hm) {                         \
+    __##name##_hm_sanity_check(hm);                                            \
+    return hm->used_count;                                                     \
+  }                                                                            \
+                                                                               \
   void name##_hashmap_insert(name##_hashmap_t *hm, K key, V value) {           \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
@@ -163,7 +171,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
       __##name##_hm_rehash(hm);                                                \
   }                                                                            \
                                                                                \
-  void name##_hashmap_delete(name##_hashmap_t *hm, K key) {                    \
+  void name##_hashmap_remove(name##_hashmap_t *hm, K key) {                    \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
     unsigned index = __##name##_hm_lookup_for_reading(hm, key);                \
@@ -182,6 +190,24 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     return index < name##_hashentry_vector_size(hm->entries);                  \
   }                                                                            \
                                                                                \
+  K##_vector_t *name##_hashmap_keys(name##_hashmap_t *hm) {                    \
+    __##name##_hm_sanity_check(hm);                                            \
+                                                                               \
+    K##_vector_t *keys =                                                       \
+        K##_vector_create_with_capacity(name##_hashmap_size(hm));              \
+                                                                               \
+    for (unsigned i = 0; i < name##_hashentry_vector_size(hm->entries); i++) { \
+      name##_hash_entry_t entry = name##_hashentry_vector_at(hm->entries, i);  \
+      if (entry.state != __GHM_USED) {                                         \
+        continue;                                                              \
+      }                                                                        \
+                                                                               \
+      K##_vector_append(keys, entry.key);                                      \
+    }                                                                          \
+                                                                               \
+    return keys;                                                               \
+  }                                                                            \
+                                                                               \
   V name##_hashmap_get(name##_hashmap_t *hm, K key) {                          \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
@@ -191,6 +217,17 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     name##_hash_entry_t entry =                                                \
         name##_hashentry_vector_at(hm->entries, index);                        \
     return entry.value;                                                        \
+  }                                                                            \
+                                                                               \
+  void name##_hashmap_clear(name##_hashmap_t *hm) {                            \
+    __##name##_hm_sanity_check(hm);                                            \
+                                                                               \
+    name##_hash_entry_t initial = {.state = __GHM_EMPTY};                      \
+    for (unsigned i = 0; i < name##_hashentry_vector_size(hm->entries); i++) { \
+      name##_hashentry_vector_insert_at(hm->entries, i, initial);              \
+    }                                                                          \
+                                                                               \
+    hm->used_count = 0;                                                        \
   }                                                                            \
                                                                                \
   void name##_hashmap_destroy(name##_hashmap_t *hm) {                          \

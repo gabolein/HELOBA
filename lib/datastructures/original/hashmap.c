@@ -1,4 +1,5 @@
 #include "lib/datastructures/original/hashmap.h"
+#include "lib/datastructures/original/priority_queue.h"
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
@@ -221,6 +222,11 @@ hashmap_t *hashmap_create(eq_t eq) {
   return hm;
 }
 
+unsigned hashmap_size(hashmap_t *hm) {
+  __hm_sanity_check(hm);
+  return hm->used_count;
+}
+
 void hashmap_insert(hashmap_t *hm, int key, int value) {
   __hm_sanity_check(hm);
 
@@ -243,7 +249,7 @@ void hashmap_insert(hashmap_t *hm, int key, int value) {
     __hm_rehash(hm);
 }
 
-void hashmap_delete(hashmap_t *hm, int key) {
+void hashmap_remove(hashmap_t *hm, int key) {
   __hm_sanity_check(hm);
 
   unsigned index = __hm_lookup_for_reading(hm, key);
@@ -262,6 +268,23 @@ bool hashmap_exists(hashmap_t *hm, int key) {
   return index < hashentry_vector_size(hm->entries);
 }
 
+int_vector_t *hashmap_keys(hashmap_t *hm) {
+  __hm_sanity_check(hm);
+
+  int_vector_t *keys = int_vector_create_with_capacity(hashmap_size(hm));
+
+  for (unsigned i = 0; i < hashentry_vector_size(hm->entries); i++) {
+    hash_entry_t entry = hashentry_vector_at(hm->entries, i);
+    if (entry.state != USED) {
+      continue;
+    }
+
+    int_vector_append(keys, entry.key);
+  }
+
+  return keys;
+}
+
 int hashmap_get(hashmap_t *hm, int key) {
   __hm_sanity_check(hm);
 
@@ -270,6 +293,17 @@ int hashmap_get(hashmap_t *hm, int key) {
 
   hash_entry_t entry = hashentry_vector_at(hm->entries, index);
   return entry.value;
+}
+
+void hashmap_clear(hashmap_t *hm) {
+  __hm_sanity_check(hm);
+
+  hash_entry_t initial = {.state = EMPTY};
+  for (unsigned i = 0; i < hashentry_vector_size(hm->entries); i++) {
+    hashentry_vector_insert_at(hm->entries, i, initial);
+  }
+
+  hm->used_count = 0;
 }
 
 void hashmap_destroy(hashmap_t *hm) {
