@@ -55,7 +55,7 @@ bool message_is_valid(message_t *msg) {
 }
 
 bool routing_id_equal(routing_id_t id1, routing_id_t id2) {
-  return id1.layer == id2.layer &&
+  return (id1.layer & specific) && (id2.layer & specific) &&
          memcmp(id1.optional_MAC, id2.optional_MAC, MAC_SIZE) == 0;
 }
 

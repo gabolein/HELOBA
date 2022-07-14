@@ -1,4 +1,6 @@
 #include "src/protocol/message_handler.h"
+#include "lib/datastructures/generic/generic_vector.h"
+#include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
@@ -35,7 +37,8 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
     [WILL][FIND] = handle_will_find,
-    [DO][MIGRATE] = handle_do_migrate};
+    [DO][MIGRATE] = handle_do_migrate
+};
 
 bool handle_do_mute(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -114,8 +117,10 @@ void perform_swap(frequency_t to) {
   transport_change_frequency(to);
 }
 
-// FIXME: braucht vllt Variable, in der steht, an welche Frequenz Swapping
+// NOTE: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
+// FIXME: braucht Timeout, nach dem abgebrochen wird, weil es sein kann dass auf
+// angefragter Frequenz niemand ist.
 bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);
@@ -245,8 +250,10 @@ bool handle_will_transfer(message_t *msg) {
       }
 
       club_hashmap_remove(gs.members, f);
+      gs.scores.current--;
     } else {
       club_hashmap_insert(gs.members, f, true);
+      gs.scores.current++;
     }
   }
 
@@ -278,35 +285,23 @@ bool handle_do_find(message_t *msg) {
   return true;
 }
 
-bool handle_will_find(message_t *msg) {
-  assert(message_action(msg) == WILL);
-  assert(message_type(msg) == FIND);
-
-  if (!(gs.flags & SEARCHING)) {
-    fprintf(stderr, "Got WILL FIND, but didn't start search.\n");
-    return false;
-  }
-
-  routing_id_t sender = msg->header.sender_id;
-
-  if (routing_id_MAC_equal(sender, get_to_find())) {
-    search_concluded();
-    gs.search.found = true;
-  } else {
-    // FIXME: sollte vielleicht direkt im Paket gesendet werden.
-    search_hint_t hint = {
-        .type = CACHE,
-        .f = msg->payload.find.cached,
-    };
-
-    search_queue_add(hint);
-  }
-
-  return true;
-}
-
 bool handle_message(message_t *msg) {
   assert(message_is_valid(msg));
 
   return message_handlers[message_action(msg)][message_type(msg)](msg);
+}
+
+MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
+
+// FIXME: das ist ein extrem schlechter Name, pls fix
+void message_assign_collector(unsigned timeout_ms, filter_f filter,
+                              message_vector_t *collector) {
+  message_t msg;
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while (!hit_timeout(timeout_ms, &start_time)) {
+    if (transport_receive_message(&msg) && filter(&msg)) {
+      message_vector_append(collector, msg);
+    }
+  }
 }

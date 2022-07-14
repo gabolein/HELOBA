@@ -27,7 +27,6 @@ typedef struct {
   search_direction_t direction;
   frequency_t current_frequency;
   routing_id_t to_find_id;
-  bool found;
   search_priority_queue_t *search_queue;
   checked_hashmap_t *checked_frequencies;
 } search_state_t;
