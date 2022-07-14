@@ -228,7 +228,7 @@ bool handle_will_transfer(message_t *msg) {
         return false;
       }
 
-      club_hashmap_delete(gs.members, f);
+      club_hashmap_remove(gs.members, f);
     } else {
       club_hashmap_insert(gs.members, f, true);
     }
