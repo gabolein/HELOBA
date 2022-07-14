@@ -62,32 +62,52 @@ bool handle_dont_mute(message_t *msg) {
   return true;
 }
 
-void reject_do_swap() {
-  message_t answer;
-  answer.header.action = WONT;
-  answer.header.type = SWAP;
-  // FIXME: Die IDs müssen genauer gesetzt werden, im VIRTUAL Modus
-  // kann es sonst sein, dass wir unsere eigene Nachricht bekommen.
-  answer.header.receiver_id.layer = leader;
-  answer.header.sender_id = gs.id;
-  answer.payload.swap.with = gs.frequency;
-  answer.payload.swap.score = gs.scores.current;
+// TODO: Der mit dem man gerade SWAP macht, sollte irgendwo im Swap State
+// gespeichert werden, dann muss man das nicht hier extra als Argument übergeben
+void reject_swap(routing_id_t receiver) {
+  message_t answer = message_create(WONT, SWAP);
+  answer.payload.swap = (swap_payload_t){
+      .with = gs.frequency,
+      .score = gs.scores.current,
+  };
 
-  transport_send_message(&answer);
+  transport_send_message(&answer, receiver);
 }
 
-void accept_do_swap() {
-  message_t answer;
-  answer.header.action = WILL;
-  answer.header.type = SWAP;
-  // FIXME: Die IDs müssen genauer gesetzt werden, im VIRTUAL Modus
-  // kann es sonst sein, dass wir unsere eigene Nachricht bekommen.
-  answer.header.receiver_id.layer = leader;
-  answer.header.sender_id = gs.id;
-  answer.payload.swap.with = gs.frequency;
-  answer.payload.swap.score = gs.scores.current;
+void accept_swap(routing_id_t receiver) {
+  message_t answer = message_create(WILL, SWAP);
+  answer.payload.swap = (swap_payload_t){
+      .with = gs.frequency,
+      .score = gs.scores.current,
+  };
 
-  transport_send_message(&answer);
+  transport_send_message(&answer, receiver);
+}
+
+void perform_swap(frequency_t to) {
+  // NOTE: wie stellen wir sicher, dass das ohne Probleme auf beiden Frequenzen
+  // zeitverschoben passieren kann?
+  // Was im Moment passieren könnte:
+  // 1. A schickt DO SWAP zu B
+  // 2. A akzeptiert, sendet Antwort
+  // 3. Alle Listeners auf A wechseln zu B
+  // 4. B bekommt Antwort
+  // 5. Alle Listeners auf B wechseln zu A
+  // Nach diesem Austausch würden alle Listener auf Frequenz A sein und keiner
+  // auf B, weil der Austausch nicht gleichzeitig passiert ist.
+  // NOTE: die einfachste Lösung ist es, bei TRANSFER mitzusenden, ob er Teil
+  // eines SWAPs ist. Wenn wir dann bei einem TRANSFER immer die alte Frequenz
+  // abspeichern, können wir den zweiten falschen TRANSFER erkennen und
+  // ignorieren.
+
+  message_t migrate = message_create(DO, TRANSFER);
+  migrate.payload.transfer = (transfer_payload_t){
+      .to = to,
+  };
+
+  routing_id_t receivers = {.layer = everyone};
+  transport_send_message(&migrate, receivers);
+  transport_change_frequency(to);
 }
 
 // FIXME: braucht vllt Variable, in der steht, an welche Frequenz Swapping
@@ -107,15 +127,14 @@ bool handle_do_swap(message_t *msg) {
   if (gs.flags & TREE_SWAPPING) {
     fprintf(stderr, "Received DO SWAP while in the middle of another tree "
                     "operation, rejecting.\n");
-    reject_do_swap();
-    // NOTE: muss hier false oder true zurückgegeben werden?
-    return true;
+    reject_swap(msg->header.sender_id);
+    return false;
   }
 
   frequency_t f = msg->payload.swap.with;
   if (!is_valid_tree_node(f) || f == gs.frequency) {
     fprintf(stderr, "Sent frequency is invalid, ignoring.\n");
-    // NOTE: sollte hier noch reject_do_swap() aufgerufen werden?
+    reject_swap(msg->header.sender_id);
     return false;
   }
 
@@ -125,30 +144,13 @@ bool handle_do_swap(message_t *msg) {
       (score >= gs.scores.current && tree_node_gt(f, gs.frequency))) {
     fprintf(stderr,
             "Tree Order is still preserved, I see no reason to swap!\n");
-    reject_do_swap();
+    reject_swap(msg->header.sender_id);
     return true;
   }
 
-  accept_do_swap();
+  accept_swap(msg->header.sender_id);
+  perform_swap(f);
 
-  // NOTE: wie stellen wir sicher, dass das ohne Probleme auf beiden Frequenzen
-  // zeitverschoben passieren kann?
-  // Was im Moment passieren könnte:
-  // 1. A schickt DO SWAP zu B
-  // 2. A akzeptiert, sendet Antwort
-  // 3. Alle Listeners auf A wechseln zu B
-  // 4. B bekommt Antwort
-  // 5. Alle Listeners auf B wechseln zu A
-  // Nach diesem Austausch würden alle Listener auf Frequenz A sein und keiner
-  // auf B, weil der Austausch nicht gleichzeitig passiert ist.
-  message_t migrate;
-  migrate.header.action = DO;
-  migrate.header.type = TRANSFER;
-  migrate.header.receiver_id.layer = everyone;
-  migrate.header.sender_id = gs.id;
-  migrate.payload.transfer.to = f;
-
-  transport_send_message(&migrate);
   return true;
 }
 
@@ -168,17 +170,7 @@ bool handle_will_swap(message_t *msg) {
     return false;
   }
 
-  frequency_t f = msg->payload.swap.with;
-
-  message_t migrate;
-  migrate.header.action = DO;
-  migrate.header.type = TRANSFER;
-  migrate.header.receiver_id.layer = everyone;
-  migrate.header.sender_id = gs.id;
-  migrate.payload.transfer.to = f;
-
-  transport_send_message(&migrate);
-
+  perform_swap(msg->payload.swap.with);
   gs.flags &= ~TREE_SWAPPING;
   return true;
 }
@@ -200,17 +192,14 @@ bool handle_do_transfer(message_t *msg) {
     return false;
   }
 
-  frequency_t destination_frequency = msg->payload.transfer.to;
-  transport_change_frequency(destination_frequency);
-  message_t join_request;
-  join_request.header.action = WILL;
-  join_request.header.type = TRANSFER;
-  join_request.header.sender_id.layer = specific;
-  transport_get_id(join_request.header.sender_id.optional_MAC);
-  join_request.header.receiver_id.layer = leader;
-  join_request.payload.transfer.to = destination_frequency;
+  frequency_t destination = msg->payload.transfer.to;
+  transport_change_frequency(destination);
 
-  transport_send_message(&join_request);
+  message_t join_request = message_create(WILL, TRANSFER);
+  join_request.payload.transfer = (transfer_payload_t){.to = destination};
+
+  routing_id_t receiver = {.layer = leader};
+  transport_send_message(&join_request, receiver);
 
   return true;
 }
@@ -239,21 +228,6 @@ bool handle_will_transfer(message_t *msg) {
   return true;
 }
 
-bool set_sender_id_layer(routing_id_t *sender_id) {
-  if (gs.flags & LEADER) {
-    sender_id->layer |= leader;
-  } else {
-    sender_id->layer &= ~leader;
-  }
-
-  return true;
-}
-
-message_header_t will_find_assemble_header(routing_id_t sender_id,
-                                           routing_id_t receiver_id) {
-  return (message_header_t){WILL, FIND, sender_id, receiver_id};
-}
-
 bool handle_do_find(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == FIND);
@@ -271,11 +245,8 @@ bool handle_do_find(message_t *msg) {
     return false;
   }
 
-  message_t reply_msg;
-  set_sender_id_layer(&self_id);
-  reply_msg.header = will_find_assemble_header(self_id, msg->header.sender_id);
-
-  transport_send_message(&reply_msg);
+  message_t reply = message_create(WILL, FIND);
+  transport_send_message(&reply, msg->header.sender_id);
 
   return true;
 }

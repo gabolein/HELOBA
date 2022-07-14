@@ -2,6 +2,7 @@
 #include "lib/datastructures/u8_vector.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
+#include "src/protocol/routing.h"
 #include "src/state.h"
 #include <stdint.h>
 
@@ -39,7 +40,14 @@ bool transport_change_frequency(uint16_t frequency) {
   return ret;
 }
 
-bool transport_send_message(message_t *msg) {
+bool transport_send_message(message_t *msg, routing_id_t to) {
+  msg->header.receiver_id = to;
+  msg->header.sender_id = gs.id;
+
+  if (!message_is_valid(msg)) {
+    return false;
+  }
+
   pack_message(send_vec, msg);
 
 #if defined(VIRTUAL)

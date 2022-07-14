@@ -54,7 +54,18 @@ bool message_is_valid(message_t *msg) {
   return true;
 }
 
+bool routing_id_equal(routing_id_t id1, routing_id_t id2) {
+  return id1.layer == id2.layer &&
+         memcmp(id1.optional_MAC, id2.optional_MAC, MAC_SIZE) == 0;
+}
+
 bool message_addressed_to(message_t *msg, routing_id_t id) {
+  // NOTE: wird für den VIRTUAL Modus gebraucht, weil wir nach dem Abschicken
+  // unsere eigenen UDP Nachrichten empfangen.
+  if (routing_id_equal(msg->header.sender_id, id)) {
+    return false;
+  }
+
   if (msg->header.receiver_id.layer & everyone) {
     return true;
   }
@@ -63,11 +74,19 @@ bool message_addressed_to(message_t *msg, routing_id_t id) {
     return true;
   }
 
-  if ((msg->header.receiver_id.layer & specific) &&
-      memcmp(msg->header.receiver_id.optional_MAC, id.optional_MAC, MAC_SIZE) ==
-          0) {
+  if (routing_id_equal(msg->header.receiver_id, id)) {
     return true;
   }
 
   return false;
+}
+
+message_t message_create(message_action_t action, message_type_t type) {
+  assert(message_allowlist[action][type]);
+
+  message_t msg;
+  msg.header.action = action;
+  msg.header.type = type;
+
+  return msg;
 }
