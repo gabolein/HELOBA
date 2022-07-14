@@ -219,8 +219,10 @@ bool handle_will_transfer(message_t *msg) {
       }
 
       club_hashmap_remove(gs.members, f);
+      gs.scores.current--;
     } else {
       club_hashmap_insert(gs.members, f, true);
+      gs.scores.current++;
     }
   }
 
