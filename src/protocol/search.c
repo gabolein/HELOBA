@@ -10,7 +10,7 @@
 #include <time.h>
 
 // FIXME: viel zu groß
-#define DO_FIND_SEND_TIMEOUT 1000
+#define DO_FIND_SEND_TIMEOUT 256
 #define WILL_FIND_RECV_TIMEOUT 10
 
 int hint_cmp(search_hint_t a, search_hint_t b) {
@@ -80,37 +80,12 @@ void search_queue_expand_by_order() {
 }
 
 void search_state_initialize() {
-  gs.flags &= ~(SEARCHING);
   gs.search.search_queue = search_priority_queue_create();
   gs.search.checked_frequencies = checked_hashmap_create();
 }
 
-bool search_concluded() {
-  gs.flags &= ~(SEARCHING);
-  search_priority_queue_destroy(gs.search.search_queue);
-  gs.search.search_queue = search_priority_queue_create();
-  // TODO register in frequency
-  return true;
-}
-
-routing_id_t get_to_find() {
-  assert(gs.flags & SEARCHING);
-  return gs.search.to_find_id;
-}
-
-bool wait_will_find() {
-  message_t msg;
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while (!hit_timeout(WILL_FIND_RECV_TIMEOUT, &start_time)) {
-    if (transport_receive_message(&msg) && message_action(&msg) == WILL &&
-        message_type(&msg) == FIND) {
-      // NOTE: vielleicht aus message_handler.c hierher verschieben
-      handle_message(&msg);
-    }
-  }
-
-  return true;
+bool search_response_filter(message_t *msg) {
+  return message_action(msg) == WILL && message_type(msg) == FIND;
 }
 
 bool search_for(routing_id_t to_find) {
@@ -124,7 +99,6 @@ bool search_for(routing_id_t to_find) {
   checked_hashmap_clear(gs.search.checked_frequencies);
   gs.search.current_frequency = gs.frequency;
   gs.search.direction = UP;
-  gs.search.found = false;
   search_priority_queue_clear(gs.search.search_queue);
 
   search_hint_t start = {
@@ -133,7 +107,8 @@ bool search_for(routing_id_t to_find) {
   };
   search_priority_queue_push(gs.search.search_queue, start);
 
-  // TODO unregister from frequency
+  // NOTE: sollen wir direkt aus unserer aktuellen Frequenz rausgehen oder erst
+  // am Ende der Suche, wenn wir wissen auf welche Frequenz wir wechseln wollen?
 
   while (gs.flags & SEARCHING) {
     if (search_priority_queue_size(gs.search.search_queue) == 0) {
@@ -150,10 +125,52 @@ bool search_for(routing_id_t to_find) {
     routing_id_t receivers = {.layer = everyone};
     transport_send_message(&scan, receivers);
 
-    wait_will_find();
+    // NOTE: Wenn wir keine Antworten bekommen, kann es sein, dass
+    // 1. niemand auf der Frequenz ist
+    // 2. niemand auf der Frequenz weiß, wo der gesuchte Node ist
+    // Im ersten Fall würde es keinen Sinn machen, weiter zu suchen, weil alle
+    // darunter liegenden Frequenzen auch garantiert leer sein werden. Wir
+    // sollten also auch noch prüfen, ob auf der Frequenz irgendwelche
+    // Nachrichten verschickt werden.
+    // NOTE: Nach weiterem Nachdenken ist das glaube ich doch nicht so wichtig,
+    // weil wir essentiell eine Breitensuche durch den gesamten Baum machen,
+    // d.h. den Fall haben wir nur, wenn der gesuchte Node überhaupt nicht
+    // im Baum ist.
+    message_vector_t *responses = message_vector_create();
+    message_assign_collector(WILL_FIND_RECV_TIMEOUT, search_response_filter,
+                             responses);
+
+    for (unsigned i = 0; i < message_vector_size(responses); i++) {
+      message_t current = message_vector_at(responses, i);
+
+      if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
+        gs.flags &= ~SEARCHING;
+        message_vector_destroy(responses);
+
+        // NOTE: Es wäre gut, einen Failsave einzubauen, falls der Leader auf
+        // der Frequenz nicht mehr aktiv ist und deswegen keiner antwortet. In
+        // dem Fall könnten wir selbst zum Leader werden.
+        message_t join = message_create(WILL, TRANSFER);
+        join.payload.transfer =
+            (transfer_payload_t){.to = gs.search.current_frequency};
+        routing_id_t receiver = {.layer = leader};
+        transport_send_message(&join, receiver);
+
+        return true;
+      }
+
+      // FIXME: sollte vielleicht direkt im Paket gesendet werden, besonders
+      // wenn wir noch mehr Informationen wie Timedelta mitsenden
+      search_hint_t hint = {
+          .type = CACHE,
+          .f = current.payload.find.cached,
+      };
+
+      search_queue_add(hint);
+    }
 
     search_queue_expand_by_order();
   }
 
-  return gs.search.found;
+  return false;
 }
