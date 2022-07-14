@@ -112,8 +112,10 @@ void perform_swap(frequency_t to) {
   transport_change_frequency(to);
 }
 
-// FIXME: braucht vllt Variable, in der steht, an welche Frequenz Swapping
+// NOTE: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
+// FIXME: braucht Timeout, nach dem abgebrochen wird, weil es sein kann dass auf
+// angefragter Frequenz niemand ist.
 bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);
