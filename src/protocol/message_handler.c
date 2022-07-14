@@ -5,9 +5,11 @@
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
+#include "lib/time_util.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 typedef bool (*handler_f)(message_t *msg);
 
@@ -21,6 +23,7 @@ bool handle_do_transfer(message_t *msg);
 bool handle_will_transfer(message_t *msg);
 bool handle_do_find(message_t *msg);
 bool handle_will_find(message_t *msg);
+bool handle_do_migrate(message_t *msg);
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = handle_do_mute,
@@ -31,7 +34,8 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][TRANSFER] = handle_do_transfer,
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
-    [WILL][FIND] = handle_will_find};
+    [WILL][FIND] = handle_will_find,
+    [DO][MIGRATE] = handle_do_migrate};
 
 bool handle_do_mute(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -182,6 +186,30 @@ bool handle_wont_swap(message_t *msg) {
   gs.flags &= ~TREE_SWAPPING;
   return true;
 }
+
+bool handle_do_migrate(message_t *msg) {
+  assert(message_action(msg) == DO);
+  assert(message_type(msg) == MIGRATE);
+
+  if (msg->header.sender_id.layer != leader) {
+    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
+    return false;
+  }
+
+  frequency_t destination = msg->payload.transfer.to;
+
+  struct timespec current;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &current);
+  struct timespec migration_blocked = timestamp_add_ms(gs.migrate.last_migrate, 10);
+  if (destination == gs.migrate.old
+      && timestamp_cmp(migration_blocked, current) == 1)
+    return false;
+
+  return transport_change_frequency(destination);
+}
+
+
+
 
 bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);

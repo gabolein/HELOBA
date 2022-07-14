@@ -22,12 +22,18 @@ typedef struct {
 } score_state_t;
 
 typedef struct {
+  frequency_t old;
+  struct timespec last_migrate;
+} migrate_state_t;
+
+typedef struct {
   club_hashmap_t *members;
   score_state_t scores;
   routing_id_t id;
   flags_t flags;
   frequency_t frequency;
   search_state_t search;
+  migrate_state_t migrate;
 } state_t;
 
 state_t gs;
