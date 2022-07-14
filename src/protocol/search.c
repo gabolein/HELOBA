@@ -3,6 +3,7 @@
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
+#include "src/protocol/routing.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
@@ -29,54 +30,19 @@ bool frequency_eq(frequency_t a, frequency_t b) { return a == b; }
 MAKE_SPECIFIC_VECTOR_SOURCE(search_hint_t, search);
 MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(search_hint_t, search, hint_cmp)
 
+MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, frequency_t)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
-  // FIXME: hier muss noch sichergestellt werden, dass man f nicht schon vorher
-  // besucht hat, am besten HashMap dafür benutzen. Sonst kann es mit Caches
-  // passieren, dass wir in einer Endlosschleife landen
+  if (checked_hashmap_exists(gs.search.checked_frequencies, hint.f)) {
+    return;
+  }
+
   search_priority_queue_push(gs.search.search_queue, hint);
 }
 
-void search_state_initialize() {
-  gs.flags &= ~(SEARCHING);
-  gs.search.search_queue = search_priority_queue_create();
-  gs.search.checked_frequencies = checked_hashmap_create();
-}
-
-bool search_concluded() {
-  gs.flags &= ~(SEARCHING);
-  search_priority_queue_destroy(gs.search.search_queue);
-  gs.search.search_queue = search_priority_queue_create();
-  // TODO register in frequency
-  return true;
-}
-
-routing_id_t get_to_find() {
-  assert(gs.flags & SEARCHING);
-  return gs.search.to_find_id;
-}
-
-bool send_do_find() {
-  routing_id_t receiver_id = {.layer = everyone};
-  message_t do_find_msg = {.header = {DO, FIND, gs.id, receiver_id},
-                           .payload.find.to_find = gs.search.to_find_id};
-
-  return transport_send_message(&do_find_msg);
-}
-
-bool wait_will_find() {
-  message_t msg;
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-  while (!hit_timeout(WILL_FIND_RECV_TIMEOUT, &start_time)) {
-    if (transport_receive_message(&msg) && message_action(&msg) == WILL &&
-        message_type(&msg) == FIND) {
-      // NOTE: vielleicht aus message_handler.c hierher verschieben
-      handle_message(&msg);
-    }
-  }
-
+// TOOD: besseren Namen finden
+void search_queue_expand_by_order() {
   if (gs.search.current_frequency ==
           tree_node_parent(gs.search.current_frequency) &&
       gs.search.direction == UP) {
@@ -104,16 +70,44 @@ bool wait_will_find() {
       continue;
     }
 
-    if (checked_hashmap_exists(gs.search.checked_frequencies, next_freqs[i])) {
-      continue;
-    }
-
     search_hint_t hint = {
         .type = ORDER,
         .f = next_freqs[i],
     };
 
     search_queue_add(hint);
+  }
+}
+
+void search_state_initialize() {
+  gs.flags &= ~(SEARCHING);
+  gs.search.search_queue = search_priority_queue_create();
+  gs.search.checked_frequencies = checked_hashmap_create();
+}
+
+bool search_concluded() {
+  gs.flags &= ~(SEARCHING);
+  search_priority_queue_destroy(gs.search.search_queue);
+  gs.search.search_queue = search_priority_queue_create();
+  // TODO register in frequency
+  return true;
+}
+
+routing_id_t get_to_find() {
+  assert(gs.flags & SEARCHING);
+  return gs.search.to_find_id;
+}
+
+bool wait_will_find() {
+  message_t msg;
+  struct timespec start_time;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+  while (!hit_timeout(WILL_FIND_RECV_TIMEOUT, &start_time)) {
+    if (transport_receive_message(&msg) && message_action(&msg) == WILL &&
+        message_type(&msg) == FIND) {
+      // NOTE: vielleicht aus message_handler.c hierher verschieben
+      handle_message(&msg);
+    }
   }
 
   return true;
@@ -127,13 +121,11 @@ bool search_for(routing_id_t to_find) {
 
   gs.flags |= SEARCHING;
   gs.search.to_find_id = to_find;
-  // FIXME: Funktion gibt es noch nicht, schreiben!
-  // checked_hashmap_clear(gs.search.checked_frequencies);
+  checked_hashmap_clear(gs.search.checked_frequencies);
   gs.search.current_frequency = gs.frequency;
   gs.search.direction = UP;
   gs.search.found = false;
-  // FIXME: Funktion gibt es noch nicht, schreiben!
-  // search_priority_queue_clear(gs.search.search_queue);
+  search_priority_queue_clear(gs.search.search_queue);
 
   search_hint_t start = {
       .type = ORDER,
@@ -153,8 +145,14 @@ bool search_for(routing_id_t to_find) {
     gs.search.current_frequency = next_hint.f;
     checked_hashmap_insert(gs.search.checked_frequencies, next_hint.f, true);
 
-    send_do_find();
+    message_t scan = message_create(DO, FIND);
+    scan.payload.find = (find_payload_t){.to_find = gs.search.to_find_id};
+    routing_id_t receivers = {.layer = everyone};
+    transport_send_message(&scan, receivers);
+
     wait_will_find();
+
+    search_queue_expand_by_order();
   }
 
   return gs.search.found;

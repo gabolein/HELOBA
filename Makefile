@@ -1,37 +1,27 @@
+CC = gcc
 BUILD_DIR = build
 
 # FIXME: bessere Lösung dafür finden
 ifeq ($(MAKECMDGOALS),test)
-SRC = $(shell find test src lib -name '*.c')
+SRC = $(shell find test src lib -name '*.c' ! -wholename src/main.c)
+CFLAGS = -Wall -Wextra -ggdb -O0
+CPPFLAGS = -Iinclude -DVIRTUAL
+LDFLAGS = -lcriterion -lm -lpthread
 else
 SRC = $(shell find src lib -name '*.c')
+CFLAGS = -std=gnu11 -Wall -Wextra -s -O2
+CPPFLAGS = -Iinclude -DVIRTUAL
+LDFLAGS = -lm -lpthread
 endif
 
-ifeq ($(MAKECMDGOALS),test)
-CFLAGS = -Wall -Wextra -ggdb -O0 -DVIRTUAL
-else
-CFLAGS = -std=gnu11 -Wall -Wextra -s -O2 -DVIRTUAL 
-endif
-CPPFLAGS = -Iinclude
-
-ifneq (,$(findstring -DVIRTUAL,$(CFLAGS)))
-SRC := $(filter-out src/beaglebone/% src/main.c, $(SRC))
+ifneq (,$(findstring -DVIRTUAL,$(CPPFLAGS)))
+SRC := $(filter-out src/beaglebone/%, $(SRC))
 else
 SRC := $(filter-out src/virtual_transport.c, $(SRC))
 endif
 
 OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
-
-# auto generated dep files
 DEP = $(OBJ:.o=.d)
-
-CC = gcc
-
-ifeq ($(MAKECMDGOALS),test)
-LDFLAGS = -lcriterion -lm -lpthread
-else
-LDFLAGS = -lm -lpthread
-endif
 
 $(OBJ):$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -40,9 +30,9 @@ $(OBJ):$(BUILD_DIR)/%.o: %.c
 $(BUILD_DIR)/program: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: all test run build clean deploy
+.PHONY: test run build clean deploy
 
-all: run
+.DEFAULT_GOAL = run
 
 test: run
 
