@@ -219,7 +219,6 @@ bool handle_will_transfer(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == TRANSFER);
 
-  // TODO: my_id muss irgendwo noch initialisiert werden
   if (gs.id.layer == leader) {
     frequency_t f = msg->payload.transfer.to;
 
