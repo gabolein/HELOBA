@@ -1,8 +1,8 @@
 #include "lib/time_util.h"
 #include "src/interface/interface.h"
+#include "src/state.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
-#include "src/state.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -17,14 +17,14 @@ void kill_handler(int signo) {
 }
 
 int main() {
-  interface_initialize();
+  initialize_global_state();
 
   if (!transport_initialize()) {
     fprintf(stderr, "Couldn't initialize transport.\n");
     exit(EXIT_FAILURE);
   }
 
-  initialize_global_state();
+  interface_initialize();
 
   struct sigaction sa;
   sa.sa_handler = kill_handler;
