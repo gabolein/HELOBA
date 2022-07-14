@@ -29,11 +29,14 @@ bool transport_initialize() {
 }
 
 bool transport_change_frequency(uint16_t frequency) {
+  bool ret;
 #if defined(VIRTUAL)
-  return virtual_change_frequency(frequency);
+  ret = virtual_change_frequency(frequency);
 #else
-  return radio_change_frequency(frequency);
+  ret = radio_change_frequency(frequency);
 #endif
+  gs.frequency = ret ? frequency : gs.frequency;
+  return ret;
 }
 
 bool transport_send_message(message_t *msg) {
