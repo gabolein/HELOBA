@@ -1,6 +1,7 @@
 #include "src/interface/command.h"
 #include "src/transport.h"
 #include "src/state.h"
+#include "src/protocol/routing.h"
 
 bool handle_freq(
     __attribute__ ((unused))command_param_t param){
@@ -46,6 +47,7 @@ bool handle_split(
 }
 
 bool handle_searchfor(command_param_t param){
+  param.to_find.layer = specific;
   return search_for(param.to_find);
 }
 
