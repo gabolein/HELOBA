@@ -9,10 +9,10 @@ bool handle_freq(
   return true;
 }
 
-void print_id(){
+void print_id(uint8_t MAC[6]){
 
   for (size_t i = 0; i < 6; i++) {
-    printf("%x", gs.id.optional_MAC[i]);
+    printf("%x", MAC[i]);
 
     if (i != 5)
       putchar(':');
@@ -43,7 +43,7 @@ bool handle_list(
 bool handle_id(
     __attribute__ ((unused))command_param_t param){
   printf("Node ID: ");
-  print_id();
+  print_id(gs.id.optional_MAC);
 
   return true;
 }
