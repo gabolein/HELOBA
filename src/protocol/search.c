@@ -137,7 +137,7 @@ bool search_for(routing_id_t to_find) {
     // d.h. den Fall haben wir nur, wenn der gesuchte Node überhaupt nicht
     // im Baum ist.
     message_vector_t *responses = message_vector_create();
-    message_assign_collector(WILL_FIND_RECV_TIMEOUT, search_response_filter,
+    message_assign_collector(WILL_FIND_RECV_TIMEOUT, 5, search_response_filter,
                              responses);
 
     for (unsigned i = 0; i < message_vector_size(responses); i++) {

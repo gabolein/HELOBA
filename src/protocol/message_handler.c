@@ -7,7 +7,6 @@
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
-#include "lib/time_util.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,8 +36,7 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
     [WILL][FIND] = handle_will_find,
-    [DO][MIGRATE] = handle_do_migrate
-};
+    [DO][MIGRATE] = handle_do_migrate};
 
 bool handle_do_mute(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -206,16 +204,14 @@ bool handle_do_migrate(message_t *msg) {
 
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC_RAW, &current);
-  struct timespec migration_blocked = timestamp_add_ms(gs.migrate.last_migrate, 10);
-  if (destination == gs.migrate.old
-      && timestamp_cmp(migration_blocked, current) == 1)
+  struct timespec migration_blocked =
+      timestamp_add_ms(gs.migrate.last_migrate, 10);
+  if (destination == gs.migrate.old &&
+      timestamp_cmp(migration_blocked, current) == 1)
     return false;
 
   return transport_change_frequency(destination);
 }
-
-
-
 
 bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);
@@ -295,14 +291,17 @@ bool handle_message(message_t *msg) {
 MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
 
 // FIXME: das ist ein extrem schlechter Name, pls fix
-void message_assign_collector(unsigned timeout_ms, filter_f filter,
-                              message_vector_t *collector) {
+void message_assign_collector(unsigned timeout_ms, unsigned max_messages,
+                              filter_f filter, message_vector_t *collector) {
   message_t msg;
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
   while (!hit_timeout(timeout_ms, &start_time)) {
     if (transport_receive_message(&msg) && filter(&msg)) {
       message_vector_append(collector, msg);
+      if (message_vector_size(collector) == max_messages) {
+        return;
+      }
     }
   }
 }
