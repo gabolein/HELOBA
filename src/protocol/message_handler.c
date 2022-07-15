@@ -89,33 +89,6 @@ void accept_swap(routing_id_t receiver) {
   transport_send_message(&answer, receiver);
 }
 
-void perform_swap(frequency_t to) {
-  // NOTE: wie stellen wir sicher, dass das ohne Probleme auf beiden Frequenzen
-  // zeitverschoben passieren kann?
-  // Was im Moment passieren könnte:
-  // 1. A schickt DO SWAP zu B
-  // 2. A akzeptiert, sendet Antwort
-  // 3. Alle Listeners auf A wechseln zu B
-  // 4. B bekommt Antwort
-  // 5. Alle Listeners auf B wechseln zu A
-  // Nach diesem Austausch würden alle Listener auf Frequenz A sein und keiner
-  // auf B, weil der Austausch nicht gleichzeitig passiert ist.
-  // NOTE: die einfachste Lösung ist es, bei TRANSFER mitzusenden, ob er Teil
-  // eines SWAPs ist. Wenn wir dann bei einem TRANSFER immer die alte Frequenz
-  // abspeichern, können wir den zweiten falschen TRANSFER erkennen und
-  // ignorieren.
-  // -> solved by MIGRATE
-
-  message_t migrate = message_create(DO, TRANSFER);
-  migrate.payload.transfer = (transfer_payload_t){
-      .to = to,
-  };
-
-  routing_id_t receivers = {.layer = everyone};
-  transport_send_message(&migrate, receivers);
-  transport_change_frequency(to);
-}
-
 // NOTE: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
 // FIXME: braucht Timeout, nach dem abgebrochen wird, weil es sein kann dass auf
@@ -157,6 +130,7 @@ bool handle_do_swap(message_t *msg) {
   }
 
   accept_swap(msg->header.sender_id);
+  // TODO correct perform_swap?
   perform_swap(f);
 
   return true;
