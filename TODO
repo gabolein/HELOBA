@@ -40,9 +40,6 @@ leader chores: send nodes to other frequencies, swap up or down
 
 	split: if over certain threshold (actually: if certain number of backoffs)
 
-	swap up: more people in than old*x -> ask parent
-	swap down: less people than old/x -> ask child (which?)
-
 mute: que pasa?
 
 test algo
@@ -57,3 +54,5 @@ transport: recv buffer and send vector
 leader not valid messages
 cache
 backoff threshold way too big
+
+radio: asynchronous listen?

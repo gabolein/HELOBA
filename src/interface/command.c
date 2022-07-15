@@ -5,7 +5,6 @@
 
 bool handle_freq(
     __attribute__ ((unused))command_param_t param){
-  // FIXME where should frequency be set??
   printf("Current frequency: %u\n", gs.frequency);
   return true;
 }
@@ -52,9 +51,17 @@ bool handle_searchfor(command_param_t param){
 }
 
 bool handle_goto(command_param_t param){
-  // TODO unregister
+  message_t unregister = message_create(WILL, TRANSFER);
+  unregister.payload.transfer = (transfer_payload_t){.to = param.freq};
+  routing_id_t receiver = {.layer = leader};
+  transport_send_message(&unregister, receiver);
+
   transport_change_frequency(param.freq);
-  // TODO register
+  // TODO election algorithm
+  message_t join_request = message_create(WILL, TRANSFER);
+  join_request.payload.transfer = (transfer_payload_t){.to = param.freq};
+
+  transport_send_message(&join_request, receiver);
   return true;
 }
 
