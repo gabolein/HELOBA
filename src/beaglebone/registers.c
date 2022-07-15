@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Registers"
+
 #include "src/beaglebone/registers.h"
+#include "lib/logger.h"
 #include <SPIv1.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -207,14 +211,14 @@ void read_registers() {
   for (size_t i = 0; i < MAX_REG; i++) {
     int val;
     cc1200_reg_read(RegSettings[i].adr, &val);
-    printf("Adr: %x, val: %x, expected: %x\n", RegSettings[i].adr, (uint8_t)val,
-           RegSettings[i].val);
+    dbgln("Adr: %x, val: %x, expected: %x", RegSettings[i].adr, (uint8_t)val,
+          RegSettings[i].val);
   }
 
   for (size_t i = 0; i < MAX_EXT_REG; i++) {
     int val;
     cc1200_reg_read(EXT_ADR | ExtRegSettings[i].adr, &val);
-    printf("Adr: %x, val: %x, expected: %x\n", ExtRegSettings[i].adr,
-           (uint8_t)val, ExtRegSettings[i].val);
+    dbgln("Adr: %x, val: %x, expected: %x", ExtRegSettings[i].adr, (uint8_t)val,
+          ExtRegSettings[i].val);
   }
 }

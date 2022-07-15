@@ -1,5 +1,9 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Search"
+
 #include "src/protocol/search.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
@@ -91,7 +95,7 @@ bool search_response_filter(message_t *msg) {
 
 bool perform_search(routing_id_t to_find) {
   if (!(gs.flags & SEARCHING)) {
-    fprintf(stderr, "Currently still searching for another ID, ignoring.\n");
+    dbgln("Currently still searching for another ID, ignoring.");
     return false;
   }
 

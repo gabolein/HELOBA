@@ -1,9 +1,13 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Main"
+
+#include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/event_loop.h"
 #include "src/interface/interface.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
-#include "src/event_loop.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -23,7 +27,7 @@ int main() {
   initialize_global_state();
 
   if (!transport_initialize()) {
-    fprintf(stderr, "Couldn't initialize transport.\n");
+    dbgln("Couldn't initialize transport.");
     exit(EXIT_FAILURE);
   }
 
