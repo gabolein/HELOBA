@@ -23,9 +23,13 @@ int id_order(const void *arg1, const void *arg2) {
   return 0;
 }
 
-bool perform_split() {
-  routing_id_t_vector_t *keys = club_hashmap_keys(gs.members);
-  unsigned nkeys = routing_id_t_vector_size(keys);
+bool perform_split(){
+  routing_id_t_vector_t* keys = club_hashmap_keys(gs.members);
+  unsigned nkeys;
+  if ((nkeys = routing_id_t_vector_size(keys)) == 0) {
+    return false;
+  }
+
   qsort(keys, sizeof(routing_id_t), nkeys, &id_order);
 
   // NOTE nkeys/x -1??

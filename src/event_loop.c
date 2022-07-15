@@ -24,8 +24,13 @@ float score_trajectory(uint8_t old, uint8_t new) {
 }
 
 void event_loop_run() {
-  if (gs.flags & REGISTERED)
-    perform_registration();
+  if (!(gs.flags & REGISTERED)) {
+    if (!perform_registration()) {
+      perror("Registration:");
+    } else {
+      assert(gs.flags & REGISTERED);
+    }
+  }
 
   message_t received;
   if (transport_receive_message(&received)) {
