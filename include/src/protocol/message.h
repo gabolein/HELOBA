@@ -15,7 +15,7 @@ typedef enum { DO, DONT, WILL, WONT } message_action_t;
 #define MESSAGE_TYPE_COUNT 5
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
-typedef enum { FIND, SWAP, TRANSFER, MUTE, MIGRATE } message_type_t;
+typedef enum { FIND, SWAP, TRANSFER, MUTE, MIGRATE, SPLIT } message_type_t;
 
 #define FREQUENCY_ENCODED_SIZE sizeof(uint16_t)
 typedef uint16_t frequency_t;
@@ -50,12 +50,18 @@ typedef struct {
 } transfer_payload_t;
 
 typedef struct {
+  routing_id_t delim1;
+  routing_id_t delim2;
+} split_payload_t;
+
+typedef struct {
   message_header_t header;
   union {
     find_payload_t find;
     update_payload_t update;
     swap_payload_t swap;
     transfer_payload_t transfer;
+    split_payload_t split;
   } payload;
 } message_t;
 
