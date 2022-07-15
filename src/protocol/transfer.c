@@ -2,6 +2,7 @@
 #include "src/transport.h"
 #include "src/protocol/tree.h"
 #include "src/protocol/message_util.h"
+#include "src/protocol/transfer.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
 
@@ -54,15 +55,15 @@ bool handle_do_split(message_t* msg){
   assert(!(gs.flags & LEADER));
 
   bool split = true;
-  frequency_t to;
+  frequency_t destination;
   routing_id_t delim1 = msg->payload.split.delim1;
   routing_id_t delim2 = msg->payload.split.delim2;
 
   
   if (id_order(gs.id.optional_MAC, delim1.optional_MAC) <= 0) {
-    to = tree_node_lhs(gs.frequencies.current);
+    destination = tree_node_lhs(gs.frequencies.current);
   } else if (id_order(gs.id.optional_MAC, delim2.optional_MAC) <= 0) {
-    to = tree_node_rhs(gs.frequencies.current);
+    destination = tree_node_rhs(gs.frequencies.current);
     transport_change_frequency(tree_node_rhs(gs.frequencies.current));
   } else {
     split = false;
@@ -70,10 +71,10 @@ bool handle_do_split(message_t* msg){
   }
 
   if (split) {
-    transport_change_frequency(to);
-    // TODO election
+    transport_change_frequency(destination);
+    perform_registration();
     message_t join_request = message_create(WILL, TRANSFER);
-    join_request.payload.transfer = (transfer_payload_t){.to = to};
+    join_request.payload.transfer = (transfer_payload_t){.to = destination};
     routing_id_t receiver = {.layer = leader};
     transport_send_message(&join_request, receiver);
   }

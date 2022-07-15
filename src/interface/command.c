@@ -1,6 +1,7 @@
 #include "src/interface/command.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
+#include "src/protocol/transfer.h"
 #include "src/state.h"
 #include "src/transport.h"
 
@@ -47,11 +48,11 @@ bool handle_id(__attribute__((unused)) command_param_t param) {
 }
 
 bool handle_split(__attribute__((unused)) command_param_t param) {
-  // TODO call function that makes node split
   if (!(gs.flags & LEADER)) {
     printf("Node is not a leader and therefore cannot perform split.\n");
     return false;
   }
+  perform_split();
   return true;
 }
 
@@ -67,12 +68,7 @@ bool handle_goto(command_param_t param) {
   transport_send_message(&unregister, receiver);
 
   transport_change_frequency(param.freq);
-  // TODO election algorithm
-  message_t join_request = message_create(WILL, TRANSFER);
-  join_request.payload.transfer = (transfer_payload_t){.to = param.freq};
-
-  transport_send_message(&join_request, receiver);
-  return true;
+  return perform_registration();
 }
 
 bool handle_send(command_param_t param) {
@@ -114,7 +110,7 @@ interface_commands get_command(char *command) {
   if (strcmp(command, "goto") == 0)
     return GOTO;
 
-  if (strcmp(command, "splitnodes") == 0)
+  if (strcmp(command, "split") == 0)
     return SPLIT_NODES;
 
   if (strcmp(command, "id") == 0)
