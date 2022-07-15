@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Radio Transport"
+
 #include "src/beaglebone/radio_transport.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/beaglebone/backoff.h"
 #include "src/beaglebone/frequency.h"
@@ -82,18 +86,15 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   uint8_t recv_length = rx_fifo_pop();
   if (recv_length > *length) {
-    fprintf(
-        stderr,
-        "Buffer with size=%u is too small to receive packet with size=%u.\n",
-        *length, recv_length);
+    warnln("Buffer with size=%u is too small to receive packet with size=%u.",
+           *length, recv_length);
     return false;
   }
 
   uint8_t status[PACKET_STATUS_LENGTH];
   for (size_t i = 0; i < recv_length + PACKET_STATUS_LENGTH; i++) {
     if (!fifo_wait(NEXT_BYTE_WAIT_TIME)) {
-      fprintf(stderr, "Expected to receive %u bytes, only got %lu.\n",
-              recv_length, i);
+      warnln("Expected to receive %u bytes, only got %lu.", recv_length, i);
       ret = false;
       goto cleanup;
     }
@@ -107,10 +108,9 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
   // überhaupt nicht erst angenommen?
-  fprintf(stderr,
-          "Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u\n",
-          recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
-          status[1] & ~(1 << 7));
+  dbgln("Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u",
+        recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
+        status[1] & ~(1 << 7));
 
   *length = recv_length;
   ret = true;
@@ -130,12 +130,12 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
 
   while (!hit_timeout(SEND_PACKET_TIMEOUT, &start_time)) {
     if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
-      printf("Backoff timeout not expired yet.\n");
+      dbgln("Backoff timeout not expired yet.");
       continue;
     }
 
     if (!collision_detection()) {
-      printf("First scan unsuccessful. Backing off\n");
+      dbgln("First scan unsuccessful. Backing off");
       continue;
     }
 
@@ -145,12 +145,12 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     cc1200_cmd(STX);
 
     if (!collision_detection()) {
-      printf("Second scan unsuccessful. Backing off\n");
+      dbgln("Second scan unsuccessful. Backing off");
       continue;
     }
 
     reset_backoff_attempts();
-    printf("Trasmission successful.\n");
+    dbgln("Transmission successful.");
     return true;
   }
 
@@ -159,13 +159,14 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
 
 bool radio_transport_initialize() {
   if (spi_init() != 0) {
-    printf("ERROR: SPI initialization failed\n");
+    warnln("SPI initialization failed!");
     return false;
   }
+
   cc1200_cmd(SRES);
   write_default_register_configuration();
   cc1200_cmd(SNOP);
-  printf("CC1200 Status: %s\n", get_status_cc1200_str());
+  dbgln("CC1200 Status: %s", get_status_cc1200_str());
   return true;
 }
 

@@ -1,5 +1,9 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Message"
+
 #include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
+#include "lib/logger.h"
 #include "src/protocol/routing.h"
 #include "src/state.h"
 #include "src/transport.h"
@@ -36,17 +40,18 @@ bool message_is_command(message_t *msg) {
 
 bool message_is_valid(message_t *msg) {
   if (msg == NULL) {
-    fprintf(stderr, "[WARNING] Message is NULL.\n");
+    warnln("Message is NULL.");
     return false;
   }
 
   if (message_allowlist[message_action(msg)][message_type(msg)] == false) {
-    fprintf(stderr, "[WARNING] Message has invalid ACTION/TYPE combination.\n");
+    warnln("Message has invalid ACTION/TYPE combination.");
     return false;
   }
 
-  if (msg->header.sender_id.layer & specific) {
-    fprintf(stderr, "[WARNING] Message sender field is not set.\n");
+  if (!(msg->header.sender_id.layer & specific)) {
+    warnln("Sender ID Layer = %#0x does not have 'specific' bit set",
+           msg->header.sender_id.layer);
     return false;
   }
 

@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Swap"
+
 #include "src/protocol/swap.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
@@ -26,7 +30,7 @@ bool handle_do_migrate(message_t *msg) {
   assert(message_type(msg) == MIGRATE);
 
   if (msg->header.sender_id.layer != leader) {
-    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
+    dbgln("Received DO TRANSFER from non-leader, ignoring.");
     return false;
   }
 
@@ -80,13 +84,13 @@ bool handle_do_swap(message_t *msg) {
   assert(message_type(msg) == SWAP);
 
   if (!(gs.flags & LEADER) || msg->header.sender_id.layer != leader) {
-    fprintf(stderr, "Only leaders should be able to swap, ignoring.\n");
+    dbgln("Only leaders should be able to swap, ignoring.");
     return false;
   }
 
   frequency_t f = msg->payload.swap.with;
   if (!is_valid_tree_node(f) || f == gs.frequencies.current) {
-    fprintf(stderr, "Sent frequency is invalid, ignoring.\n");
+    dbgln("Sent frequency is invalid, ignoring.");
     reject_swap(msg->header.sender_id);
     return false;
   }
@@ -94,8 +98,7 @@ bool handle_do_swap(message_t *msg) {
   uint8_t score = msg->payload.swap.score;
   if ((score <= gs.scores.current && tree_node_gt(gs.frequencies.current, f)) ||
       (score >= gs.scores.current && tree_node_gt(f, gs.frequencies.current))) {
-    fprintf(stderr,
-            "Tree Order is still preserved, I see no reason to swap!\n");
+    dbgln("Tree Order is still preserved, I see no reason to swap.");
     reject_swap(msg->header.sender_id);
     return true;
   }
@@ -113,7 +116,7 @@ bool swap_reply_filter(message_t *msg) {
 
 bool perform_swap(frequency_t with) {
   if (!is_valid_tree_node(with)) {
-    fprintf(stderr, "Can't swap with frequency %u, is invalid.\n", with);
+    warnln("Can't swap with frequency %u, is invalid.", with);
     return false;
   }
 
@@ -133,16 +136,14 @@ bool perform_swap(frequency_t with) {
   collect_messages(10, 1, swap_reply_filter, replies);
 
   if (message_vector_empty(replies)) {
-    fprintf(stderr,
-            "Didn't receive answer from frequency %u, assuming failure.\n",
-            with);
+    warnln("Didn't receive answer from frequency %u, assuming failure.", with);
     message_vector_destroy(replies);
     return false;
   }
 
   message_t reply = message_vector_at(replies, 0);
   if (message_action(&reply) == WONT) {
-    fprintf(stderr, "Frequency %u doesn't want to swap, aborting.\n", with);
+    dbgln("Frequency %u doesn't want to swap, aborting.", with);
     message_vector_destroy(replies);
     return false;
   }

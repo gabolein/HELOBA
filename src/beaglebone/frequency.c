@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Frequency"
+
 #include "src/beaglebone/frequency.h"
+#include "lib/logger.h"
 #include "src/beaglebone/backoff.h"
 #include "src/beaglebone/registers.h"
 #include <SPIv1.h>
@@ -124,5 +128,5 @@ void print_transceiver_frequency() {
   uint32_t freq = ((hw_freq >> 16) + (FREQ_OFF >> 18)) * CRYSTAL_FREQUENCY /
                   read_LO_divider_value();
 
-  printf("[INFO] Current Transceiver Frequency: %uMHz\n", freq / MHz);
+  dbgln("Current Transceiver Frequency: %uMHz", freq / MHz);
 }

@@ -1,7 +1,8 @@
+#include "lib/logger.h"
 #define _GNU_SOURCE
-#include "src/interface/interface.h"
 #include "lib/time_util.h"
 #include "src/interface/command.h"
+#include "src/interface/interface.h"
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -18,13 +19,13 @@ static pthread_mutex_t interface_lock;
 
 bool strtol_check_error(long number) {
   if (errno == ERANGE && number == LONG_MIN) {
-    printf("underflow\n");
+    warnln("underflow");
   } else if (errno == ERANGE && number == LONG_MAX) {
-    printf("overflow\n");
+    warnln("overflow");
   } else if (errno == EINVAL) {
-    printf("base invalid\n");
+    warnln("base invalid");
   } else if (errno != 0 && number == 0) {
-    printf("unspecified error\n");
+    warnln("unspecified error");
   } else {
     return true;
   }
@@ -139,14 +140,14 @@ void *interface_collect_user_input(void *arg) {
         pthread_mutex_unlock(&interface_lock);
         wait_command_fetched();
       } else {
-        printf("Invalid frequency input."
-               " Valid frequencies are in range [800,950].\n");
+        warnln("Invalid frequency input. Valid frequencies are in range "
+               "[800, 950].");
       }
       break;
     }
 
     case SEND:
-      printf("Send currently not supported.\n");
+      warnln("Send currently not supported.");
       break;
 
     case SEARCHFOR: {
@@ -160,15 +161,14 @@ void *interface_collect_user_input(void *arg) {
         pthread_mutex_unlock(&interface_lock);
         wait_command_fetched();
       } else {
-        printf("Invalid address input."
-               " Try a 6 Byte MAC address.\n");
+        warnln("Invalid address input. Try a 6 Byte MAC address.");
       }
       break;
     }
 
     default:
-      printf("Unknown command. Commands: "
-             "id, goto, list, searchfor, freq, split, send\n");
+      warnln("Unknown command. Commands: id, goto, list, searchfor, freq, "
+             "split, send");
     }
     printf("\nInsert command\n");
   }

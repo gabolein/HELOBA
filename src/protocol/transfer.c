@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Transfer"
+
 #include "src/protocol/transfer.h"
+#include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
 #include "src/protocol/message_util.h"
@@ -23,8 +27,8 @@ int id_order(const void *arg1, const void *arg2) {
   return 0;
 }
 
-bool perform_split(){
-  routing_id_t_vector_t* keys = club_hashmap_keys(gs.members);
+bool perform_split() {
+  routing_id_t_vector_t *keys = club_hashmap_keys(gs.members);
   unsigned nkeys;
   if ((nkeys = routing_id_t_vector_size(keys)) == 0) {
     return false;
@@ -170,16 +174,16 @@ bool perform_registration() {
   collect_messages(50, 1, join_filter, received);
 
   if (message_vector_size(received) == 0) {
-    fprintf(stderr, "Leader didn't answer join request.\n");
+    warnln("Leader didn't answer join request.");
     return false;
   }
 
   message_t answer = message_vector_at(received, 0);
   if (message_action(&answer) == DONT) {
-    fprintf(stderr, "Leader rejected our join request.\n");
+    dbgln("Leader rejected our join request.");
     return false;
   } else {
-    fprintf(stderr, "Leader accepted our join request.\n");
+    dbgln("Leader accepted our join request.");
     gs.flags |= REGISTERED;
     return true;
   }
@@ -190,7 +194,7 @@ bool handle_do_transfer(message_t *msg) {
   assert(message_type(msg) == TRANSFER);
 
   if (msg->header.sender_id.layer != leader) {
-    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
+    dbgln("Received DO TRANSFER from non-leader, ignoring.");
     return false;
   }
 

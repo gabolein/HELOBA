@@ -1,5 +1,9 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Message Handlers"
+
 #include "src/protocol/message_handler.h"
 #include "lib/datastructures/generic/generic_vector.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
@@ -36,7 +40,7 @@ bool handle_do_mute(message_t *msg) {
   assert(message_type(msg) == MUTE);
 
   if (!message_from_leader(msg)) {
-    fprintf(stderr, "Received DO MUTE from non-leader, will not act on it.\n");
+    dbgln("Received DO MUTE from non-leader, will not act on it.");
     return false;
   }
 
@@ -50,8 +54,7 @@ bool handle_dont_mute(message_t *msg) {
   assert(message_type(msg) == MUTE);
 
   if (!message_from_leader(msg)) {
-    fprintf(stderr,
-            "Received DONT MUTE from non-leader, will not act on it.\n");
+    dbgln("Received DONT MUTE from non-leader, will not act on it.");
     return false;
   }
 

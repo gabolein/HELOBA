@@ -1,5 +1,9 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Virtual Transport"
+
 #include "src/virtual_transport.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
@@ -66,19 +70,19 @@ bool virtual_change_frequency(uint16_t frequency) {
   }
 
   if ((virt_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    fprintf(stderr, "Couldn't create virtual socket!\n");
+    dbgln("Couldn't create virtual socket!");
     return false;
   }
 
   if (setsockopt(virt_fd, IPPROTO_IP, IP_MULTICAST_LOOP, &(int){1},
                  sizeof(int)) < 0) {
-    fprintf(stderr, "Couldn't enable multicast on loopback interface!\n");
+    dbgln("Couldn't enable multicast on loopback interface!");
     close(virt_fd);
     return false;
   }
 
   if (setsockopt(virt_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int))) {
-    fprintf(stderr, "Couldn't set SO_REUSEADDR for socket.\n");
+    dbgln("Couldn't set SO_REUSEADDR for socket.");
     close(virt_fd);
     return false;
   }
@@ -108,19 +112,19 @@ bool virtual_change_frequency(uint16_t frequency) {
     return false;
   }
 
-  fprintf(stderr, "Changed frequency to %u.\n", frequency);
+  dbgln("Changed frequency to %u.", frequency);
   return true;
 }
 
 bool virtual_send_packet(uint8_t *buffer, unsigned length) {
   if (sendto(virt_fd, buffer, length, 0, (struct sockaddr *)&comm_addr,
              sizeof(comm_addr)) < 0) {
-    fprintf(stderr, "Couldn't send %u bytes to fd=%i:\n", length, virt_fd);
-    fprintf(stderr, "%s\n", strerror(errno));
+    dbgln("Couldn't send %u bytes to fd=%i: %s", length, virt_fd,
+          strerror(errno));
     return false;
   }
 
-  fprintf(stderr, "Sent packet.\n");
+  dbgln("Sent packet.");
   return true;
 }
 
@@ -132,15 +136,13 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   // NOTE: Timeout sollte wahrscheinlich kleiner sein
   switch (poll(&fds, 1, 100)) {
   case -1:
-    fprintf(stderr, "Couldn't poll fd=%i:\n", virt_fd);
-    fprintf(stderr, "%s\n", strerror(errno));
+    dbgln("Couldn't poll fd=%i: %s", virt_fd, strerror(errno));
     return false;
   case 0:
     return false;
   default:
     if (recv(virt_fd, buffer, MAX_MSG_LEN, 0) < 0) {
-      fprintf(stderr, "Couldn't receive message:\n");
-      fprintf(stderr, "%s\n", strerror(errno));
+      dbgln("Couldn't receive message: %s", strerror(errno));
     }
     *length = buffer[0];
     return true;

@@ -1,4 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Command"
+
 #include "src/interface/command.h"
+#include "lib/logger.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/search.h"
 #include "src/protocol/transfer.h"
@@ -6,25 +10,15 @@
 #include "src/transport.h"
 
 bool handle_freq(__attribute__((unused)) command_param_t param) {
-  printf("Current frequency: %u\n", gs.frequencies.current);
+  dbgln("Current frequency: %u", gs.frequencies.current);
   return true;
 }
 
-void print_id(uint8_t MAC[6]) {
-
-  for (size_t i = 0; i < 6; i++) {
-    printf("%x", MAC[i]);
-
-    if (i != 5)
-      putchar(':');
-  }
-
-  printf("\n");
-}
+void print_id(uint8_t MAC[6]) { dbgln("ID: %lx", *(uint64_t *)MAC); }
 
 bool handle_list(__attribute__((unused)) command_param_t param) {
   if (!(gs.flags & LEADER)) {
-    printf("Node is not a leader and therefore has no list of nodes.\n");
+    dbgln("Node is not a leader and therefore has no list of nodes.");
     return false;
   }
 
@@ -41,7 +35,6 @@ bool handle_list(__attribute__((unused)) command_param_t param) {
 }
 
 bool handle_id(__attribute__((unused)) command_param_t param) {
-  printf("Node ID: ");
   print_id(gs.id.MAC);
 
   return true;
@@ -49,7 +42,7 @@ bool handle_id(__attribute__((unused)) command_param_t param) {
 
 bool handle_split(__attribute__((unused)) command_param_t param) {
   if (!(gs.flags & LEADER)) {
-    printf("Node is not a leader and therefore cannot perform split.\n");
+    dbgln("Node is not a leader and therefore cannot perform split.");
     return false;
   }
   perform_split();
@@ -73,7 +66,7 @@ bool handle_goto(command_param_t param) {
 
 bool handle_send(command_param_t param) {
   // TODO
-  printf("Send currently not supported.\n");
+  warnln("Send currently not supported.");
   return false;
 }
 
