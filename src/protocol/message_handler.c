@@ -25,7 +25,6 @@ bool handle_wont_swap(message_t *msg);
 bool handle_do_transfer(message_t *msg);
 bool handle_will_transfer(message_t *msg);
 bool handle_do_find(message_t *msg);
-bool handle_will_find(message_t *msg);
 bool handle_do_migrate(message_t *msg);
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
@@ -37,7 +36,6 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][TRANSFER] = handle_do_transfer,
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
-    [WILL][FIND] = handle_will_find,
     [DO][MIGRATE] = handle_do_migrate};
 
 bool handle_do_mute(message_t *msg) {
