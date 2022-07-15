@@ -13,7 +13,7 @@
 #define MESSAGE_ACTION_MASK 0b11000000
 typedef enum { DO, DONT, WILL, WONT } message_action_t;
 
-#define MESSAGE_TYPE_COUNT 5
+#define MESSAGE_TYPE_COUNT 6
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
 typedef enum { FIND, SWAP, TRANSFER, MUTE, MIGRATE, SPLIT } message_type_t;

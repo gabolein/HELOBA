@@ -5,5 +5,7 @@
 #include <stdbool.h>
 
 bool perform_swap(frequency_t with);
+bool handle_do_swap(message_t*);
+bool handle_do_migrate(message_t*);
 
 #endif

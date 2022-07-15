@@ -33,8 +33,8 @@ typedef struct {
 
 void search_queue_add(search_hint_t hint);
 void search_state_initialize(void);
-bool search_concluded(void);
 routing_id_t get_to_find(void);
 bool perform_search(routing_id_t);
+bool handle_do_find(message_t*);
 
 #endif
