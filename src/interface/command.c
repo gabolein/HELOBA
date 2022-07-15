@@ -9,20 +9,7 @@ bool handle_freq(
   return true;
 }
 
-bool handle_list(
-    __attribute__ ((unused))command_param_t param){
-  // TODO get all nodes from hashmap and print them
-  // need keys function for hashmap
-  if (!(gs.flags & LEADER)) {
-    printf("Node is not a leader and therefore has no list of nodes.\n");
-    return false;
-  }
-  return true;
-}
-
-bool handle_id(
-    __attribute__ ((unused))command_param_t param){
-  printf("Node ID: ");
+void print_id(uint8_t MAC[6]){
 
   for (size_t i = 0; i < 6; i++) {
     printf("%x", gs.id.optional_MAC[i]);
@@ -32,6 +19,32 @@ bool handle_id(
   }
 
   printf("\n");
+}
+  
+bool handle_list(
+    __attribute__ ((unused))command_param_t param){
+  if (!(gs.flags & LEADER)) {
+    printf("Node is not a leader and therefore has no list of nodes.\n");
+    return false;
+  }
+
+  routing_id_t_vector_t* keys = club_hashmap_keys(gs.members);
+  unsigned nkeys = routing_id_t_vector_size(keys);
+  for (size_t i = 0; i < nkeys; i++) {
+    routing_id_t id = routing_id_t_vector_at(keys, i);
+    printf("1. ");
+    print_id(id.optional_MAC);
+  }
+
+  routing_id_t_vector_destroy(keys);
+  return true;
+}
+
+bool handle_id(
+    __attribute__ ((unused))command_param_t param){
+  printf("Node ID: ");
+  print_id(gs.id.optional_MAC);
+
   return true;
 }
 
