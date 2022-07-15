@@ -240,16 +240,17 @@ bool handle_will_transfer(message_t *msg) {
 
   if (gs.id.layer == leader) {
     frequency_t f = msg->payload.transfer.to;
+    routing_id_t nonleader = msg->header.sender_id;
 
     if (f == gs.frequency) {
-      if (!club_hashmap_exists(gs.members, f)) {
+      if (!club_hashmap_exists(gs.members, nonleader)) {
         return false;
       }
 
-      club_hashmap_remove(gs.members, f);
+      club_hashmap_remove(gs.members, nonleader);
       gs.scores.current--;
     } else {
-      club_hashmap_insert(gs.members, f, true);
+      club_hashmap_insert(gs.members, nonleader, true);
       gs.scores.current++;
     }
   }
