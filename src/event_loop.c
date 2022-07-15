@@ -3,6 +3,7 @@
 #include "src/protocol/message_handler.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/tree.h"
+#include "src/protocol/transfer.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include <stdint.h>
@@ -64,23 +65,6 @@ bool perform_swap(frequency_t with) {
   return true;
 }
 
-int id_order(const void* arg1, const void* arg2) {
-  uint8_t* id_1 = (uint8_t*)arg1;
-  uint8_t* id_2 = (uint8_t*)arg2;
-
-  for (size_t i = 0; i < MAC_SIZE; i++) {
-    if (id_1[i] > id_2[i]) {
-      return 1;
-    }
-
-    if (id_1[i] < id_2[i]) {
-      return -1;
-    }
-  }
-
-  return 0;
-}
-
 void event_loop_run() {
   message_t received;
   if (transport_receive_message(&received)) {
@@ -92,27 +76,7 @@ void event_loop_run() {
   if (gs.flags & LEADER) {
     if (gs.scores.current >= MIN_SPLIT_SCORE &&
         gs.scores.current < MIN_SWAP_SCORE) {
-      // TODO: split to children
-      // 1. sort member list by id
-      routing_id_t_vector_t* keys = club_hashmap_keys(gs.members);
-      unsigned nkeys = routing_id_t_vector_size(keys);
-      qsort(keys, sizeof(routing_id_t), nkeys, &id_order);
-      // 2. send SPLIT message with delimeters sorted[n/4], sorted[2n/4] to
-      // everone on frequency
-      routing_id_t delim1 = routing_id_t_vector_at(keys, nkeys/4);
-      routing_id_t delim2 = routing_id_t_vector_at(keys, nkeys/2);
-      
-      message_t split_msg = message_create(DO, SPLIT);
-      split_msg.payload.split.delim1 = delim1;
-      split_msg.payload.split.delim2 = delim2;
-      routing_id_t receivers = {.layer = everyone};
-
-      transport_send_message(&split_msg, receivers);
-
-      // 3. receiving nodes will compare id with delimeters
-      // 3.1. if id < sorted[n/4] goto lhs
-      // 3.2. else if id < sorted[2n/4] goto rhs
-      // 3.1. else do nothing
+      perform_split();
     }
 
     if (gs.scores.current >= MIN_SWAP_SCORE) {
