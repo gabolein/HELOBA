@@ -101,7 +101,8 @@ bool transport_receive_message_unverified(message_t *msg) {
   }
 
   *msg = unpack_message(recv_buffer, length);
-  return message_is_valid(msg);
+  return message_is_valid(msg) &&
+         !routing_id_equal(msg->header.sender_id, gs.id);
 }
 
 bool transport_get_id(uint8_t *out) {
