@@ -1,4 +1,7 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Parse"
 
+#include "lib/logger.h"
 #include "lib/datastructures/u8_vector.h"
 #include "src/protocol/message.h"
 #include <assert.h>
@@ -81,13 +84,54 @@ void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload) {
   pack_frequency(v, payload->to);
 }
 
+unsigned get_payload_size(message_action_t action, message_type_t type) {
+  // TODO replace magic numbers
+  switch (type) {
+  case FIND:
+    // TODO extend for cache
+    return 7;
+    break;
+  case SWAP:
+    return 2 + 1;
+  case MIGRATE:
+    return 2;
+  case TRANSFER:
+    return action == WILL ? 2 : 0;
+  case SPLIT:
+    return 7 + 7;
+  case MUTE:
+    // TODO
+    return 0;
+  default:
+    warnln("get payload size: case not handled");
+    return 0;
+  }
+}
+
+void pack_message_length(u8_vector_t *v, message_t *msg) {
+
+  uint8_t message_length = 0;
+  // add action and type
+  message_length += 2;
+  // add sender routing_id
+  message_length += 7;
+  // add recv sender id
+  message_length += 1;
+  if (msg->header.sender_id.layer == specific) {
+    message_length += 6;
+  }
+
+  // add payload size
+  message_length += get_payload_size(msg->header.action, msg->header.type);
+  u8_vector_append(v, message_length);
+  pack_header(v, &msg->header);
+}
+  
+
 void pack_message(u8_vector_t *v, message_t *msg) {
   assert(u8_vector_size(v) == 0);
 
-  uint8_t message_length = sizeof(*msg);
-  u8_vector_append(v, message_length);
-
-  pack_header(v, &msg->header);
+  pack_message_length(v, msg);
 
   switch (msg->header.type) {
   case FIND:
@@ -186,7 +230,6 @@ transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
 }
 
 message_t unpack_message(uint8_t *buffer, unsigned length) {
-  assert(length == sizeof(message_t));
   message_t d;
   unsigned decoded = 1;
 
