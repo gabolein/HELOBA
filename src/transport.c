@@ -84,3 +84,11 @@ bool transport_get_id(uint8_t *out) {
   return radio_get_id(out);
 #endif
 }
+
+bool transport_channel_active() {
+#if defined(VIRTUAL)
+  return virtual_channel_active();
+#else
+  return radio_channel_active();
+#endif
+}

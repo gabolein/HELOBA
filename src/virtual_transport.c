@@ -1,8 +1,8 @@
 #include "src/virtual_transport.h"
-#include "src/protocol/routing.h"
-#include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/time_util.h"
+#include "src/protocol/message.h"
+#include "src/protocol/routing.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>
@@ -147,13 +147,28 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   }
 }
 
-// TODO include from protocol
-#define ADDR_LEN 6
-
 bool virtual_get_id(uint8_t *out) {
   assert(sizeof(pid_t) <= MAC_SIZE);
   pid_t pid = getpid();
   memcpy(out, &pid, sizeof(pid));
   memset(out + sizeof(pid), 0, MAC_SIZE - sizeof(pid_t));
   return true;
+}
+
+// NOTE: Es kann sein, dass wir unsere eigenen gesendeten Nachrichten empfangen,
+// diese Funktion sollte also nur aufgerufen werden, bevor wir etwas gesendet
+// haben, um mit der Radio Variante konsistente Ergebisse zu liefern
+bool virtual_channel_active() {
+  struct pollfd fds;
+  fds.fd = virt_fd;
+  fds.events = POLLIN;
+
+  int ret;
+  // NOTE: Timeout sollte wahrscheinlich kleiner sein
+  if ((ret = poll(&fds, 1, 100)) < 0) {
+    perror("poll");
+    return false;
+  }
+
+  return ret != 0;
 }
