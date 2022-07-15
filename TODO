@@ -31,12 +31,11 @@ registration: leader "election" upon changing frequency
 
 interface: perform split, list, goto (unregister + register), send?
 	split: easy once leader logic is done
-	list: no vector of members currently being saved
 	goto: unregister (send will transfer to leader), change frequency, 
 		register (problem: registration)
 	send: look if enough time
 
-leader chores: send nodes to other frequencies, swap up or down
+leader chores: send nodes to other frequencies
 
 	split: if over certain threshold (actually: if certain number of backoffs)
 
@@ -51,8 +50,9 @@ MINOR
 
 shutdown stuff
 transport: recv buffer and send vector
-leader not valid messages
 cache
 backoff threshold way too big
 
 radio: asynchronous listen?
+
+add send migrate to swap logic
