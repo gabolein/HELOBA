@@ -4,7 +4,6 @@
 #include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
-#include "lib/logger.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -211,7 +210,7 @@ bool handle_will_transfer(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == TRANSFER);
 
-  if (gs.id.layer == leader) {
+  if (gs.id.layer & leader) {
     frequency_t f = msg->payload.transfer.to;
     routing_id_t nonleader = msg->header.sender_id;
 
