@@ -4,6 +4,8 @@
 #include "src/state.h"
 #include "src/transport.h"
 
+MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
+
 static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][MUTE] = true,
     [DONT][MUTE] = true,
@@ -43,9 +45,6 @@ bool message_is_valid(message_t *msg) {
     return false;
   }
 
-  // FIXME: Nachrichten vom Leader würden im Moment als nicht valid angesehen
-  // werden. Es sollte am besten so gemacht werden, dass leader ein weiteres Bit
-  // ist, welches man separat von specific setzen kann.
   if (msg->header.sender_id.layer & specific) {
     fprintf(stderr, "[WARNING] Message sender field is not set.\n");
     return false;

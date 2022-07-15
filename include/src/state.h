@@ -3,8 +3,8 @@
 
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
-#include "src/protocol/search.h"
 #include "src/protocol/routing.h"
+#include "src/protocol/search.h"
 
 MAKE_SPECIFIC_VECTOR_HEADER(routing_id_t, routing_id_t)
 MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, bool, club)
@@ -24,6 +24,11 @@ typedef struct {
 } score_state_t;
 
 typedef struct {
+  frequency_t previous;
+  frequency_t current;
+} frequency_state_t;
+
+typedef struct {
   frequency_t old;
   struct timespec last_migrate;
 } migrate_state_t;
@@ -33,7 +38,7 @@ typedef struct {
   score_state_t scores;
   routing_id_t id;
   flags_t flags;
-  frequency_t frequency;
+  frequency_state_t frequencies;
   search_state_t search;
   migrate_state_t migrate;
 } state_t;

@@ -1,6 +1,7 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include "lib/datastructures/generic/generic_vector.h"
 #include "routing.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -58,6 +59,8 @@ typedef struct {
     transfer_payload_t transfer;
   } payload;
 } message_t;
+
+MAKE_SPECIFIC_VECTOR_HEADER(message_t, message)
 
 message_action_t message_action(message_t *msg);
 message_type_t message_type(message_t *msg);

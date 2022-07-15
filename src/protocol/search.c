@@ -3,6 +3,7 @@
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
+#include "src/protocol/message_util.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -88,7 +89,7 @@ bool search_response_filter(message_t *msg) {
   return message_action(msg) == WILL && message_type(msg) == FIND;
 }
 
-bool search_for(routing_id_t to_find) {
+bool perform_search(routing_id_t to_find) {
   if (!(gs.flags & SEARCHING)) {
     fprintf(stderr, "Currently still searching for another ID, ignoring.\n");
     return false;
@@ -97,7 +98,7 @@ bool search_for(routing_id_t to_find) {
   gs.flags |= SEARCHING;
   gs.search.to_find_id = to_find;
   checked_hashmap_clear(gs.search.checked_frequencies);
-  gs.search.current_frequency = gs.frequency;
+  gs.search.current_frequency = gs.frequencies.current;
   gs.search.direction = UP;
   search_priority_queue_clear(gs.search.search_queue);
 
@@ -137,8 +138,8 @@ bool search_for(routing_id_t to_find) {
     // d.h. den Fall haben wir nur, wenn der gesuchte Node überhaupt nicht
     // im Baum ist.
     message_vector_t *responses = message_vector_create();
-    message_assign_collector(WILL_FIND_RECV_TIMEOUT, 5, search_response_filter,
-                             responses);
+    collect_messages(WILL_FIND_RECV_TIMEOUT, 5, search_response_filter,
+                     responses);
 
     for (unsigned i = 0; i < message_vector_size(responses); i++) {
       message_t current = message_vector_at(responses, i);
