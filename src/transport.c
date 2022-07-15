@@ -83,6 +83,22 @@ bool transport_receive_message(message_t *msg) {
   return message_is_valid(msg) && message_addressed_to(msg, gs.id);
 }
 
+bool transport_receive_message_unverified(message_t *msg) {
+  unsigned length = sizeof(recv_buffer);
+#if defined(VIRTUAL)
+  bool ret = virtual_receive_packet(recv_buffer, &length);
+#else
+  bool ret = radio_receive_packet(recv_buffer, &length);
+#endif
+
+  if (ret == false) {
+    return false;
+  }
+
+  *msg = unpack_message(recv_buffer, length);
+  return message_is_valid(msg);
+}
+
 bool transport_get_id(uint8_t *out) {
 #if defined(VIRTUAL)
   return virtual_get_id(out);
