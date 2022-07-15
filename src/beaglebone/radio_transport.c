@@ -191,3 +191,5 @@ bool radio_get_id(uint8_t out[MAC_SIZE]) {
 
   return true;
 }
+
+bool radio_channel_active() { return detect_RSSI(); }
