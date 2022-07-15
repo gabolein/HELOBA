@@ -13,7 +13,7 @@ typedef enum {
   FREQ,
   LIST,
   GOTO,
-  SPLIT,
+  SPLIT_NODES,
   ID,
   UNKNOWN
 } interface_commands;

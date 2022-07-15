@@ -9,7 +9,7 @@ bool handle_freq(
   return true;
 }
 
-void print_id(uint8_t MAC[6]){
+void print_id(){
 
   for (size_t i = 0; i < 6; i++) {
     printf("%x", gs.id.optional_MAC[i]);
@@ -43,12 +43,12 @@ bool handle_list(
 bool handle_id(
     __attribute__ ((unused))command_param_t param){
   printf("Node ID: ");
-  print_id(gs.id.optional_MAC);
+  print_id();
 
   return true;
 }
 
-bool handle_split(
+bool handle_split_nodes(
     __attribute__ ((unused))command_param_t param){
   // TODO call function that makes node split
   if (!(gs.flags & LEADER)) {
@@ -90,7 +90,7 @@ static interface_handler_f interface_handlers[INTERFACE_COMMAND_COUNT-1] = {
   [FREQ] = handle_freq,
   [LIST] = handle_list,
   [GOTO] = handle_goto,
-  [SPLIT] = handle_split,
+  [SPLIT_NODES] = handle_split_nodes,
   [ID] = handle_id};
 
 bool handle_interface_command(interface_commands command, 
@@ -117,8 +117,8 @@ interface_commands get_command(char* command) {
   if (strcmp(command, "goto") == 0)
     return GOTO;
 
-  if (strcmp(command, "split") == 0)
-    return SPLIT;
+  if (strcmp(command, "splitnodes") == 0)
+    return SPLIT_NODES;
 
   if (strcmp(command, "id") == 0)
     return ID;
