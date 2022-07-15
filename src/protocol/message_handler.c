@@ -1,5 +1,6 @@
 #include "src/protocol/message_handler.h"
 #include "lib/datastructures/generic/generic_vector.h"
+#include "lib/random.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
@@ -8,6 +9,7 @@
 #include "src/state.h"
 #include "src/transport.h"
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
@@ -103,7 +105,7 @@ void perform_swap(frequency_t to) {
   // NOTE: die einfachste Lösung ist es, bei TRANSFER mitzusenden, ob er Teil
   // eines SWAPs ist. Wenn wir dann bei einem TRANSFER immer die alte Frequenz
   // abspeichern, können wir den zweiten falschen TRANSFER erkennen und
-  // ignorieren. 
+  // ignorieren.
   // -> solved by MIGRATE
 
   message_t migrate = message_create(DO, TRANSFER);
