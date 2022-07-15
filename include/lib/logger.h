@@ -49,7 +49,7 @@
     exit(0);                                                                   \
   } while (0)
 #else
-#define panic(...)
+#define panicln(...)
 #endif
 
 #endif
