@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 199309L
 #include "src/beaglebone/backoff.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
+#include "lib/random.h"
 #include "src/beaglebone/rssi.h"
 #include <assert.h>
 #include <stddef.h>
@@ -10,12 +11,6 @@
 #define TWO_PWR_OF(n) (1 << n)
 
 static backoff_struct node_backoff = {0, 0, {0}};
-
-size_t random_number_between(size_t min, size_t max) {
-  assert(min <= max);
-  srand(time(NULL));
-  return min + (rand() % (int)(max - min + 1));
-}
 
 void set_new_backoff() {
   node_backoff.attempts++;
