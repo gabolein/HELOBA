@@ -17,6 +17,8 @@ void kill_handler(int signo) {
 }
 
 int main() {
+  srandom(time(NULL));
+
   initialize_global_state();
 
   if (!transport_initialize()) {
