@@ -32,7 +32,7 @@ bool handle_list(__attribute__((unused)) command_param_t param) {
   for (size_t i = 0; i < nkeys; i++) {
     routing_id_t id = routing_id_t_vector_at(keys, i);
     printf("1. ");
-    print_id(id.optional_MAC);
+    print_id(id.MAC);
   }
 
   routing_id_t_vector_destroy(keys);
@@ -41,7 +41,7 @@ bool handle_list(__attribute__((unused)) command_param_t param) {
 
 bool handle_id(__attribute__((unused)) command_param_t param) {
   printf("Node ID: ");
-  print_id(gs.id.optional_MAC);
+  print_id(gs.id.MAC);
 
   return true;
 }

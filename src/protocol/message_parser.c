@@ -46,7 +46,7 @@ void pack_routing_id(u8_vector_t *v, routing_id_t *id) {
     for (size_t i = 0; i < MAC_SIZE; i++) {
       // TODO: Nachschauen ob das in NW Byteorder sein muss bzw. ob wir das zu
       // diesem Zeitpunkt überhaupt schon brauchen.
-      u8_vector_append(v, id->optional_MAC[i]);
+      u8_vector_append(v, id->MAC[i]);
     }
   }
 }
@@ -123,7 +123,7 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
 
   if (d.layer == specific) {
     for (size_t i = 0; i < MAC_SIZE; i++) {
-      d.optional_MAC[i] = buffer[*decoded];
+      d.MAC[i] = buffer[*decoded];
       (*decoded)++;
     }
   }

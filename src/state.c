@@ -9,7 +9,7 @@ void initialize_global_state() {
   score_state_t scores = {0, 0};
   gs.scores = scores;
   gs.members = club_hashmap_create();
-  transport_get_id(gs.id.optional_MAC);
+  transport_get_id(gs.id.MAC);
   gs.id.layer = specific;
   search_state_initialize();
 }

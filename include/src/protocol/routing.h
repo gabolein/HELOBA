@@ -16,7 +16,7 @@ typedef enum {
 
 typedef struct {
   routing_layer_t layer;
-  uint8_t optional_MAC[MAC_SIZE];
+  uint8_t MAC[MAC_SIZE];
 } routing_id_t;
 
 bool routing_id_MAC_equal(routing_id_t, routing_id_t);

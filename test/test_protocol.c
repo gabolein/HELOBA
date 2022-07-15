@@ -22,7 +22,7 @@ routing_id_t get_random_id() {
     exit(EXIT_FAILURE);
   }
 
-  if (read(fd, id.optional_MAC, sizeof(id.optional_MAC)) < 0) {
+  if (read(fd, id.MAC, sizeof(id.MAC)) < 0) {
     perror("read");
     exit(EXIT_FAILURE);
   }
@@ -44,8 +44,7 @@ message_t create_basic_test_message(message_action_t action,
 }
 
 bool id_equal(routing_id_t id1, routing_id_t id2) {
-  return id1.layer == id2.layer &&
-         memcmp(id1.optional_MAC, id2.optional_MAC, MAC_SIZE) == 0;
+  return id1.layer == id2.layer && memcmp(id1.MAC, id2.MAC, MAC_SIZE) == 0;
 }
 
 bool message_equal(message_t *m1, message_t *m2) {

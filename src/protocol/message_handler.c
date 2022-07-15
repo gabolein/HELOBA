@@ -208,7 +208,7 @@ bool handle_do_find(message_t *msg) {
 
   routing_id_t to_find = msg->payload.find.to_find;
   routing_id_t self_id;
-  transport_get_id(self_id.optional_MAC);
+  transport_get_id(self_id.MAC);
   bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
   if (!leader && !searching_for_self) {
