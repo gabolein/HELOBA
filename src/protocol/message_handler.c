@@ -105,7 +105,8 @@ void perform_swap(frequency_t to) {
   // NOTE: die einfachste Lösung ist es, bei TRANSFER mitzusenden, ob er Teil
   // eines SWAPs ist. Wenn wir dann bei einem TRANSFER immer die alte Frequenz
   // abspeichern, können wir den zweiten falschen TRANSFER erkennen und
-  // ignorieren.
+  // ignorieren. 
+  // -> solved by MIGRATE
 
   message_t migrate = message_create(DO, TRANSFER);
   migrate.payload.transfer = (transfer_payload_t){
@@ -120,7 +121,7 @@ void perform_swap(frequency_t to) {
 // NOTE: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
 // FIXME: braucht Timeout, nach dem abgebrochen wird, weil es sein kann dass auf
-// angefragter Frequenz niemand ist.
+// angefragter Frequenz niemand ist. (Nur der Fall wenn man nach unten SWAP)
 bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);

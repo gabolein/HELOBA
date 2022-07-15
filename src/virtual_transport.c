@@ -1,4 +1,6 @@
 #include "src/virtual_transport.h"
+#include "src/protocol/routing.h"
+#include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/time_util.h"
 #include <arpa/inet.h>
@@ -136,9 +138,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   case 0:
     return false;
   default:
-    // TODO import definition of packet length from somewhere else, remove magic
-    // number
-    if (recv(virt_fd, buffer, 255, 0) < 0) {
+    if (recv(virt_fd, buffer, MAX_MSG_LEN, 0) < 0) {
       fprintf(stderr, "Couldn't receive message:\n");
       fprintf(stderr, "%s\n", strerror(errno));
     }
@@ -151,9 +151,9 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
 #define ADDR_LEN 6
 
 bool virtual_get_id(uint8_t *out) {
-  assert(sizeof(pid_t) <= ADDR_LEN);
+  assert(sizeof(pid_t) <= MAC_SIZE);
   pid_t pid = getpid();
   memcpy(out, &pid, sizeof(pid));
-  memset(out + sizeof(pid), 0, ADDR_LEN - sizeof(pid_t));
+  memset(out + sizeof(pid), 0, MAC_SIZE - sizeof(pid_t));
   return true;
 }

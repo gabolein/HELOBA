@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define MAX_MSG_LEN 255
+
 #define MESSAGE_ACTION_COUNT 4
 #define MESSAGE_ACTION_OFFSET 6
 #define MESSAGE_ACTION_MASK 0b11000000
