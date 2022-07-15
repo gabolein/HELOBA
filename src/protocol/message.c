@@ -94,3 +94,5 @@ message_t message_create(message_action_t action, message_type_t type) {
 
   return msg;
 }
+
+void message_print(message_t *msg) {}
