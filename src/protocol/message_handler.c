@@ -25,7 +25,6 @@ bool handle_wont_swap(message_t *msg);
 bool handle_do_transfer(message_t *msg);
 bool handle_will_transfer(message_t *msg);
 bool handle_do_find(message_t *msg);
-bool handle_will_find(message_t *msg);
 bool handle_do_migrate(message_t *msg);
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
@@ -37,7 +36,6 @@ static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][TRANSFER] = handle_do_transfer,
     [WILL][TRANSFER] = handle_will_transfer,
     [DO][FIND] = handle_do_find,
-    [WILL][FIND] = handle_will_find,
     [DO][MIGRATE] = handle_do_migrate};
 
 bool handle_do_mute(message_t *msg) {
@@ -91,33 +89,6 @@ void accept_swap(routing_id_t receiver) {
   transport_send_message(&answer, receiver);
 }
 
-void perform_swap(frequency_t to) {
-  // NOTE: wie stellen wir sicher, dass das ohne Probleme auf beiden Frequenzen
-  // zeitverschoben passieren kann?
-  // Was im Moment passieren könnte:
-  // 1. A schickt DO SWAP zu B
-  // 2. A akzeptiert, sendet Antwort
-  // 3. Alle Listeners auf A wechseln zu B
-  // 4. B bekommt Antwort
-  // 5. Alle Listeners auf B wechseln zu A
-  // Nach diesem Austausch würden alle Listener auf Frequenz A sein und keiner
-  // auf B, weil der Austausch nicht gleichzeitig passiert ist.
-  // NOTE: die einfachste Lösung ist es, bei TRANSFER mitzusenden, ob er Teil
-  // eines SWAPs ist. Wenn wir dann bei einem TRANSFER immer die alte Frequenz
-  // abspeichern, können wir den zweiten falschen TRANSFER erkennen und
-  // ignorieren.
-  // -> solved by MIGRATE
-
-  message_t migrate = message_create(DO, TRANSFER);
-  migrate.payload.transfer = (transfer_payload_t){
-      .to = to,
-  };
-
-  routing_id_t receivers = {.layer = everyone};
-  transport_send_message(&migrate, receivers);
-  transport_change_frequency(to);
-}
-
 // NOTE: braucht vllt Variable, in der steht, an welche Frequenz Swapping
 // angefragt wurde
 // FIXME: braucht Timeout, nach dem abgebrochen wird, weil es sein kann dass auf
@@ -159,6 +130,7 @@ bool handle_do_swap(message_t *msg) {
   }
 
   accept_swap(msg->header.sender_id);
+  // TODO correct perform_swap?
   perform_swap(f);
 
   return true;
@@ -328,16 +300,17 @@ bool handle_will_transfer(message_t *msg) {
 
   if (gs.id.layer == leader) {
     frequency_t f = msg->payload.transfer.to;
+    routing_id_t nonleader = msg->header.sender_id;
 
     if (f == gs.frequency) {
-      if (!club_hashmap_exists(gs.members, f)) {
+      if (!club_hashmap_exists(gs.members, nonleader)) {
         return false;
       }
 
-      club_hashmap_remove(gs.members, f);
+      club_hashmap_remove(gs.members, nonleader);
       gs.scores.current--;
     } else {
-      club_hashmap_insert(gs.members, f, true);
+      club_hashmap_insert(gs.members, nonleader, true);
       gs.scores.current++;
     }
   }

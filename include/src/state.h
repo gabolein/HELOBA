@@ -4,8 +4,10 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
 #include "src/protocol/search.h"
+#include "src/protocol/routing.h"
 
-MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, club)
+MAKE_SPECIFIC_VECTOR_HEADER(routing_id_t, routing_id_t)
+MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, bool, club)
 
 typedef enum {
   LEADER = 1 << 0,

@@ -1,8 +1,8 @@
 #include "src/state.h"
 #include "src/transport.h"
 
-bool freq_eq(frequency_t a, frequency_t b) { return a == b; }
-MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, club, freq_eq)
+MAKE_SPECIFIC_VECTOR_SOURCE(routing_id_t, routing_id_t)
+MAKE_SPECIFIC_HASHMAP_SOURCE(routing_id_t, bool, club, routing_id_equal)
 
 void initialize_global_state() {
   gs.flags = 0;
@@ -10,5 +10,6 @@ void initialize_global_state() {
   gs.scores = scores;
   gs.members = club_hashmap_create();
   transport_get_id(gs.id.optional_MAC);
+  gs.id.layer = specific;
   search_state_initialize();
 }
