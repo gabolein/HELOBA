@@ -150,6 +150,7 @@ bool perform_registration() {
   }
 
   if (gs.flags & LEADER) {
+    gs.flags |= REGISTERED;
     return true;
   }
 
@@ -175,6 +176,7 @@ bool perform_registration() {
     return false;
   } else {
     fprintf(stderr, "Leader accepted our join request.\n");
+    gs.flags |= REGISTERED;
     return true;
   }
 }
