@@ -4,6 +4,7 @@
 #include "src/protocol/routing.h"
 #include "src/protocol/swap.h"
 #include "src/protocol/tree.h"
+#include "src/protocol/transfer.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include <stdint.h>
@@ -33,14 +34,7 @@ void event_loop_run() {
   if (gs.flags & LEADER) {
     if (gs.scores.current >= MIN_SPLIT_SCORE &&
         gs.scores.current < MIN_SWAP_SCORE) {
-      // TODO: split to children
-      // 1. sort member list by id
-      // 2. send SPLIT message with delimeters sorted[n/4], sorted[2n/4] to
-      // everone on frequency
-      // 3. receiving nodes will compare id with delimeters
-      // 3.1. if id < sorted[n/4] goto lhs
-      // 3.2. else if id < sorted[2n/4] goto rhs
-      // 3.1. else do nothing
+      perform_split();
     }
 
     if (gs.scores.current >= MIN_SWAP_SCORE) {

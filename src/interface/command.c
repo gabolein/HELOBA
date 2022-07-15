@@ -12,7 +12,7 @@ bool handle_freq(__attribute__((unused)) command_param_t param) {
 void print_id(uint8_t MAC[6]) {
 
   for (size_t i = 0; i < 6; i++) {
-    printf("%x", gs.id.optional_MAC[i]);
+    printf("%x", MAC[i]);
 
     if (i != 5)
       putchar(':');
@@ -87,7 +87,7 @@ static interface_handler_f interface_handlers[INTERFACE_COMMAND_COUNT - 1] = {
     [FREQ] = handle_freq,
     [LIST] = handle_list,
     [GOTO] = handle_goto,
-    [SPLIT] = handle_split,
+    [SPLIT_NODES] = handle_split,
     [ID] = handle_id};
 
 bool handle_interface_command(interface_commands command,
@@ -114,8 +114,8 @@ interface_commands get_command(char *command) {
   if (strcmp(command, "goto") == 0)
     return GOTO;
 
-  if (strcmp(command, "split") == 0)
-    return SPLIT;
+  if (strcmp(command, "splitnodes") == 0)
+    return SPLIT_NODES;
 
   if (strcmp(command, "id") == 0)
     return ID;

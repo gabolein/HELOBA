@@ -121,10 +121,10 @@ void* interface_collect_user_input(void* arg) {
           wait_command_fetched();
           break;
 
-        case SPLIT:
+        case SPLIT_NODES:
           pthread_mutex_lock(&interface_lock);
           command.set = true;
-          command.type = SPLIT;
+          command.type = SPLIT_NODES;
           pthread_mutex_unlock(&interface_lock);
           wait_command_fetched();
           break;
