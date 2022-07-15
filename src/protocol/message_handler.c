@@ -22,8 +22,8 @@ bool handle_do_mute(message_t *msg);
 bool handle_dont_mute(message_t *msg);
 
 static handler_f message_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
-    [DO][MUTE] = handle_do_mute,
-    [DONT][MUTE] = handle_dont_mute,
+    /*[DO][MUTE] = handle_do_mute,*/
+    /*[DONT][MUTE] = handle_dont_mute,*/
     [DO][SWAP] = handle_do_swap,
     [DO][TRANSFER] = handle_do_transfer,
     [WILL][TRANSFER] = handle_will_transfer,
