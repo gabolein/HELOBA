@@ -214,19 +214,24 @@ bool handle_will_transfer(message_t *msg) {
     frequency_t f = msg->payload.transfer.to;
     routing_id_t nonleader = msg->header.sender_id;
 
-    if (f == gs.frequencies.current) {
+    if (f != gs.frequencies.current) {
       if (!club_hashmap_exists(gs.members, nonleader)) {
+        warnln("Will Transfer:" 
+            "not registered node is trying to unregister.");
         return false;
       }
 
+      dbgln("Will Transfer: Node is unregistering.");
       club_hashmap_remove(gs.members, nonleader);
       gs.scores.current--;
     } else {
+      dbgln("Will Transfer: Node is registering.");
       club_hashmap_insert(gs.members, nonleader, true);
       gs.scores.current++;
     }
   }
 
+  // TODO respond with will transfer
   // TODO: Cache Handling
 
   return true;
