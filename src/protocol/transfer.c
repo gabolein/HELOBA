@@ -92,17 +92,7 @@ bool join_filter(message_t *msg) {
           message_type(msg) == TRANSFER);
 }
 
-bool handle_do_transfer(message_t *msg) {
-  assert(message_action(msg) == DO);
-  assert(message_type(msg) == TRANSFER);
-
-  if (msg->header.sender_id.layer != leader) {
-    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
-    return false;
-  }
-
-  frequency_t destination = msg->payload.transfer.to;
-  transport_change_frequency(destination);
+bool perform_registration() {
 
   // clang-format off
   // Leader election algorithm:
@@ -122,7 +112,7 @@ bool handle_do_transfer(message_t *msg) {
   message_vector_t *received = message_vector_create();
 
   message_t join_request = message_create(WILL, TRANSFER);
-  join_request.payload.transfer = (transfer_payload_t){.to = destination};
+  join_request.payload.transfer = (transfer_payload_t){.to = gs.frequencies.current};
   routing_id_t receiver = {.layer = leader};
 
   while (participating) {
@@ -186,6 +176,20 @@ bool handle_do_transfer(message_t *msg) {
     fprintf(stderr, "Leader accepted our join request.\n");
     return true;
   }
+}
+
+bool handle_do_transfer(message_t *msg) {
+  assert(message_action(msg) == DO);
+  assert(message_type(msg) == TRANSFER);
+
+  if (msg->header.sender_id.layer != leader) {
+    fprintf(stderr, "Received DO TRANSFER from non-leader, ignoring.\n");
+    return false;
+  }
+
+  frequency_t destination = msg->payload.transfer.to;
+  transport_change_frequency(destination);
+  return perform_registration();
 }
 
 bool handle_will_transfer(message_t *msg) {
