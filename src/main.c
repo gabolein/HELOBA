@@ -3,6 +3,7 @@
 #include "src/state.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
+#include "src/event_loop.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -33,8 +34,7 @@ int main() {
   sigaction(SIGINT, &sa, NULL);
 
   while (!shutdown_flag) {
-    sleep_ms(400);
-    interface_do_action();
+    event_loop_run();
   }
 
   /*TODO shutdown stuff*/
