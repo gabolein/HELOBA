@@ -84,6 +84,9 @@ void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload) {
 void pack_message(u8_vector_t *v, message_t *msg) {
   assert(u8_vector_size(v) == 0);
 
+  uint8_t message_length = sizeof(*msg);
+  u8_vector_append(v, message_length);
+
   pack_header(v, &msg->header);
 
   switch (msg->header.type) {
@@ -183,8 +186,9 @@ transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
 }
 
 message_t unpack_message(uint8_t *buffer, unsigned length) {
+  assert(length == sizeof(message_t));
   message_t d;
-  unsigned decoded = 0;
+  unsigned decoded = 1;
 
   d.header = unpack_header(buffer, length, &decoded);
 
@@ -202,6 +206,7 @@ message_t unpack_message(uint8_t *buffer, unsigned length) {
     break;
   }
 
-  assert(decoded == length);
+  // NOTE Es muss nicht alles decoded werden
+  /*assert(decoded == length);*/
   return d;
 }
