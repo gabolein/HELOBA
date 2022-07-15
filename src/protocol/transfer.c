@@ -1,10 +1,10 @@
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Transfer"
-
 #include "src/protocol/transfer.h"
 #include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
+#include "lib/logger.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -135,6 +135,7 @@ bool perform_registration() {
     }
 
     if (participating) {
+      dbgln("Registration: starting election");
       transport_send_message(&join_request, receiver);
       collect_messages(50, UINT_MAX, election_filter, received);
 
@@ -159,6 +160,7 @@ bool perform_registration() {
 
   if (gs.flags & LEADER) {
     gs.flags |= REGISTERED;
+    dbgln("Registration result: became leader");
     return true;
   }
 
@@ -166,9 +168,11 @@ bool perform_registration() {
     // NOTE: wir landen hier auch im Normalfall, wenn es schon einen Leader auf
     // der Frequenz gibt. Wir sollten dann irgendwie einen Weg finden, nicht in
     // diesem Timeout zu landen.
+    dbgln("Registration: No Leader detected, sleeping for a bit.");
     sleep_ms(500);
   }
 
+  dbgln("Registration: sending WILL TRANSFER");
   transport_send_message(&join_request, receiver);
   // NOTE: ist es sicher, dass der received vector hier wieder leer ist?
   collect_messages(50, 1, join_filter, received);

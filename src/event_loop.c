@@ -1,3 +1,6 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "EVENT LOOP"
+#include "lib/logger.h"
 #include "src/interface/interface.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
@@ -34,6 +37,7 @@ void event_loop_run() {
 
   message_t received;
   if (transport_receive_message(&received)) {
+    dbgln("Event Loop: received message. Handling...");
     handle_message(&received);
   }
 

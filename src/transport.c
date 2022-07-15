@@ -1,5 +1,8 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "TRANSPORT"
 #include "src/transport.h"
 #include "lib/datastructures/u8_vector.h"
+#include "lib/logger.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
 #include "src/protocol/routing.h"
@@ -51,6 +54,7 @@ bool transport_send_message(message_t *msg, routing_id_t to) {
   msg->header.sender_id = gs.id;
 
   if (!message_is_valid(msg)) {
+    warnln("Send message: message not valid");
     return false;
   }
 
@@ -78,6 +82,7 @@ bool transport_receive_message(message_t *msg) {
     return false;
   }
 
+  dbgln("Receive message: Received something. Unpacking ...");
   *msg = unpack_message(recv_buffer, length);
 
   return message_is_valid(msg) && message_addressed_to(msg, gs.id);

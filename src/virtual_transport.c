@@ -5,6 +5,7 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "lib/logger.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include <arpa/inet.h>
@@ -139,6 +140,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
     dbgln("Couldn't poll fd=%i: %s", virt_fd, strerror(errno));
     return false;
   case 0:
+    /*dbgln("receive packet: timeout");*/
     return false;
   default:
     if (recv(virt_fd, buffer, MAX_MSG_LEN, 0) < 0) {
