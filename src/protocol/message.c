@@ -263,5 +263,6 @@ void message_dbgln(message_t *msg) {
 
   char_vector_append(repr, '\0');
   dbgln("%s", repr->data);
+  char_vector_destroy(repr);
 #endif
 }
