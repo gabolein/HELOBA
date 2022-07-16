@@ -16,7 +16,6 @@
 #include <time.h>
 
 // FIXME: viel zu groß
-#define DO_FIND_SEND_TIMEOUT 256
 #define WILL_FIND_RECV_TIMEOUT 10
 
 int hint_cmp(search_hint_t a, search_hint_t b) {
