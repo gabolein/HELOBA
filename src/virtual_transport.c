@@ -5,7 +5,6 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
-#include "lib/logger.h"
 #include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include <arpa/inet.h>

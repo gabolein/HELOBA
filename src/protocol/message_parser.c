@@ -147,6 +147,7 @@ void pack_message(u8_vector_t *v, message_t *msg) {
     break;
   };
 
+  dbgln("Packed message of size = %u bytes", u8_vector_size(v));
   assert(u8_vector_at(v, 0) == u8_vector_size(v) - 1);
 }
 
