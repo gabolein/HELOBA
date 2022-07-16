@@ -47,6 +47,7 @@ void event_loop_run() {
   if (gs.flags & LEADER) {
     if (gs.scores.current >= MIN_SPLIT_SCORE &&
         gs.scores.current < MIN_SWAP_SCORE) {
+      dbgln("Many nodes on freq. Splitting ... ");
       perform_split();
     }
 
@@ -57,10 +58,12 @@ void event_loop_run() {
       float ratio = score_trajectory(gs.scores.previous, gs.scores.current);
 
       if (ratio > 0 && ratio > MIN_GT_SWAP_RATIO && f != parent) {
+        dbgln("Try to swap with parent");
         perform_swap(parent);
         gs.scores.previous = gs.scores.current;
       } else if (ratio < 0 && ratio < MIN_LT_SWAP_RATIO) {
         bool ret = false;
+        dbgln("Try to swap with child");
         if (f != lhs) {
           ret = perform_swap(lhs);
         }
