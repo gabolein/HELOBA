@@ -1,5 +1,6 @@
 #define LOG_LEVEL DEBUG_LEVEL
-#define LOG_LABEL "TRANSPORT"
+#define LOG_LABEL "Transport"
+
 #include "src/transport.h"
 #include "lib/datastructures/u8_vector.h"
 #include "lib/logger.h"

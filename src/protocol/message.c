@@ -8,6 +8,7 @@
 #include "src/protocol/routing.h"
 #include "src/state.h"
 #include "src/transport.h"
+#include <stdio.h>
 
 MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
 
