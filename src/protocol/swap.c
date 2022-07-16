@@ -31,7 +31,7 @@ bool handle_do_migrate(message_t *msg) {
   assert(message_type(msg) == MIGRATE);
 
   if (msg->header.sender_id.layer != leader) {
-    dbgln("Received DO TRANSFER from non-leader, ignoring.");
+    dbgln("Received DO MIGRATE from non-leader, ignoring.");
     return false;
   }
 

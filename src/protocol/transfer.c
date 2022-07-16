@@ -269,8 +269,6 @@ bool handle_will_transfer(message_t *msg) {
             " Membercount: %u",
             gs.scores.current);
     } else {
-      // NOTE because of election
-      // we get more than one WILL TRANSFER from each node
       if (!club_hashmap_exists(gs.members, nonleader)) {
         club_hashmap_insert(gs.members, nonleader, true);
         gs.scores.current++;
