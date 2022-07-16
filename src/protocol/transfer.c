@@ -228,16 +228,23 @@ bool handle_will_transfer(message_t *msg) {
         return false;
       }
 
-      dbgln("Will Transfer: Node is unregistering.");
       club_hashmap_remove(gs.members, nonleader);
       gs.scores.current--;
+      dbgln("Will Transfer: Node is unregistering." 
+          " Membercount: %u", gs.scores.current);
     } else {
-      dbgln("Will Transfer: Node is registering.");
-      club_hashmap_insert(gs.members, nonleader, true);
-      gs.scores.current++;
+      // NOTE because of election 
+      // we get more than one WILL TRANSFER from each node
+      if (club_hashmap_exists(gs.members, nonleader)) {
+        club_hashmap_insert(gs.members, nonleader, true);
+        gs.scores.current++;
+        dbgln("Will Transfer: Node is registering."
+            " Membercount: %u", gs.scores.current);
+      }
     }
   }
 
+  // NOTE also send to registering nodes if they are already registered?
   message_t response = message_create(DO, TRANSFER);
   response.payload.transfer =
       (transfer_payload_t){.to = gs.frequencies.current};
