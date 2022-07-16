@@ -1,8 +1,8 @@
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Parse"
 
-#include "lib/logger.h"
 #include "lib/datastructures/u8_vector.h"
+#include "lib/logger.h"
 #include "src/protocol/message.h"
 #include <assert.h>
 #include <stddef.h>
@@ -45,7 +45,7 @@ void pack_routing_id(u8_vector_t *v, routing_id_t *id) {
   u8_vector_append(v, (uint8_t)layer);
 
   // NOTE: Sollte bei leader auch die MAC Adresse gesendet werden?
-  if (layer == specific) {
+  if (layer & specific) {
     for (size_t i = 0; i < MAC_SIZE; i++) {
       // TODO: Nachschauen ob das in NW Byteorder sein muss bzw. ob wir das zu
       // diesem Zeitpunkt überhaupt schon brauchen.
@@ -118,7 +118,7 @@ void pack_message_length(u8_vector_t *v, message_t *msg) {
   message_length += 7;
   // add recv sender id
   message_length += 1;
-  if (msg->header.receiver_id.layer == specific) {
+  if (msg->header.receiver_id.layer & specific) {
     message_length += 6;
   }
 
@@ -127,7 +127,6 @@ void pack_message_length(u8_vector_t *v, message_t *msg) {
   u8_vector_append(v, message_length);
   pack_header(v, &msg->header);
 }
-  
 
 void pack_message(u8_vector_t *v, message_t *msg) {
   assert(u8_vector_size(v) == 0);
@@ -147,6 +146,9 @@ void pack_message(u8_vector_t *v, message_t *msg) {
   default:
     break;
   };
+
+  dbgln("Packed message of size = %u bytes", u8_vector_size(v));
+  assert(u8_vector_at(v, 0) == u8_vector_size(v) - 1);
 }
 
 frequency_t unpack_frequency(uint8_t *buffer, unsigned length,
@@ -162,14 +164,14 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
                                unsigned *decoded) {
   assert(*decoded <= length);
   assert(length - *decoded >= sizeof(uint8_t));
-  if (buffer[*decoded] == specific)
+  if (buffer[*decoded] & specific)
     assert(length - *decoded >= sizeof(uint8_t) + MAC_SIZE);
 
   routing_id_t d;
   d.layer = buffer[*decoded];
   (*decoded)++;
 
-  if (d.layer == specific) {
+  if (d.layer & specific) {
     for (size_t i = 0; i < MAC_SIZE; i++) {
       d.MAC[i] = buffer[*decoded];
       (*decoded)++;
