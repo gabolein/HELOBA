@@ -134,7 +134,7 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   fds.events = POLLIN;
 
   // NOTE: Timeout sollte wahrscheinlich kleiner sein
-  switch (poll(&fds, 1, 100)) {
+  switch (poll(&fds, 1, 0)) {
   case -1:
     dbgln("Couldn't poll fd=%i: %s", virt_fd, strerror(errno));
     return false;
@@ -171,7 +171,7 @@ bool virtual_channel_active() {
 
   int ret;
   // NOTE: Timeout sollte wahrscheinlich kleiner sein
-  if ((ret = poll(&fds, 1, 100)) < 0) {
+  if ((ret = poll(&fds, 1, 0)) < 0) {
     perror("poll");
     return false;
   }

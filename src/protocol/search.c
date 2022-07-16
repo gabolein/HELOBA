@@ -9,13 +9,13 @@
 #include "src/protocol/message_handler.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/routing.h"
+#include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include <time.h>
 
 // FIXME: viel zu groß
-#define DO_FIND_SEND_TIMEOUT 256
 #define WILL_FIND_RECV_TIMEOUT 10
 
 int hint_cmp(search_hint_t a, search_hint_t b) {
@@ -150,11 +150,7 @@ bool perform_search(routing_id_t to_find) {
         // NOTE: Es wäre gut, einen Failsave einzubauen, falls der Leader auf
         // der Frequenz nicht mehr aktiv ist und deswegen keiner antwortet. In
         // dem Fall könnten wir selbst zum Leader werden.
-        message_t join = message_create(WILL, TRANSFER);
-        join.payload.transfer =
-            (transfer_payload_t){.to = gs.search.current_frequency};
-        routing_id_t receiver = {.layer = leader};
-        transport_send_message(&join, receiver);
+        perform_registration();
 
         return true;
       }
