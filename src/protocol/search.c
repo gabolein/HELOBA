@@ -181,7 +181,7 @@ bool handle_do_find(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == FIND);
 
-  if (!(gs.flags & REGISTERED)) {
+  if (!gs.registered) {
     return false;
   }
 

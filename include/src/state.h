@@ -8,9 +8,6 @@
 
 MAKE_SPECIFIC_VECTOR_HEADER(routing_id_t, routing_id_t)
 MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, bool, club)
-
-typedef enum { MUTED = 1 << 0, REGISTERED = 1 << 1 } flags_t;
-
 typedef struct {
   uint8_t previous;
   uint8_t current;
@@ -30,7 +27,7 @@ typedef struct {
   club_hashmap_t *members;
   score_state_t scores;
   routing_id_t id;
-  flags_t flags;
+  bool registered;
   frequency_state_t frequencies;
   search_state_t search;
   migrate_state_t migrate;

@@ -16,7 +16,7 @@ typedef enum { DO, DONT, WILL, WONT } message_action_t;
 #define MESSAGE_TYPE_COUNT 6
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
-typedef enum { FIND, SWAP, TRANSFER, MUTE, MIGRATE, SPLIT } message_type_t;
+typedef enum { FIND, SWAP, TRANSFER, MIGRATE, SPLIT } message_type_t;
 
 #define FREQUENCY_ENCODED_SIZE sizeof(uint16_t)
 typedef uint16_t frequency_t;

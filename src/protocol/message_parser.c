@@ -107,9 +107,6 @@ unsigned get_payload_size(message_t* msg) {
     /*return action == WILL ? 2 : 0;*/
   case SPLIT:
     return 7 + 7;
-  case MUTE:
-    // TODO
-    return 0;
   default:
     warnln("get payload size: case not handled");
     return 0;

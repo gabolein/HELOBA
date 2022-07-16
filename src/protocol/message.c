@@ -157,9 +157,6 @@ void message_format_type(message_type_t type, char_vector_t *repr) {
   case TRANSFER:
     repr_append("TRANSFER", repr);
     break;
-  case MUTE:
-    repr_append("MUTE", repr);
-    break;
   case MIGRATE:
     repr_append("MIGRATE", repr);
     break;
@@ -263,9 +260,6 @@ void message_dbgln(message_t *msg) {
   case TRANSFER:
     repr_append("Target: ", repr);
     message_format_frequency(msg->payload.transfer.to, repr);
-    break;
-  case MUTE:
-    repr_append("<empty>", repr);
     break;
   case MIGRATE:
     // FIXME: richtigen Typ für Migrate

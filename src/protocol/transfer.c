@@ -134,7 +134,7 @@ bool perform_unregistration(frequency_t to) {
     transport_send_message(&unregister, receiver);
   }
 
-  gs.flags &= ~REGISTERED;
+  gs.registered = false;
   return true;
 }
 
@@ -197,7 +197,7 @@ bool perform_registration() {
             return false;
           } else {
             dbgln("Leader accepted our join request.");
-            gs.flags |= REGISTERED;
+            gs.registered = true;
             return true;
           }
         }
@@ -208,7 +208,7 @@ bool perform_registration() {
   }
 
   if (gs.id.layer & leader) {
-    gs.flags |= REGISTERED;
+    gs.registered = true;
     dbgln("Registration result: became leader");
     return true;
   }
@@ -237,7 +237,7 @@ bool perform_registration() {
     return false;
   } else {
     dbgln("Leader accepted our join request.");
-    gs.flags |= REGISTERED;
+    gs.registered = true;
     return true;
   }
 }

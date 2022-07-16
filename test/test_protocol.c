@@ -107,13 +107,3 @@ Test(protocol, transfer_message) {
 
   cr_assert(message_equal(&msg, &unpacked));
 }
-
-Test(protocol, mute_message) {
-  message_t msg = create_basic_test_message(DONT, MUTE);
-
-  u8_vector_t *v = u8_vector_create();
-  pack_message(v, &msg);
-  message_t unpacked = unpack_message(v->data, u8_vector_size(v));
-
-  cr_assert(message_equal(&msg, &unpacked));
-}
