@@ -54,6 +54,11 @@ cache
 backoff threshold way too big
 
 how does leader leave
+problem: empty frequencies?
+can we swap up into them?
+
+election: dont become leader when current leader is swapping
+react on do migrate?
 
 radio: asynchronous listen?
 

@@ -84,12 +84,14 @@ void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload) {
   pack_frequency(v, payload->to);
 }
 
-unsigned get_payload_size(message_action_t action, message_type_t type) {
+unsigned get_payload_size(message_t* msg) {
   // TODO replace magic numbers
-  switch (type) {
+  switch (msg->header.type) {
   case FIND:
+    
     // TODO extend for cache
-    return 7;
+    return msg->header.receiver_id.layer 
+      & specific ? 7 : 1;
     break;
   case SWAP:
     return 2 + 1;
@@ -123,7 +125,7 @@ void pack_message_length(u8_vector_t *v, message_t *msg) {
   }
 
   // add payload size
-  message_length += get_payload_size(msg->header.action, msg->header.type);
+  message_length += get_payload_size(msg);
   u8_vector_append(v, message_length);
   pack_header(v, &msg->header);
 }
