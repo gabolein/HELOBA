@@ -49,7 +49,7 @@ bool handle_id(__attribute__((unused)) command_param_t param) {
 }
 
 bool handle_split(__attribute__((unused)) command_param_t param) {
-  if (!(gs.flags & LEADER)) {
+  if (!(gs.id.layer & leader)) {
     dbgln("Node is not a leader and therefore cannot perform split.");
     return false;
   }
