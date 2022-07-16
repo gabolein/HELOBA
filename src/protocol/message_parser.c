@@ -146,6 +146,8 @@ void pack_message(u8_vector_t *v, message_t *msg) {
   default:
     break;
   };
+
+  assert(u8_vector_at(v, 0) == u8_vector_size(v) - 1);
 }
 
 frequency_t unpack_frequency(uint8_t *buffer, unsigned length,
