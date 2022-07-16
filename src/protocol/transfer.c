@@ -183,6 +183,15 @@ bool perform_registration() {
         if (current.header.sender_id.layer & leader) {
           leader_detected = true;
           participating = false;
+
+          if (message_action(&current) == DONT) {
+            dbgln("Leader rejected our join request.");
+            return false;
+          } else {
+            dbgln("Leader accepted our join request.");
+            gs.flags |= REGISTERED;
+            return true;
+          }
         }
       }
 
