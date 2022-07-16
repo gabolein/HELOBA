@@ -86,10 +86,14 @@ bool transport_receive_message(message_t *msg) {
   }
 
   *msg = unpack_message(recv_buffer, length);
-  dbgln("Received Message");
-  message_dbgln(msg);
+  bool valid = message_is_valid(msg) && message_addressed_to(msg, gs.id);
 
-  return message_is_valid(msg) && message_addressed_to(msg, gs.id);
+  if (valid) {
+    dbgln("Received Message");
+    message_dbgln(msg);
+  }
+
+  return valid;
 }
 
 bool transport_receive_message_unverified(message_t *msg) {
