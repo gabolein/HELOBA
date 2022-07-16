@@ -12,6 +12,14 @@
 #include "src/state.h"
 #include "src/transport.h"
 
+extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
+
+void register_automatic_transfer_handlers() {
+  auto_handlers[DO][TRANSFER] = handle_do_transfer;
+  auto_handlers[WILL][TRANSFER] = handle_will_transfer;
+  auto_handlers[DO][SPLIT] = handle_do_split;
+}
+
 int id_order(const void *arg1, const void *arg2) {
   uint8_t *id_1 = (uint8_t *)arg1;
   uint8_t *id_2 = (uint8_t *)arg2;

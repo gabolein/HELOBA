@@ -3,6 +3,9 @@
 
 #include "src/protocol/message.h"
 
+typedef bool (*handler_f)(message_t *msg);
+void register_automatic_transfer_handlers();
+
 bool perform_split(void);
 bool perform_unregistration(frequency_t to);
 bool perform_registration();

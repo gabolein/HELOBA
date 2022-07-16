@@ -15,7 +15,12 @@
 #include "src/transport.h"
 #include <time.h>
 
-// FIXME: viel zu groß
+extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
+
+void register_automatic_search_handlers() {
+  auto_handlers[DO][FIND] = handle_do_find;
+}
+
 #define WILL_FIND_RECV_TIMEOUT 10
 
 int hint_cmp(search_hint_t a, search_hint_t b) {

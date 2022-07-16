@@ -37,6 +37,7 @@ int main() {
   sa.sa_handler = kill_handler;
   sigaction(SIGINT, &sa, NULL);
 
+  event_loop_initialize();
   while (!shutdown_flag) {
     event_loop_run();
   }

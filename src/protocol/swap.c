@@ -10,9 +10,6 @@
 #include "src/state.h"
 #include "src/transport.h"
 
-typedef bool (*handler_f)(message_t *msg);
-void register_automatic_swap_handlers(handler_f **handlers_table);
-
 bool handle_do_migrate(message_t *msg);
 void accept_swap(routing_id_t receiver);
 void reject_swap(routing_id_t receiver);
@@ -21,9 +18,11 @@ bool handle_do_swap(message_t *msg);
 bool swap_reply_filter(message_t *msg);
 bool perform_swap(frequency_t with);
 
-void register_automatic_swap_handlers(handler_f **handlers_table) {
-  handlers_table[DO][SWAP] = handle_do_swap;
-  handlers_table[DO][MIGRATE] = handle_do_migrate;
+extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
+
+void register_automatic_swap_handlers() {
+  auto_handlers[DO][SWAP] = handle_do_swap;
+  auto_handlers[DO][MIGRATE] = handle_do_migrate;
 }
 
 bool handle_do_migrate(message_t *msg) {
