@@ -1,8 +1,8 @@
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Parse"
 
-#include "lib/logger.h"
 #include "lib/datastructures/u8_vector.h"
+#include "lib/logger.h"
 #include "src/protocol/message.h"
 #include <assert.h>
 #include <stddef.h>
@@ -127,7 +127,6 @@ void pack_message_length(u8_vector_t *v, message_t *msg) {
   u8_vector_append(v, message_length);
   pack_header(v, &msg->header);
 }
-  
 
 void pack_message(u8_vector_t *v, message_t *msg) {
   assert(u8_vector_size(v) == 0);
