@@ -94,7 +94,7 @@ bool search_response_filter(message_t *msg) {
 }
 
 bool perform_search(routing_id_t to_find) {
-  if (!(gs.flags & SEARCHING)) {
+  if (gs.flags & SEARCHING) {
     dbgln("Currently still searching for another ID, ignoring.");
     return false;
   }
@@ -193,7 +193,7 @@ bool handle_do_find(message_t *msg) {
   transport_get_id(self_id.MAC);
   bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
-  if (!leader && !searching_for_self) {
+  if (!searching_for_self) {
     return false;
   }
 
