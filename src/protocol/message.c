@@ -91,6 +91,7 @@ message_t message_create(message_action_t action, message_type_t type) {
   assert(message_allowlist[action][type]);
 
   message_t msg;
+  memset(&msg, 0, sizeof(msg));
   msg.header.action = action;
   msg.header.type = type;
 
