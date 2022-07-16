@@ -9,9 +9,9 @@ CPPFLAGS = -Iinclude -DVIRTUAL
 LDFLAGS = -lcriterion -lm -lpthread
 else
 SRC = $(shell find src lib -name '*.c')
-CFLAGS = -std=gnu11 -Wall -Wextra -ggdb -O2
+CFLAGS = -std=gnu11 -Wall -Wextra -ggdb -O2 -fsanitize=address
 CPPFLAGS = -Iinclude -DVIRTUAL
-LDFLAGS = -lm -lpthread
+LDFLAGS = -lm -lpthread -fsanitize=address
 endif
 
 ifneq (,$(findstring -DVIRTUAL,$(CPPFLAGS)))

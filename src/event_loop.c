@@ -1,13 +1,14 @@
 #define LOG_LEVEL DEBUG_LEVEL
-#define LOG_LABEL "EVENT LOOP"
+#define LOG_LABEL "Event Loop"
+
 #include "lib/logger.h"
 #include "src/interface/interface.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
 #include "src/protocol/routing.h"
 #include "src/protocol/swap.h"
-#include "src/protocol/tree.h"
 #include "src/protocol/transfer.h"
+#include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include <stdint.h>

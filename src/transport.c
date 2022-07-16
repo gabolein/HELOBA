@@ -1,5 +1,6 @@
 #define LOG_LEVEL DEBUG_LEVEL
-#define LOG_LABEL "TRANSPORT"
+#define LOG_LABEL "Transport"
+
 #include "src/transport.h"
 #include "lib/datastructures/u8_vector.h"
 #include "lib/logger.h"
@@ -58,6 +59,8 @@ bool transport_send_message(message_t *msg, routing_id_t to) {
     return false;
   }
 
+  dbgln("Sending Message");
+  message_dbgln(msg);
   pack_message(send_vec, msg);
 
 #if defined(VIRTUAL)
@@ -82,8 +85,9 @@ bool transport_receive_message(message_t *msg) {
     return false;
   }
 
-  dbgln("Receive message: Received something. Unpacking ...");
   *msg = unpack_message(recv_buffer, length);
+  dbgln("Received Message");
+  message_dbgln(msg);
 
   return message_is_valid(msg) && message_addressed_to(msg, gs.id);
 }

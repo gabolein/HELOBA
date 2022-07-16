@@ -1,6 +1,8 @@
 #include "src/state.h"
 #include "src/transport.h"
 
+state_t gs;
+
 MAKE_SPECIFIC_VECTOR_SOURCE(routing_id_t, routing_id_t)
 MAKE_SPECIFIC_HASHMAP_SOURCE(routing_id_t, bool, club, routing_id_equal)
 
