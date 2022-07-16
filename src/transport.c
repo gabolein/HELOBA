@@ -29,7 +29,7 @@ bool transport_initialize() {
   }
 #endif
 
-  return transport_change_frequency(850);
+  return transport_change_frequency(800);
 }
 
 bool transport_change_frequency(uint16_t frequency) {
