@@ -44,7 +44,7 @@ void event_loop_run() {
 
   interface_do_action();
 
-  if (gs.flags & LEADER) {
+  if (gs.id.layer & leader) {
     if (gs.scores.current >= MIN_SPLIT_SCORE &&
         gs.scores.current < MIN_SWAP_SCORE) {
       perform_split();

@@ -25,7 +25,7 @@ void print_id(uint8_t MAC[6]) {
 }
 
 bool handle_list(__attribute__((unused)) command_param_t param) {
-  if (!(gs.flags & LEADER)) {
+  if (!(gs.id.layer & leader)) {
     dbgln("Node is not a leader and therefore has no list of nodes.");
     return false;
   }

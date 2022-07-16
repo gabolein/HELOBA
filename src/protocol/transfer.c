@@ -62,7 +62,7 @@ bool perform_split() {
 bool handle_do_split(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == MUTE);
-  assert(!(gs.flags & LEADER));
+  assert(!(gs.id.layer & leader));
 
   bool split = true;
   frequency_t destination;
@@ -146,7 +146,6 @@ bool perform_registration() {
 
       if (message_vector_size(received) == 0) {
         dbgln("Nobody active on frequency, I am electing myself as leader.");
-        gs.flags |= LEADER;
         gs.id.layer |= leader;
         participating = false;
       }
@@ -164,7 +163,7 @@ bool perform_registration() {
     }
   }
 
-  if (gs.flags & LEADER) {
+  if (gs.id.layer & leader) {
     gs.flags |= REGISTERED;
     dbgln("Registration result: became leader");
     return true;
