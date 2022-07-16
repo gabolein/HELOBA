@@ -36,7 +36,7 @@ bool perform_split() {
     return false;
   }
 
-  qsort(keys, sizeof(routing_id_t), nkeys, &id_order);
+  qsort(keys->data, sizeof(routing_id_t), nkeys, &id_order);
 
   // NOTE nkeys/x -1??
   routing_id_t delim1 = routing_id_t_vector_at(keys, nkeys / 4);
