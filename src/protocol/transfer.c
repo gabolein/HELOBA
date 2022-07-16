@@ -1,10 +1,13 @@
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Transfer"
+
 #include "src/protocol/transfer.h"
 #include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
+#include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
+#include "src/protocol/routing.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
@@ -139,6 +142,7 @@ bool perform_registration() {
       collect_messages(50, UINT_MAX, election_filter, received);
 
       if (message_vector_size(received) == 0) {
+        dbgln("Nobody active on frequency, I am electing myself as leader.");
         gs.flags |= LEADER;
         gs.id.layer |= leader;
         participating = false;
@@ -216,8 +220,8 @@ bool handle_will_transfer(message_t *msg) {
 
     if (f != gs.frequencies.current) {
       if (!club_hashmap_exists(gs.members, nonleader)) {
-        warnln("Will Transfer:" 
-            "not registered node is trying to unregister.");
+        warnln("Will Transfer:"
+               "not registered node is trying to unregister.");
         return false;
       }
 
@@ -231,7 +235,11 @@ bool handle_will_transfer(message_t *msg) {
     }
   }
 
-  // TODO respond with will transfer
+  message_t response = message_create(DO, TRANSFER);
+  response.payload.transfer =
+      (transfer_payload_t){.to = gs.frequencies.current};
+  transport_send_message(&response, msg->header.sender_id);
+
   // TODO: Cache Handling
 
   return true;

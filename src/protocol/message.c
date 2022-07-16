@@ -3,6 +3,7 @@
 
 #include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
+#include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
 #include "src/protocol/routing.h"
 #include "src/state.h"
@@ -95,4 +96,66 @@ message_t message_create(message_action_t action, message_type_t type) {
   return msg;
 }
 
-void message_print(message_t *msg) {}
+MAKE_SPECIFIC_VECTOR_HEADER(char, char) // Binks!
+MAKE_SPECIFIC_VECTOR_SOURCE(char, char)
+
+void repr_print_string(char *str, char_vector_t *repr) {
+  for (unsigned i = 0; i < strlen(str); i++) {
+    char_vector_append(repr, str[i]);
+  }
+}
+
+void message_print_action(message_action_t action, char_vector_t *repr) {
+  repr_print_string("Action: ", repr);
+
+  switch (action) {
+  case DO:
+    repr_print_string("DO", repr);
+  case DONT:
+    repr_print_string("DONT", repr);
+  case WILL:
+    repr_print_string("WILL", repr);
+  case WONT:
+    repr_print_string("WONT", repr);
+  }
+}
+
+void message_print_type(message_type_t type, char_vector_t *repr) {
+  repr_print_string("Type: ", repr);
+
+  switch (type) {
+  case FIND:
+    repr_print_string("FIND", repr);
+  case SWAP:
+    repr_print_string("SWAP", repr);
+  case TRANSFER:
+    repr_print_string("TRANSFER", repr);
+  case MUTE:
+    repr_print_string("MUTE", repr);
+  case MIGRATE:
+    repr_print_string("MIGRATE", repr);
+  case SPLIT:
+    repr_print_string("SPLIT", repr);
+  }
+}
+
+void message_print_id(routing_id_t id, char_vector_t *repr) {
+  repr_print_string("ID: ", repr);
+
+  for (unsigned i = 0; i < 3; i++) {
+    if (id.layer & (1 << i)) {
+      switch (1 << i) {
+      case leader:
+        repr_print_string("Leader", repr);
+      case everyone:
+        repr_print_string("Everyone", repr);
+      case specific:
+        repr_print_string("Specific", repr);
+      }
+    }
+  }
+}
+
+void message_print(message_t *msg) {
+  char_vector_t *repr = char_vector_create();
+}
