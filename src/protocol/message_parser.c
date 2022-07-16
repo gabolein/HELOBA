@@ -96,7 +96,8 @@ unsigned get_payload_size(message_action_t action, message_type_t type) {
   case MIGRATE:
     return 2;
   case TRANSFER:
-    return action == WILL ? 2 : 0;
+    return 2;
+    /*return action == WILL ? 2 : 0;*/
   case SPLIT:
     return 7 + 7;
   case MUTE:
@@ -112,12 +113,12 @@ void pack_message_length(u8_vector_t *v, message_t *msg) {
 
   uint8_t message_length = 0;
   // add action and type
-  message_length += 2;
+  message_length += 1;
   // add sender routing_id
   message_length += 7;
   // add recv sender id
   message_length += 1;
-  if (msg->header.sender_id.layer == specific) {
+  if (msg->header.receiver_id.layer == specific) {
     message_length += 6;
   }
 
