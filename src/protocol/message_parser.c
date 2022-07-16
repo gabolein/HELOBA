@@ -90,7 +90,7 @@ unsigned get_payload_size(message_t* msg) {
   case FIND:
     
     // TODO extend for cache
-    return msg->header.receiver_id.layer 
+    return msg->payload.find.to_find.layer 
       & specific ? 7 : 1;
     break;
   case SWAP:
