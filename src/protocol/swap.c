@@ -4,6 +4,7 @@
 #include "src/protocol/swap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
