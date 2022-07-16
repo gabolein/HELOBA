@@ -198,6 +198,8 @@ bool handle_do_find(message_t *msg) {
   }
 
   message_t reply = message_create(WILL, FIND);
+  // NOTE pack routing id checks for specific bit
+  reply.payload.find.to_find.layer = everyone;
   transport_send_message(&reply, msg->header.sender_id);
 
   return true;
