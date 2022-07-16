@@ -36,7 +36,7 @@ bool perform_split() {
     return false;
   }
 
-  qsort(keys->data, sizeof(routing_id_t), nkeys, &id_order);
+  qsort(keys->data, nkeys, sizeof(routing_id_t), &id_order);
 
   // NOTE nkeys/x -1??
   routing_id_t delim1 = routing_id_t_vector_at(keys, nkeys / 4);
@@ -61,7 +61,7 @@ bool perform_split() {
 
 bool handle_do_split(message_t *msg) {
   assert(message_action(msg) == DO);
-  assert(message_type(msg) == MUTE);
+  assert(message_type(msg) == SPLIT);
   assert(!(gs.id.layer & leader));
 
   bool split = true;
@@ -76,7 +76,7 @@ bool handle_do_split(message_t *msg) {
     transport_change_frequency(tree_node_rhs(gs.frequencies.current));
   } else {
     split = false;
-    // TODO node that does not swap update cache
+    // TODO node that does not split update cache
   }
 
   if (split) {
