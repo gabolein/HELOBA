@@ -96,12 +96,6 @@ bool search_response_filter(message_t *msg) {
 }
 
 bool perform_search(routing_id_t to_find) {
-  if (gs.flags & SEARCHING) {
-    dbgln("Currently still searching for another ID, ignoring.");
-    return false;
-  }
-
-  gs.flags |= SEARCHING;
   gs.search.to_find_id = to_find;
   checked_hashmap_clear(gs.search.checked_frequencies);
   gs.search.current_frequency = gs.frequencies.current;
@@ -117,7 +111,7 @@ bool perform_search(routing_id_t to_find) {
   // NOTE: sollen wir direkt aus unserer aktuellen Frequenz rausgehen oder erst
   // am Ende der Suche, wenn wir wissen auf welche Frequenz wir wechseln wollen?
 
-  while (gs.flags & SEARCHING) {
+  while (true) {
     if (search_priority_queue_size(gs.search.search_queue) == 0) {
       break;
     }
@@ -151,7 +145,6 @@ bool perform_search(routing_id_t to_find) {
       message_t current = message_vector_at(responses, i);
 
       if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
-        gs.flags &= ~SEARCHING;
         message_vector_destroy(responses);
 
         // NOTE: Es wäre gut, einen Failsave einzubauen, falls der Leader auf
@@ -190,9 +183,8 @@ bool handle_do_find(message_t *msg) {
   routing_id_t to_find = msg->payload.find.to_find;
   routing_id_t self_id;
   transport_get_id(self_id.MAC);
-  bool searching_for_self = routing_id_MAC_equal(to_find, self_id);
 
-  if (!searching_for_self) {
+  if (!routing_id_MAC_equal(to_find, self_id)) {
     return false;
   }
 

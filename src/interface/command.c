@@ -25,7 +25,7 @@ void print_id(uint8_t MAC[6]) {
 }
 
 bool handle_list(__attribute__((unused)) command_param_t param) {
-  if (!(gs.flags & LEADER)) {
+  if (!(gs.id.layer & leader)) {
     dbgln("Node is not a leader and therefore has no list of nodes.");
     return false;
   }
@@ -49,7 +49,7 @@ bool handle_id(__attribute__((unused)) command_param_t param) {
 }
 
 bool handle_split(__attribute__((unused)) command_param_t param) {
-  if (!(gs.flags & LEADER)) {
+  if (!(gs.id.layer & leader)) {
     dbgln("Node is not a leader and therefore cannot perform split.");
     return false;
   }
@@ -63,10 +63,10 @@ bool handle_searchfor(command_param_t param) {
 }
 
 bool handle_goto(command_param_t param) {
-  message_t unregister = message_create(WILL, TRANSFER);
-  unregister.payload.transfer = (transfer_payload_t){.to = param.freq};
-  routing_id_t receiver = {.layer = leader};
-  transport_send_message(&unregister, receiver);
+  if (!perform_unregistration(param.freq)) {
+    warnln("Couldn't unregister from current frequency.");
+    return false;
+  }
 
   transport_change_frequency(param.freq);
   return perform_registration();
