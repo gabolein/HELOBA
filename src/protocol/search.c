@@ -113,9 +113,6 @@ bool perform_search(routing_id_t to_find) {
   };
   search_priority_queue_push(gs.search.search_queue, start);
 
-  // NOTE: sollen wir direkt aus unserer aktuellen Frequenz rausgehen oder erst
-  // am Ende der Suche, wenn wir wissen auf welche Frequenz wir wechseln wollen?
-
   while (true) {
     if (search_priority_queue_size(gs.search.search_queue) == 0) {
       break;

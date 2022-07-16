@@ -89,14 +89,13 @@ void pack_split_payload(u8_vector_t *v, split_payload_t *payload) {
   pack_routing_id(v, &payload->delim2);
 }
 
-unsigned get_payload_size(message_t* msg) {
+unsigned get_payload_size(message_t *msg) {
   // TODO replace magic numbers
   switch (msg->header.type) {
   case FIND:
-    
+
     // TODO extend for cache
-    return msg->payload.find.to_find.layer 
-      & specific ? 7 : 1;
+    return msg->payload.find.to_find.layer & specific ? 7 : 1;
     break;
   case SWAP:
     return 2 + 1;
@@ -242,7 +241,7 @@ transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
 }
 
 split_payload_t unpack_split_payload(uint8_t *buffer, unsigned length,
-                                           unsigned *decoded) {
+                                     unsigned *decoded) {
   split_payload_t d;
 
   d.delim1 = unpack_routing_id(buffer, length, decoded);

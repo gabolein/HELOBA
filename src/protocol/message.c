@@ -14,20 +14,9 @@
 MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
 
 static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
-    [DO][MUTE] = true,
-    [DONT][MUTE] = true,
-    [DO][SWAP] = true,
-    [WILL][SWAP] = true,
-    [WONT][SWAP] = true,
-    // NOTE: WONT TRANSFER wäre eigentlich auch ganz hilfreich, um TRANSFER
-    // zu einer schon zu großen Gruppe zu verhindern. In dem Fall könnte die
-    // Gruppe nach dem TRANSFER aber auch einfach in 2 geteilt werden.
-    [DO][TRANSFER] = true,
-    [WILL][TRANSFER] = true,
-    [DO][FIND] = true,
-    [WILL][FIND] = true,
-    [DO][MIGRATE] = true,
-    [DO][SPLIT] = true};
+    [DO][SWAP] = true,     [WILL][SWAP] = true,     [WONT][SWAP] = true,
+    [DO][TRANSFER] = true, [WILL][TRANSFER] = true, [DO][FIND] = true,
+    [WILL][FIND] = true,   [DO][MIGRATE] = true,    [DO][SPLIT] = true};
 
 inline message_action_t message_action(message_t *msg) {
   return msg->header.action;
