@@ -4,6 +4,7 @@
 #include "src/protocol/swap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -74,7 +75,7 @@ void perform_migrate(frequency_t with) {
   migrate.payload.transfer = (transfer_payload_t){
       .to = with,
   };
-  routing_id_t receivers = {.layer = everyone};
+  routing_id_t receivers = routing_id_create(everyone, NULL);
   transport_send_message(&migrate, receivers);
   transport_change_frequency(with);
 }
@@ -125,7 +126,7 @@ bool perform_swap(frequency_t with) {
       .score = gs.scores.current,
       .with = gs.frequencies.current,
   };
-  routing_id_t receiver = {.layer = leader};
+  routing_id_t receiver = routing_id_create(leader, NULL);
 
   transport_change_frequency(with);
   // NOTE: Wenn wir alle nonleader überhaupt noch muten wollen, dann sollte das

@@ -45,7 +45,7 @@ bool perform_split() {
   message_t split_msg = message_create(DO, SPLIT);
   split_msg.payload.split.delim1 = delim1;
   split_msg.payload.split.delim2 = delim2;
-  routing_id_t receivers = {.layer = everyone};
+  routing_id_t receivers = routing_id_create(everyone, NULL);
 
   transport_send_message(&split_msg, receivers);
 
@@ -84,7 +84,7 @@ bool handle_do_split(message_t *msg) {
     perform_registration();
     message_t join_request = message_create(WILL, TRANSFER);
     join_request.payload.transfer = (transfer_payload_t){.to = destination};
-    routing_id_t receiver = {.layer = leader};
+    routing_id_t receiver = routing_id_create(leader, NULL);
     transport_send_message(&join_request, receiver);
   }
 
@@ -122,7 +122,7 @@ bool perform_unregistration(frequency_t to) {
   } else {
     message_t unregister = message_create(WILL, TRANSFER);
     unregister.payload.transfer = (transfer_payload_t){.to = to};
-    routing_id_t receiver = {.layer = leader};
+    routing_id_t receiver = routing_id_create(leader, NULL);
     transport_send_message(&unregister, receiver);
   }
 
@@ -151,7 +151,7 @@ bool perform_registration() {
   message_t join_request = message_create(WILL, TRANSFER);
   join_request.payload.transfer =
       (transfer_payload_t){.to = gs.frequencies.current};
-  routing_id_t receiver = {.layer = leader};
+  routing_id_t receiver = routing_id_create(leader, NULL);
 
   while (participating) {
     size_t listen_ms = random_number_between(0, 50);
