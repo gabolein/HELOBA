@@ -279,15 +279,13 @@ bool handle_will_transfer(message_t *msg) {
               gs.scores.current);
       }
     }
+
+    // NOTE also send to registering nodes if they are already registered?
+    message_t response = message_create(DO, TRANSFER);
+    response.payload.transfer = (transfer_payload_t){.to = f};
+    transport_send_message(&response, msg->header.sender_id);
   }
 
-  // NOTE also send to registering nodes if they are already registered?
-  message_t response = message_create(DO, TRANSFER);
-  response.payload.transfer =
-      (transfer_payload_t){.to = gs.frequencies.current};
-  transport_send_message(&response, msg->header.sender_id);
-
   // TODO: Cache Handling
-
   return true;
 }
