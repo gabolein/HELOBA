@@ -142,12 +142,15 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
   case 0:
     /*dbgln("receive packet: timeout");*/
     return false;
-  default:
-    if (recv(virt_fd, buffer, MAX_MSG_LEN, 0) < 0) {
+  default: {
+    ssize_t ret;
+    if ((ret = recv(virt_fd, buffer, MAX_MSG_LEN, 0)) < 0) {
       dbgln("Couldn't receive message: %s", strerror(errno));
     }
-    *length = buffer[0];
+
+    *length = ret;
     return true;
+  }
   }
 }
 

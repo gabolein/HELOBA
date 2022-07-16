@@ -112,7 +112,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
         recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
         status[1] & ~(1 << 7));
 
-  *length = recv_length;
+  *length = recv_length + 1;
   ret = true;
 
 cleanup:
