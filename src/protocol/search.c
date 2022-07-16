@@ -39,10 +39,12 @@ MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, frequency_t)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
-  if (checked_hashmap_exists(gs.search.checked_frequencies, hint.f)) {
+  if (checked_hashmap_exists(gs.search.checked_frequencies, hint.f) &&
+      hint.type == ORDER) {
     return;
   }
 
+  checked_hashmap_insert(gs.search.checked_frequencies, hint.f, true);
   search_priority_queue_push(gs.search.search_queue, hint);
 }
 
