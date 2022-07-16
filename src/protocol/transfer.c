@@ -139,6 +139,9 @@ bool perform_registration() {
     if (participating) {
       dbgln("Registration: starting election");
       transport_send_message(&join_request, receiver);
+      // NOTE: selbst mit einem Timeout von 5000ms kommen hier keine Nachrichten
+      // an, obwohl der andere Node auf jeden Fall sendet, irgendetwas
+      // funktioniert in dieser Funktion noch nicht.
       collect_messages(50, UINT_MAX, election_filter, received);
 
       if (message_vector_size(received) == 0) {
