@@ -57,11 +57,6 @@ bool handle_split(__attribute__((unused)) command_param_t param) {
   return true;
 }
 
-bool handle_searchfor(command_param_t param) {
-  param.to_find.layer = specific;
-  return perform_search(param.to_find);
-}
-
 bool handle_goto(command_param_t param) {
   if (!perform_unregistration(param.freq)) {
     warnln("Couldn't unregister from current frequency.");
@@ -72,8 +67,24 @@ bool handle_goto(command_param_t param) {
   return perform_registration();
 }
 
+bool handle_searchfor(command_param_t param) {
+  param.to_find.layer = specific;
+  if (!perform_search(param.to_find)) {
+    warnln("Couldn't find requested node");
+    return false;
+  }
+
+  dbgln("Found requested node, is on frequency %u", gs.frequencies.current);
+  transport_change_frequency(gs.frequencies.previous);
+
+  // NOTE: previous ist richtig, weil transport_change_frequency() automatisch
+  // previous und current anpasst
+  command_param_t wrap = {.freq = gs.frequencies.previous};
+  return handle_goto(wrap);
+}
+
 bool handle_send(command_param_t param) {
-  // TODO
+  (void)param;
   warnln("Send currently not supported.");
   return false;
 }
