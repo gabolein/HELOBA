@@ -84,6 +84,11 @@ void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload) {
   pack_frequency(v, payload->to);
 }
 
+void pack_split_payload(u8_vector_t *v, split_payload_t *payload) {
+  pack_routing_id(v, &payload->delim1);
+  pack_routing_id(v, &payload->delim2);
+}
+
 unsigned get_payload_size(message_t* msg) {
   // TODO replace magic numbers
   switch (msg->header.type) {
@@ -145,6 +150,11 @@ void pack_message(u8_vector_t *v, message_t *msg) {
   case TRANSFER:
     pack_transfer_payload(v, &msg->payload.transfer);
     break;
+  case MIGRATE:
+    pack_transfer_payload(v, &msg->payload.transfer);
+    break;
+  case SPLIT:
+    pack_split_payload(v, &msg->payload.split);
   default:
     break;
   };
@@ -234,6 +244,16 @@ transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
   return d;
 }
 
+split_payload_t unpack_split_payload(uint8_t *buffer, unsigned length,
+                                           unsigned *decoded) {
+  split_payload_t d;
+
+  d.delim1 = unpack_routing_id(buffer, length, decoded);
+  d.delim2 = unpack_routing_id(buffer, length, decoded);
+
+  return d;
+}
+
 message_t unpack_message(uint8_t *buffer, unsigned length) {
   message_t d;
   unsigned decoded = 1;
@@ -250,6 +270,11 @@ message_t unpack_message(uint8_t *buffer, unsigned length) {
   case TRANSFER:
     d.payload.transfer = unpack_transfer_payload(buffer, length, &decoded);
     break;
+  case MIGRATE:
+    d.payload.transfer = unpack_transfer_payload(buffer, length, &decoded);
+    break;
+  case SPLIT:
+    d.payload.split = unpack_split_payload(buffer, length, &decoded);
   default:
     break;
   }
