@@ -176,6 +176,7 @@ bool perform_search(routing_id_t to_find) {
       search_queue_add(hint);
     }
 
+    message_vector_destroy(responses);
     search_queue_expand_by_order();
   }
 
