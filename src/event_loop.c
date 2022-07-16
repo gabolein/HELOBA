@@ -13,7 +13,7 @@
 #include "src/transport.h"
 #include <stdint.h>
 
-#define MIN_SPLIT_SCORE 5
+#define MIN_SPLIT_SCORE 10
 #define MIN_SWAP_SCORE 10
 #define MIN_LT_SWAP_RATIO -1.25
 #define MIN_GT_SWAP_RATIO 1.25

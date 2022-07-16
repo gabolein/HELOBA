@@ -49,7 +49,7 @@ bool perform_split() {
 
   transport_send_message(&split_msg, receivers);
 
-  for (size_t i = 0; i < nkeys / 2; i++) {
+  for (size_t i = 0; i <= nkeys / 2; i++) {
     club_hashmap_remove(gs.members, routing_id_t_vector_at(keys, i));
     gs.scores.current--;
   }
