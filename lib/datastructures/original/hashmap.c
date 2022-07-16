@@ -50,6 +50,11 @@ static inline uint32_t fmix(uint32_t h) {
 
 // FIXME: optimierte Version für 64bit Architektur benutzen
 // NOTE: ist es ok, den Typ von len zu unsigned zu ändern?
+// NOTE: Weil diese Hashfunktion mit dem unterliegenden Speicher des jeweiligen
+// Datentyps arbeitet, muss man bei structs extrem gut aufpassen, dass vor dem
+// Benutzen der HashMap auf allen Items memset() bei der Erstellung aufgerufen
+// wurde. Ansonsten kann es sein, dass Paddingbytes unterschiedliche Werte haben
+// und die HashMap in dem Fall unerwartete Ergebnisse liefert!
 uint32_t __hm_murmur3(const void *key, int len, uint32_t seed) {
   const uint8_t *data = (const uint8_t *)key;
   const int nblocks = len / 4;

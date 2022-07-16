@@ -1,10 +1,11 @@
+#include <string.h>
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Message"
 
-#include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
+#include "src/protocol/message.h"
 #include "src/protocol/routing.h"
 #include "src/state.h"
 #include "src/transport.h"
@@ -96,6 +97,21 @@ message_t message_create(message_action_t action, message_type_t type) {
   msg.header.type = type;
 
   return msg;
+}
+
+routing_id_t routing_id_create(routing_layer_t layer, uint8_t *MAC) {
+  if (layer & specific) {
+    assert(MAC != NULL);
+  }
+
+  routing_id_t id;
+  memset(&id, 0, sizeof(id));
+  id.layer = layer;
+  if (layer & specific) {
+    memcpy(id.MAC, MAC, MAC_SIZE);
+  }
+
+  return id;
 }
 
 MAKE_SPECIFIC_VECTOR_HEADER(char, char) // Binks!

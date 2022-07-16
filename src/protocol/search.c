@@ -123,7 +123,7 @@ bool perform_search(routing_id_t to_find) {
 
     message_t scan = message_create(DO, FIND);
     scan.payload.find = (find_payload_t){.to_find = gs.search.to_find_id};
-    routing_id_t receivers = {.layer = everyone};
+    routing_id_t receivers = routing_id_create(everyone, NULL);
     transport_send_message(&scan, receivers);
 
     // NOTE: Wenn wir keine Antworten bekommen, kann es sein, dass

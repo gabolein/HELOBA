@@ -1,4 +1,5 @@
 #include "lib/logger.h"
+#include "src/protocol/message.h"
 #define _GNU_SOURCE
 #include "lib/time_util.h"
 #include "src/interface/command.h"
@@ -151,7 +152,7 @@ void *interface_collect_user_input(void *arg) {
       break;
 
     case SEARCHFOR: {
-      routing_id_t to_find = {0, {0}};
+      routing_id_t to_find = routing_id_create(0, NULL);
       if (parse_searchfor(args[1], &to_find)) {
 
         pthread_mutex_lock(&interface_lock);

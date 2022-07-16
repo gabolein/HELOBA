@@ -75,6 +75,7 @@ bool message_is_valid(message_t *msg);
 bool routing_id_equal(routing_id_t id1, routing_id_t id2);
 bool message_addressed_to(message_t *msg, routing_id_t id);
 message_t message_create(message_action_t action, message_type_t type);
+routing_id_t routing_id_create(routing_layer_t layer, uint8_t *MAC);
 void message_dbgln(message_t *msg);
 
 #endif
