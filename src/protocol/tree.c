@@ -39,7 +39,7 @@ frequency_t tree_node_rhs(frequency_t f) {
     return f;
   }
 
-  frequency_t rhs = FREQUENCY_BASE + (f - FREQUENCY_BASE) * 2 + 1;
+  frequency_t rhs = FREQUENCY_BASE + (f - FREQUENCY_BASE) * 2 + 2;
   return rhs > FREQUENCY_CEILING ? f : rhs;
 }
 
