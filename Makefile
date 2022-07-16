@@ -4,12 +4,12 @@ BUILD_DIR = build
 # FIXME: bessere Lösung dafür finden
 ifeq ($(MAKECMDGOALS),test)
 SRC = $(shell find test src lib -name '*.c' ! -wholename src/main.c)
-CFLAGS = -Wall -Wextra -ggdb -O0
+CFLAGS = -Wall -Wextra -ggdb -O0 -fsanitize=address
 CPPFLAGS = -Iinclude -DVIRTUAL
-LDFLAGS = -lcriterion -lm -lpthread
+LDFLAGS = -lcriterion -lm -lpthread -fsanitize=address
 else
 SRC = $(shell find src lib -name '*.c')
-CFLAGS = -std=gnu11 -Wall -Wextra -ggdb -O2 -fsanitize=address
+CFLAGS = -std=gnu11 -Wall -Wextra -ggdb -O0 -fsanitize=address
 CPPFLAGS = -Iinclude -DVIRTUAL
 LDFLAGS = -lm -lpthread -fsanitize=address
 endif
