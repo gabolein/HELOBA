@@ -14,7 +14,15 @@ bool handle_freq(__attribute__((unused)) command_param_t param) {
   return true;
 }
 
-void print_id(uint8_t MAC[6]) { dbgln("ID: %lx", *(uint64_t *)MAC); }
+void print_id(uint8_t MAC[6]) {
+  for (unsigned i = 0; i < MAC_SIZE; i++) {
+    if (i != 0) {
+      printf(":");
+    }
+
+    printf("%hhx", MAC[i]);
+  }
+}
 
 bool handle_list(__attribute__((unused)) command_param_t param) {
   if (!(gs.flags & LEADER)) {
