@@ -53,8 +53,10 @@ transport: recv buffer and send vector
 cache
 backoff threshold way too big
 
-leader leave
+how does leader leave
 
 radio: asynchronous listen?
 
 add send migrate to swap logic
+
+MUY IMPORTANTE: PACK ALL KINDS OF MESSAGES
