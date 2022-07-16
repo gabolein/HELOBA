@@ -43,7 +43,7 @@ typedef struct {
   migrate_state_t migrate;
 } state_t;
 
-state_t gs;
+extern state_t gs;
 void initialize_global_state();
 
 #endif
