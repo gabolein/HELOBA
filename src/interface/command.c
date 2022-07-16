@@ -63,10 +63,10 @@ bool handle_searchfor(command_param_t param) {
 }
 
 bool handle_goto(command_param_t param) {
-  message_t unregister = message_create(WILL, TRANSFER);
-  unregister.payload.transfer = (transfer_payload_t){.to = param.freq};
-  routing_id_t receiver = {.layer = leader};
-  transport_send_message(&unregister, receiver);
+  if (!perform_unregistration(param.freq)) {
+    warnln("Couldn't unregister from current frequency.");
+    return false;
+  }
 
   transport_change_frequency(param.freq);
   return perform_registration();

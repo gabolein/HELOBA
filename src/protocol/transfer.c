@@ -102,8 +102,35 @@ bool join_filter(message_t *msg) {
           message_type(msg) == TRANSFER);
 }
 
-bool perform_registration() {
+bool perform_unregistration(frequency_t to) {
+  if (to == gs.frequencies.current) {
+    warnln("Trying to leave for current frequency.\n");
+    return false;
+  }
 
+  // FIXME: score sollte auch Leader selbst beinhalten
+  if (gs.id.layer & leader) {
+    if (gs.scores.current > 0) {
+      // TODO: anderen Node auf Frequenz explizit zum Leader machen und ihm
+      // aktuellen Status mitschicken.
+    }
+
+    gs.id.layer &= ~leader;
+    gs.scores.current = 0;
+    gs.scores.previous = 0;
+    club_hashmap_clear(gs.members);
+  } else {
+    message_t unregister = message_create(WILL, TRANSFER);
+    unregister.payload.transfer = (transfer_payload_t){.to = to};
+    routing_id_t receiver = {.layer = leader};
+    transport_send_message(&unregister, receiver);
+  }
+
+  gs.flags &= ~REGISTERED;
+  return true;
+}
+
+bool perform_registration() {
   // clang-format off
   // Leader election algorithm:
   // 1. listen for random time N \in [MIN, MAX]
