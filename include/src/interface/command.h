@@ -30,7 +30,7 @@ typedef struct {
 
 typedef bool (*interface_handler_f)(command_param_t param);
 
-interface_commands get_command(char*);
+interface_commands get_command(char *);
 bool handle_interface_command(interface_commands, command_param_t);
 
 #endif
