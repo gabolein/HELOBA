@@ -8,7 +8,6 @@
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
 #include "src/protocol/message_util.h"
-#include "src/protocol/routing.h"
 #include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -186,7 +185,7 @@ bool handle_do_find(message_t *msg) {
   routing_id_t self_id;
   transport_get_id(self_id.MAC);
 
-  if (!routing_id_MAC_equal(to_find, self_id)) {
+  if (!routing_id_equal(to_find, self_id)) {
     return false;
   }
 

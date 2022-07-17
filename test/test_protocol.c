@@ -1,7 +1,6 @@
 #include "lib/datastructures/u8_vector.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
-#include "src/protocol/routing.h"
 #include <criterion/criterion.h>
 #include <criterion/internal/assert.h>
 #include <fcntl.h>

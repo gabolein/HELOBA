@@ -3,7 +3,6 @@
 
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
-#include "src/protocol/routing.h"
 #include "src/protocol/search.h"
 
 MAKE_SPECIFIC_VECTOR_HEADER(routing_id_t, routing_id_t)

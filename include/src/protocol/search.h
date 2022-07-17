@@ -4,7 +4,6 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "src/protocol/message.h"
-#include "src/protocol/routing.h"
 
 typedef enum { CACHE, ORDER } search_hint_type_t;
 typedef enum { UP, DOWN } search_direction_t;

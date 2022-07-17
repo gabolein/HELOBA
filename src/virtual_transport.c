@@ -6,7 +6,6 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
-#include "src/protocol/routing.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>

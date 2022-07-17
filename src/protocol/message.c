@@ -6,7 +6,6 @@
 #include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
 #include "src/protocol/message.h"
-#include "src/protocol/routing.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include <stdio.h>

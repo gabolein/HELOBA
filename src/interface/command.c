@@ -3,7 +3,6 @@
 
 #include "src/interface/command.h"
 #include "lib/logger.h"
-#include "src/protocol/routing.h"
 #include "src/protocol/search.h"
 #include "src/protocol/transfer.h"
 #include "src/state.h"

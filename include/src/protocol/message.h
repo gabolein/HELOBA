@@ -2,7 +2,6 @@
 #define MESSAGE_H
 
 #include "lib/datastructures/generic/generic_vector.h"
-#include "routing.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -17,6 +16,21 @@ typedef enum { DO, DONT, WILL, WONT } message_action_t;
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
 typedef enum { FIND, SWAP, TRANSFER, MIGRATE, SPLIT } message_type_t;
+
+#define MAC_SIZE 6
+#define ROUTING_ID_ENCODED_MIN_SIZE 1
+#define ROUTING_ID_ENCODED_MAX_SIZE 6
+
+typedef enum {
+  everyone = 1 << 0,
+  leader = 1 << 1,
+  specific = 1 << 2,
+} routing_layer_t;
+
+typedef struct {
+  routing_layer_t layer;
+  uint8_t MAC[MAC_SIZE];
+} routing_id_t;
 
 #define FREQUENCY_ENCODED_SIZE sizeof(uint16_t)
 typedef uint16_t frequency_t;

@@ -7,7 +7,6 @@
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
-#include "src/protocol/routing.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"

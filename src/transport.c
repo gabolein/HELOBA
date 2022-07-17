@@ -6,7 +6,6 @@
 #include "lib/logger.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
-#include "src/protocol/routing.h"
 #include "src/state.h"
 #include <stdint.h>
 

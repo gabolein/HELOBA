@@ -1,9 +1,8 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include <stdbool.h>
 #include "src/protocol/message.h"
-#include "src/protocol/routing.h"
+#include <stdbool.h>
 
 #define INTERFACE_COMMAND_COUNT 8
 

@@ -3,7 +3,6 @@
 
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
-#include "src/protocol/routing.h"
 #include <stdbool.h>
 #include <stdint.h>
 
