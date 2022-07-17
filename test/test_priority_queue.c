@@ -49,6 +49,23 @@ Test(priority_queue, empty) {
   int_priority_queue_destroy(q);
 }
 
+// NOTE: at() und remove_at() interpretieren den Index nicht in der Priority
+// Queue Ordnung (d.h. Index 5 gibt das 5.-größte Element zurück), sondern
+// linear. Es werden einfach die dazugehörigen Vector Funktionen aufgerufen.
+Test(priority_queue, at) {
+  int_priority_queue_t *q = int_priority_queue_create();
+
+  int_priority_queue_push(q, 3);
+  int_priority_queue_push(q, 89);
+  int_priority_queue_push(q, 5);
+  int_priority_queue_push(q, 1337);
+  int_priority_queue_push(q, -7);
+  int_priority_queue_push(q, 33);
+
+  cr_assert(int_priority_queue_at(q, 3) == 3);
+  int_priority_queue_destroy(q);
+}
+
 Test(priority_queue, peek) {
   int_priority_queue_t *q = int_priority_queue_create();
 
@@ -69,6 +86,25 @@ Test(priority_queue, push) {
   for (unsigned i = 0; i < 1000; i++) {
     int_priority_queue_push(q, i);
   }
+
+  int_priority_queue_destroy(q);
+}
+
+Test(priority_queue, remove_at) {
+  int_priority_queue_t *q = int_priority_queue_create();
+
+  int_priority_queue_push(q, 3);
+  int_priority_queue_push(q, 89);
+  int_priority_queue_push(q, 5);
+  int_priority_queue_push(q, 1337);
+  int_priority_queue_push(q, -7);
+  int_priority_queue_push(q, 33);
+
+  cr_assert(int_priority_queue_remove_at(q, 2) == 33);
+  cr_assert(int_priority_queue_remove_at(q, 4) == -7);
+  cr_assert(int_priority_queue_remove_at(q, 0) == 1337);
+
+  cr_assert(int_priority_queue_size(q) == 3);
 
   int_priority_queue_destroy(q);
 }

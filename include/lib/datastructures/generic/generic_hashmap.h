@@ -25,6 +25,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     __ghm_hash_state_t state;                                                  \
   } name##_hash_entry_t;                                                       \
                                                                                \
+  MAKE_SPECIFIC_VECTOR_HEADER(K, K)                                            \
   MAKE_SPECIFIC_VECTOR_HEADER(name##_hash_entry_t, name##_hashentry)           \
                                                                                \
   typedef struct {                                                             \
