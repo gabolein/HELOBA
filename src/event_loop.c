@@ -70,11 +70,13 @@ void balance_frequency() {
 }
 
 typedef bool (*handler_f)(message_t *msg);
-static handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
+handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
 
 void event_loop_initialize() {
   memset(auto_handlers, 0, sizeof(auto_handlers));
 
+  // FIXME: auto_handlers als Parameter übergeben, anstatt in den einzelnen
+  // Dateien als extern zu deklarieren
   register_automatic_transfer_handlers();
   register_automatic_swap_handlers();
   register_automatic_search_handlers();
