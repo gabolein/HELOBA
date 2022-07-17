@@ -8,16 +8,6 @@
 // TODO: sollte in eine Traits Datei
 bool eq(int a, int b) { return a == b; }
 
-// FIXME: muss gemacht werden, weil die hashmap_keys() Funktion sonst keine
-// Ahnung hat, was ein int_vector_t ist. Der Grund dafür ist, dass HashMap
-// einen gemeinsamen Vector für Einträge definiert und nicht einzelne für
-// Key, Value und State. Wäre aber wahrscheinlich die cleanere Lösung, wenn die
-// HashMap das stattdessen so machen würde. Dann müsste man auch selber den Key
-// Vektor nicht deklarieren und es hilft allgemein beim Decluttering, weil die
-// Source für den gemeinsamen Vector auch nicht erstellt werden muss. Ist
-// allerdings ein ziemlich großer Rewrite... kommt auf den Backburner :^)
-MAKE_SPECIFIC_VECTOR_HEADER(int, int)
-
 MAKE_SPECIFIC_HASHMAP_HEADER(int, int, ii)
 MAKE_SPECIFIC_HASHMAP_SOURCE(int, int, ii, eq)
 
