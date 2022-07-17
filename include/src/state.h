@@ -5,7 +5,6 @@
 #include "src/protocol/message.h"
 #include "src/protocol/search.h"
 
-MAKE_SPECIFIC_VECTOR_HEADER(routing_id_t, routing_id_t)
 MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, bool, club)
 typedef struct {
   uint8_t previous;

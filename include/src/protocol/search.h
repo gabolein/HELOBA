@@ -17,9 +17,6 @@ typedef struct {
 
 // TODO: bessere Namen finden
 MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(search_hint_t, search)
-// FIXME: Das mit der keys Funktion geht so nicht, viel zu viel Boilerplate
-MAKE_SPECIFIC_VECTOR_HEADER(frequency_t, frequency_t)
-
 MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, checked)
 
 typedef struct {
