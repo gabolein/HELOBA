@@ -5,6 +5,7 @@
 #include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
+#include "src/protocol/cache.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
@@ -259,9 +260,10 @@ bool handle_will_transfer(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == TRANSFER);
 
+  frequency_t f = msg->payload.transfer.to;
+  routing_id_t nonleader = msg->header.sender_id;
+
   if (gs.id.layer & leader) {
-    frequency_t f = msg->payload.transfer.to;
-    routing_id_t nonleader = msg->header.sender_id;
 
     if (f != gs.frequencies.current) {
       if (!club_hashmap_exists(gs.members, nonleader)) {
@@ -291,6 +293,13 @@ bool handle_will_transfer(message_t *msg) {
     transport_send_message(&response, msg->header.sender_id);
   }
 
-  // TODO: Cache Handling
+  if (cache_hit(nonleader)) {
+    if (f != gs.frequencies.current) {
+      cache_insert(nonleader, f);
+    } else {
+      cache_remove(nonleader);
+    }
+  }
+
   return true;
 }
