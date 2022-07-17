@@ -73,10 +73,12 @@ bool priority_queue_empty(priority_queue_t *q) {
   return int_vector_size(q->items) == 0;
 }
 
-int priority_queue_peek(priority_queue_t *q) {
+int priority_queue_at(priority_queue_t *q, unsigned index) {
   __pq_sanity_check(q);
-  return int_vector_at(q->items, 0);
+  return int_vector_at(q->items, index);
 }
+
+int priority_queue_peek(priority_queue_t *q) { return priority_queue_at(q, 0); }
 
 void priority_queue_push(priority_queue_t *q, int item) {
   __pq_sanity_check(q);
@@ -94,12 +96,16 @@ void priority_queue_push(priority_queue_t *q, int item) {
   }
 }
 
-int priority_queue_pop(priority_queue_t *q) {
+int priority_queue_remove_at(priority_queue_t *q, unsigned index) {
   __pq_sanity_check(q);
 
-  int removed = int_vector_remove(q->items, 0);
-  __pq_heapify(q, 0);
+  int removed = int_vector_remove(q->items, index);
+  __pq_heapify(q, index);
   return removed;
+}
+
+int priority_queue_pop(priority_queue_t *q) {
+  return priority_queue_remove_at(q, 0);
 }
 
 void priority_queue_clear(priority_queue_t *q) {

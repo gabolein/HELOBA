@@ -22,8 +22,11 @@ unsigned __gpq_parent(unsigned i);
   name##_priority_queue_t *name##_priority_queue_create();                     \
   unsigned name##_priority_queue_size(name##_priority_queue_t *q);             \
   bool name##_priority_queue_empty(name##_priority_queue_t *q);                \
+  T name##_priority_queue_at(name##_priority_queue_t *q, unsigned index);      \
   T name##_priority_queue_peek(name##_priority_queue_t *q);                    \
   void name##_priority_queue_push(name##_priority_queue_t *q, T item);         \
+  T name##_priority_queue_remove_at(name##_priority_queue_t *q,                \
+                                    unsigned index);                           \
   T name##_priority_queue_pop(name##_priority_queue_t *q);                     \
   void name##_priority_queue_clear(name##_priority_queue_t *q);                \
   void name##_priority_queue_destroy(name##_priority_queue_t *q);
@@ -83,6 +86,11 @@ unsigned __gpq_parent(unsigned i);
     return name##_vector_size(q->items) == 0;                                  \
   }                                                                            \
                                                                                \
+  T name##_priority_queue_at(name##_priority_queue_t *q, unsigned index) {     \
+    __##name##_pq_sanity_check(q);                                             \
+    return name##_vector_at(q->items, index);                                  \
+  }                                                                            \
+                                                                               \
   T name##_priority_queue_peek(name##_priority_queue_t *q) {                   \
     __##name##_pq_sanity_check(q);                                             \
     return name##_vector_at(q->items, 0);                                      \
@@ -105,12 +113,17 @@ unsigned __gpq_parent(unsigned i);
     }                                                                          \
   }                                                                            \
                                                                                \
-  T name##_priority_queue_pop(name##_priority_queue_t *q) {                    \
+  T name##_priority_queue_remove_at(name##_priority_queue_t *q,                \
+                                    unsigned index) {                          \
     __##name##_pq_sanity_check(q);                                             \
                                                                                \
-    T removed = name##_vector_remove(q->items, 0);                             \
-    __##name##_pq_heapify(q, 0);                                               \
+    T removed = name##_vector_remove(q->items, index);                         \
+    __##name##_pq_heapify(q, index);                                           \
     return removed;                                                            \
+  }                                                                            \
+                                                                               \
+  T name##_priority_queue_pop(name##_priority_queue_t *q) {                    \
+    return name##_priority_queue_remove_at(q, 0);                              \
   }                                                                            \
                                                                                \
   void name##_priority_queue_clear(name##_priority_queue_t *q) {               \
