@@ -23,7 +23,7 @@ bool hit_timeout(size_t ms, struct timespec *start) {
   return delta_ms >= ms;
 }
 
-struct timespec timestamp_add_ms(struct timespec stamp, uint32_t to_add){
+struct timespec timestamp_add_ms(struct timespec stamp, uint32_t to_add) {
   struct timespec to_add_ts = ms_to_timespec(to_add);
   stamp.tv_sec += to_add_ts.tv_sec;
   stamp.tv_nsec += to_add_ts.tv_nsec;
@@ -31,7 +31,7 @@ struct timespec timestamp_add_ms(struct timespec stamp, uint32_t to_add){
   return stamp;
 }
 
-int timestamp_cmp(struct timespec stamp_a, struct timespec stamp_b){
+int timestamp_cmp(struct timespec stamp_a, struct timespec stamp_b) {
   if (stamp_a.tv_sec > stamp_b.tv_sec)
     return 1;
 
@@ -46,4 +46,3 @@ int timestamp_cmp(struct timespec stamp_a, struct timespec stamp_b){
 
   return 0;
 }
-

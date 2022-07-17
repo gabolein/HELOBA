@@ -21,6 +21,7 @@ typedef enum { FIND, SWAP, TRANSFER, MIGRATE, SPLIT } message_type_t;
 #define ROUTING_ID_ENCODED_MIN_SIZE 1
 #define ROUTING_ID_ENCODED_MAX_SIZE 6
 
+// TODO: besseren Namen für die ID finden, vielleicht network_id_t?
 typedef enum {
   everyone = 1 << 0,
   leader = 1 << 1,
