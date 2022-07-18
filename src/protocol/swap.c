@@ -143,6 +143,7 @@ bool perform_swap(frequency_t with) {
   if (message_vector_empty(replies)) {
     warnln("Didn't receive answer from frequency %u, assuming failure.", with);
     message_vector_destroy(replies);
+    transport_change_frequency(gs.frequencies.previous);
     return false;
   }
 
@@ -150,6 +151,7 @@ bool perform_swap(frequency_t with) {
   if (message_action(&reply) == WONT) {
     dbgln("Frequency %u doesn't want to swap, aborting.", with);
     message_vector_destroy(replies);
+    transport_change_frequency(gs.frequencies.previous);
     return false;
   }
 
