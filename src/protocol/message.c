@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <string.h>
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Message"
@@ -136,6 +137,9 @@ void message_format_type(message_type_t type, char_vector_t *repr) {
   repr_append("Type: ", repr);
 
   switch (type) {
+  case HINT:
+    repr_append("HINT", repr);
+    break;
   case FIND:
     repr_append("FIND", repr);
     break;
@@ -200,6 +204,14 @@ void message_format_id(routing_id_t id, char_vector_t *repr) {
   }
 }
 
+#define U32_PRINT_WIDTH 10
+
+void message_format_u32(uint32_t num, char_vector_t *repr) {
+  char dec[U32_PRINT_WIDTH];
+  snprintf(dec, U32_PRINT_WIDTH, "%u", num);
+  repr_append(dec, repr);
+}
+
 #define U16_PRINT_WIDTH 6
 
 void message_format_frequency(frequency_t f, char_vector_t *repr) {
@@ -231,13 +243,16 @@ void message_dbgln(message_t *msg) {
   repr_append("\n", repr);
 
   switch (msg->header.type) {
+  case HINT:
+    repr_append("Frequency: ", repr);
+    message_format_frequency(msg->payload.hint.hint.f, repr);
+    repr_append("\nTimedelta: ", repr);
+    message_format_u32(msg->payload.hint.hint.timedelta_us, repr);
+    repr_append("us", repr);
+    break;
   case FIND:
-    // FIXME: Lösung für dieses Union Problem finden, im Moment geben wir
-    // einfach beide aus, ohne zu wissen welches valide ist...
     repr_append("Wanted: ", repr);
     message_format_id(msg->payload.find.to_find, repr);
-    repr_append("\nFrequency: ", repr);
-    message_format_frequency(msg->payload.find.cached.f, repr);
     break;
   case SWAP:
     repr_append("Target: ", repr);

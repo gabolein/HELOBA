@@ -8,11 +8,10 @@
 typedef enum { CACHE, ORDER } search_hint_type_t;
 typedef enum { UP, DOWN } search_direction_t;
 
-// TODO: wir könnten auch Zeitdelta mitschicken, dann könnte man noch nach
-// Neuheit der Cache Einträge sortieren
 typedef struct {
   search_hint_type_t type;
   frequency_t f;
+  unsigned timedelta_us;
 } search_hint_t;
 
 // TODO: bessere Namen finden

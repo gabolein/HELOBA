@@ -31,6 +31,14 @@ int hint_cmp(search_hint_t a, search_hint_t b) {
     return -1;
   }
 
+  if (a.type == CACHE && b.type == CACHE) {
+    if (a.timedelta_us < b.timedelta_us) {
+      return 1;
+    } else if (b.timedelta_us < a.timedelta_us) {
+      return -1;
+    }
+  }
+
   return 0;
 }
 
@@ -96,7 +104,8 @@ void search_state_initialize() {
 }
 
 bool search_response_filter(message_t *msg) {
-  return message_action(msg) == WILL && message_type(msg) == FIND;
+  return message_action(msg) == WILL &&
+         (message_type(msg) == FIND || message_type(msg) == CACHE);
 }
 
 bool perform_search(routing_id_t to_find) {
@@ -145,21 +154,25 @@ bool perform_search(routing_id_t to_find) {
     for (unsigned i = 0; i < message_vector_size(responses); i++) {
       message_t current = message_vector_at(responses, i);
 
-      if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
+      if (message_type(&current) == FIND) {
+        if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
+          warnln("Got FIND response from Node we didn't search.");
+          return false;
+        }
+
         message_vector_destroy(responses);
         perform_registration();
         cache_insert(current.header.sender_id, gs.frequencies.current);
         return true;
+      } else if (message_type(&current) == HINT) {
+        search_hint_t hint = {
+            .type = CACHE,
+            .f = current.payload.hint.hint.f,
+            .timedelta_us = current.payload.hint.hint.timedelta_us,
+        };
+
+        search_queue_add(hint);
       }
-
-      // FIXME: sollte vielleicht direkt im Paket gesendet werden, besonders
-      // wenn wir noch mehr Informationen wie Timedelta mitsenden
-      search_hint_t hint = {
-          .type = CACHE,
-          .f = current.payload.find.cached.f,
-      };
-
-      search_queue_add(hint);
     }
 
     message_vector_destroy(responses);
@@ -182,11 +195,12 @@ bool handle_do_find(message_t *msg) {
     if (cache_hit(to_find)) {
       cache_hint_t hint = cache_get(to_find);
       if (hint.f == gs.frequencies.current) {
-        return false;
+        return true;
       }
 
-      message_t answer = message_create(WILL, FIND);
-      answer.payload.find = (find_payload_t){.cached = hint};
+      message_t reply = message_create(WILL, HINT);
+      reply.payload.hint = (hint_payload_t){.hint = hint};
+      transport_send_message(&reply, msg->header.sender_id);
     }
   } else {
     message_t reply = message_create(WILL, FIND);

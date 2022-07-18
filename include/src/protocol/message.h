@@ -15,7 +15,7 @@ typedef enum { DO, DONT, WILL, WONT } message_action_t;
 #define MESSAGE_TYPE_COUNT 6
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_TYPE_MASK 0b00111111
-typedef enum { FIND, SWAP, TRANSFER, MIGRATE, SPLIT } message_type_t;
+typedef enum { HINT, FIND, SWAP, TRANSFER, MIGRATE, SPLIT } message_type_t;
 
 #define MAC_SIZE 6
 #define ROUTING_ID_ENCODED_MIN_SIZE 1
@@ -59,11 +59,11 @@ typedef struct {
 } cache_hint_t;
 
 typedef struct {
-  // FIXME: unions sollten zu einem Minimum gehalten werden
-  union {
-    routing_id_t to_find;
-    cache_hint_t cached;
-  };
+  cache_hint_t hint;
+} hint_payload_t;
+
+typedef struct {
+  routing_id_t to_find;
 } find_payload_t;
 
 typedef struct {
@@ -83,6 +83,7 @@ typedef struct {
 typedef struct {
   message_header_t header;
   union {
+    hint_payload_t hint;
     find_payload_t find;
     swap_payload_t swap;
     transfer_payload_t transfer;
