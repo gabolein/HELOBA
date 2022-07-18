@@ -36,7 +36,7 @@ void formatter_teardown() {
 char *format_number(char *fmt, unsigned num) {
   assert(fmt != NULL);
 
-  int required_length = snprintf(NULL, 0, fmt, num);
+  int required_length = snprintf(NULL, 0, fmt, num) + 1;
   assert(required_length >= 0);
 
   char_vector_ensure_capacity(num_vec, required_length);
@@ -137,7 +137,7 @@ char *format_routing_id(routing_id_t id) {
       append_helper(routing_id_vec, ":");
     }
 
-    append_helper(routing_id_vec, format_number("%03x", id.MAC[i]));
+    append_helper(routing_id_vec, format_number("%02hhx", id.MAC[i]));
   }
 
   char_vector_append(routing_id_vec, '\0');

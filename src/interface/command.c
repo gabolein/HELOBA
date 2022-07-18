@@ -1,41 +1,31 @@
+#include "src/protocol/message_formatter.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Command"
 
-#include "src/interface/command.h"
 #include "lib/logger.h"
+#include "src/interface/command.h"
+#include "src/protocol/message.h"
 #include "src/protocol/search.h"
 #include "src/protocol/transfer.h"
 #include "src/state.h"
 #include "src/transport.h"
-#include "src/protocol/message.h"
 
 bool handle_freq(__attribute__((unused)) command_param_t param) {
-  dbgln("Current frequency: %u", gs.frequencies.current);
+  printf("Current frequency: %u\n", gs.frequencies.current);
   return true;
-}
-
-void print_id(uint8_t MAC[6]) {
-  for (unsigned i = 0; i < MAC_SIZE; i++) {
-    if (i != 0) {
-      printf(":");
-    }
-
-    printf("%hhx", MAC[i]);
-  }
 }
 
 bool handle_list(__attribute__((unused)) command_param_t param) {
   if (!(gs.id.layer & leader)) {
-    dbgln("Node is not a leader and therefore has no list of nodes.");
+    warnln("Node %s is not a leader and therefore has no list of nodes.",
+           format_routing_id(gs.id));
     return false;
   }
 
   club_key_vector_t *keys = club_hashmap_keys(gs.members);
-  unsigned nkeys = club_key_vector_size(keys);
-  for (size_t i = 0; i < nkeys; i++) {
+  for (unsigned i = 0; i < club_key_vector_size(keys); i++) {
     routing_id_t id = club_key_vector_at(keys, i);
-    printf("1. ");
-    print_id(id.MAC);
+    printf("%u. %s\n", i + 1, format_routing_id(id));
   }
 
   club_key_vector_destroy(keys);
@@ -43,14 +33,14 @@ bool handle_list(__attribute__((unused)) command_param_t param) {
 }
 
 bool handle_id(__attribute__((unused)) command_param_t param) {
-  print_id(gs.id.MAC);
-
+  printf("%s\n", format_routing_id(gs.id));
   return true;
 }
 
 bool handle_split(__attribute__((unused)) command_param_t param) {
   if (!(gs.id.layer & leader)) {
-    dbgln("Node is not a leader and therefore cannot perform split.");
+    warnln("Node %s is not a leader and therefore cannot perform split.",
+           format_routing_id(gs.id));
     return false;
   }
   perform_split(SPLIT_DOWN);
@@ -75,6 +65,8 @@ bool handle_searchfor(command_param_t param) {
   }
 
   dbgln("Found requested node, is on frequency %u", gs.frequencies.current);
+  // FIXME: Das ist falsch, es muss sich die erste Frequenz irgendwo gemerkt
+  // werden.
   transport_change_frequency(gs.frequencies.previous);
 
   // NOTE: previous ist richtig, weil transport_change_frequency() automatisch
