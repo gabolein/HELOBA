@@ -167,7 +167,7 @@ unsigned __hm_lookup_for_reading(hashmap_t *hm, int key) {
   if (delta == 0)
     delta = 1;
 
-  for (unsigned x = 0;; x++) {
+  for (unsigned x = 0; x < size; x++) {
     unsigned hash = (initial + x * delta) % size;
     hash_entry_t current = hashentry_vector_at(hm->entries, hash);
 
@@ -176,13 +176,15 @@ unsigned __hm_lookup_for_reading(hashmap_t *hm, int key) {
       continue;
 
     if (current.state == EMPTY)
-      // Im Moment geben wir einfach einen OOB Index zurück, könnte
-      // wahrscheinlich besser gemacht werden. Weil das hier aber interner
-      // Library Code ist, ist das nicht so schlimm.
-      return size;
+      break;
 
     return hash;
   }
+
+  // Im Moment geben wir einfach einen OOB Index zurück, könnte
+  // wahrscheinlich besser gemacht werden. Weil das hier aber interner
+  // Library Code ist, ist das nicht so schlimm.
+  return size;
 }
 
 unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
@@ -204,13 +206,15 @@ unsigned __hm_lookup_for_writing(hashmap_t *hm, int key) {
   if (delta == 0)
     delta = 1;
 
-  for (unsigned x = 0;; x++) {
+  for (unsigned x = 0; x < size; x++) {
     unsigned hash = (initial + x * delta) % size;
 
     hash_entry_t current = hashentry_vector_at(hm->entries, hash);
     if (current.state == EMPTY || current.state == DELETED)
       return hash;
   }
+
+  assert(false);
 }
 
 hashmap_t *hashmap_create(eq_t eq) {
