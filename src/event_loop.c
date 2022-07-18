@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #define MIN_SPLIT_SCORE 5
-#define MIN_SWAP_SCORE 3
+#define MIN_SWAP_SCORE 2
 #define MIN_LT_SWAP_RATIO -1.25
 #define MIN_GT_SWAP_RATIO 1.25
 
@@ -39,29 +39,28 @@ void balance_frequency() {
   // kommt kaum vor, erst wenn SPLIT nicht mehr möglich ist. SPLIT ist auch
   // nicht besonders gut für den Throughput im Netzwerk, weil geclusterte Nodes,
   // die oft miteinander reden, auseinander gebrochen werden.
-  if (gs.scores.current >= MIN_SWAP_SCORE) {
-    frequency_t f = gs.frequencies.current;
-    frequency_t parent = tree_node_parent(f), lhs = tree_node_lhs(f),
-                rhs = tree_node_rhs(f);
-    float ratio = score_trajectory(gs.scores.previous, gs.scores.current);
+  // NOTE removed min split condition to allow nodes to swap down,
+  // could lead to too many swaps up
+  frequency_t f = gs.frequencies.current;
+  frequency_t parent = tree_node_parent(f), lhs = tree_node_lhs(f),
+              rhs = tree_node_rhs(f);
+  float ratio = score_trajectory(gs.scores.previous, gs.scores.current);
 
-    if (ratio > 0 && ratio > MIN_GT_SWAP_RATIO && f != parent) {
-      dbgln("Try to swap with parent");
-      perform_swap(parent);
-      gs.scores.previous = gs.scores.current;
-    } else if (ratio < 0 && ratio < MIN_LT_SWAP_RATIO) {
-      bool ret = false;
-      dbgln("Try to swap with child");
-      if (f != lhs) {
-        ret = perform_swap(lhs);
-      }
-
-      if (!ret && f != rhs) {
-        ret = perform_swap(rhs);
-      }
-
-      gs.scores.previous = gs.scores.current;
+  if (ratio > 0 && ratio > MIN_GT_SWAP_RATIO && f != parent) {
+    dbgln("Try to swap with parent");
+    perform_swap(parent);
+    gs.scores.previous = gs.scores.current;
+  } else if (ratio < 0 && ratio < MIN_LT_SWAP_RATIO) {
+    bool ret = false;
+    dbgln("Try to swap with child");
+    if (f != lhs) {
+      ret = perform_swap(lhs);
     }
+
+    if (!ret && f != rhs) {
+      ret = perform_swap(rhs);
+    }
+    gs.scores.previous = gs.scores.current;
   }
 }
 
