@@ -131,7 +131,7 @@ Test(hashmap, destroy) {
   ii_hashmap_destroy(hm);
 }
 
-Test(hashmap, deleted, .timeout = 2) {
+Test(hashmap, infinite_loop, .timeout = 2) {
   ii_hashmap_t *hm = ii_hashmap_create();
   for (size_t i = 0; i < 10; i++) {
     ii_hashmap_insert(hm, i, 42);
