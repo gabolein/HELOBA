@@ -16,7 +16,8 @@ MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
 static bool message_allowlist[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT] = {
     [DO][SWAP] = true,     [WILL][SWAP] = true,     [WONT][SWAP] = true,
     [DO][TRANSFER] = true, [WILL][TRANSFER] = true, [DO][FIND] = true,
-    [WILL][FIND] = true,   [DO][MIGRATE] = true,    [DO][SPLIT] = true};
+    [WILL][FIND] = true,   [WILL][HINT] = true,     [DO][MIGRATE] = true,
+    [DO][SPLIT] = true};
 
 inline message_action_t message_action(message_t *msg) {
   return msg->header.action;

@@ -1,3 +1,6 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Cache"
+
 #include "src/protocol/cache.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
@@ -5,6 +8,7 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include <time.h>
 
 // NOTE: Es wäre interessant, die aktuelle Cachegröße abhängig vom Alter des
@@ -44,7 +48,6 @@ MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(cache_key_t, ck, cache_key_cmp)
 rc_hashmap_t *rc_hm;
 ck_priority_queue_t *ck_pq;
 
-// TODO: cache_initialize() in main() aufrufen
 // FIXME: Tests für den Cache schreiben!
 void cache_initialize() {
   rc_hm = rc_hashmap_create();
@@ -69,6 +72,11 @@ cache_hint_t cache_get(routing_id_t id) {
                            (now.tv_nsec - raw.timestamp.tv_nsec) / 1000;
   processed.f = raw.f;
 
+  dbgln("Returning from Cache: %s -> %u (%.2dm:%.2ds:%.4dms old)",
+        format_routing_id(id), processed.f, processed.timedelta_us / 60000000,
+        (processed.timedelta_us % 60000000) / 1000000,
+        (processed.timedelta_us % 1000000) / 1000);
+
   return processed;
 }
 
@@ -80,10 +88,11 @@ void cache_remove(routing_id_t id) {
 
     if (routing_id_equal(id, current.id)) {
       ck_priority_queue_remove_at(ck_pq, i);
-      return;
+      break;
     }
   }
 
+  dbgln("Removing from Cache: %s", format_routing_id(id));
   rc_hashmap_remove(rc_hm, id);
 }
 
@@ -110,6 +119,8 @@ void cache_insert(routing_id_t id, frequency_t f) {
 
   key.id = entry.id;
   key.timestamp = entry.timestamp;
+
+  dbgln("Inserting into Cache: %s -> %u", format_routing_id(id), f);
 
   ck_priority_queue_push(ck_pq, key);
   rc_hashmap_insert(rc_hm, entry.id, entry);

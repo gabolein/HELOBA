@@ -155,7 +155,7 @@ bool perform_search(routing_id_t to_find) {
       message_t current = message_vector_at(responses, i);
 
       if (message_type(&current) == FIND) {
-        if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
+        if (!routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
           warnln("Got FIND response from Node we didn't search.");
           return false;
         }
