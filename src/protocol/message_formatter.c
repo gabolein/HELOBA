@@ -36,7 +36,7 @@ void formatter_teardown() {
 char *format_number(char *fmt, unsigned num) {
   assert(fmt != NULL);
 
-  int required_length = snprintf(NULL, 0, fmt, num);
+  int required_length = snprintf(NULL, 0, fmt, num) + 1;
   assert(required_length >= 0);
 
   char_vector_ensure_capacity(num_vec, required_length);
