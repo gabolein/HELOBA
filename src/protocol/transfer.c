@@ -130,24 +130,18 @@ bool perform_unregistration(frequency_t to) {
   }
 
   // FIXME: score sollte auch Leader selbst beinhalten
-  if (gs.id.layer & leader) {
-    if (gs.scores.current > 0) {
-      // TODO: anderen Node auf Frequenz explizit zum Leader machen und ihm
-      // aktuellen Status mitschicken.
-    }
+  message_t unregister = message_create(WILL, TRANSFER);
+  unregister.payload.transfer = (transfer_payload_t){.to = to};
+  routing_id_t receiver = routing_id_create(everyone, NULL);
+  transport_send_message(&unregister, receiver);
+  gs.registered = false;
 
+  if (gs.id.layer & leader) {
     gs.id.layer &= ~leader;
     gs.scores.current = 0;
     gs.scores.previous = 0;
     club_hashmap_clear(gs.members);
-  } else {
-    message_t unregister = message_create(WILL, TRANSFER);
-    unregister.payload.transfer = (transfer_payload_t){.to = to};
-    routing_id_t receiver = routing_id_create(leader, NULL);
-    transport_send_message(&unregister, receiver);
   }
-
-  gs.registered = false;
   return true;
 }
 
@@ -246,48 +240,58 @@ bool handle_will_transfer(message_t *msg) {
   assert(message_type(msg) == TRANSFER);
 
   frequency_t f = msg->payload.transfer.to;
-  routing_id_t nonleader = msg->header.sender_id;
+  routing_id_t sender = msg->header.sender_id;
 
-  if (gs.id.layer & leader) {
+  // trying to leave
+  // TODO refactor
+  if (f != gs.frequencies.current) {
 
-    if (f != gs.frequencies.current) {
-      if (!club_hashmap_exists(gs.members, nonleader)) {
+    if (gs.id.layer & leader) {
+
+      if (!club_hashmap_exists(gs.members, sender)) {
         warnln("Will Transfer:"
                "not registered node is trying to unregister.");
         return false;
       }
 
-      club_hashmap_remove(gs.members, nonleader);
+      club_hashmap_remove(gs.members, sender);
       gs.scores.current--;
       dbgln("Will Transfer: Node is unregistering."
             " Membercount: %u",
             gs.scores.current);
+
+      // leader update cache
+      cache_insert(sender, f);
+      return true;
     } else {
-      if (!club_hashmap_exists(gs.members, nonleader)) {
-        club_hashmap_insert(gs.members, nonleader, true);
+      if (sender.layer & leader) {
+        // leader trying to leave
+        warnln("Leader leaving enter election");
+        perform_registration();
+      }
+    }
+  } else {
+    // trying to join
+    if (gs.id.layer & leader) {
+      if (!club_hashmap_exists(gs.members, sender)) {
+        club_hashmap_insert(gs.members, sender, true);
         gs.scores.current++;
         dbgln("Will Transfer: Node is registering."
               " Membercount: %u",
               gs.scores.current);
       }
+      // NOTE also send to registering nodes if they are already registered?
+      message_t response = message_create(DO, TRANSFER);
+      response.payload.transfer = (transfer_payload_t){.to = f};
+      transport_send_message(&response, msg->header.sender_id);
     }
-
-    // NOTE also send to registering nodes if they are already registered?
-    message_t response = message_create(DO, TRANSFER);
-    response.payload.transfer = (transfer_payload_t){.to = f};
-    transport_send_message(&response, msg->header.sender_id);
   }
 
-  if ((gs.id.layer & leader) && f != gs.frequencies.current) {
-    cache_insert(nonleader, f);
-    return true;
-  }
-
-  if (cache_hit(nonleader)) {
+  if (cache_hit(sender)) {
     if (f != gs.frequencies.current) {
-      cache_insert(nonleader, f);
+      cache_insert(sender, f);
     } else {
-      cache_remove(nonleader);
+      cache_remove(sender);
     }
   }
 
