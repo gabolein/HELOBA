@@ -23,5 +23,6 @@ rc_key_vector_t *cache_contents();
 cache_hint_t cache_get(routing_id_t id);
 void cache_remove(routing_id_t id);
 void cache_insert(routing_id_t id, frequency_t f);
+void cache_initialize(void);
 
 #endif

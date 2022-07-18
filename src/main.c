@@ -8,6 +8,7 @@
 #include "src/state.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
+#include "src/protocol/cache.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -25,6 +26,7 @@ int main() {
   srandom(time(NULL));
 
   initialize_global_state();
+  cache_initialize();
 
   if (!transport_initialize()) {
     dbgln("Couldn't initialize transport.");
