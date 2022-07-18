@@ -68,11 +68,11 @@ bool message_addressed_to(message_t *msg, routing_id_t id) {
     return true;
   }
 
-  if ((msg->header.receiver_id.layer & leader) == (id.layer & leader)) {
-    return true;
+  if (msg->header.receiver_id.layer & specific) {
+    return routing_id_equal(msg->header.receiver_id, id);
   }
 
-  if (routing_id_equal(msg->header.receiver_id, id)) {
+  if ((msg->header.receiver_id.layer & leader) == (id.layer & leader)) {
     return true;
   }
 
