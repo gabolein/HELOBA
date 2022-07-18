@@ -1,4 +1,3 @@
-META PROBLEMS
 mute: que pasa?
 
 TEST:
@@ -22,4 +21,20 @@ radio: asynchronous listen?
 
 backoff: transfer mode asynchronous? -> backoff broken
 
-endlosschleife? three nodes register, they all leave, new node joins
+endlosschleife? start node, goto 801, repeat 4 times
+hashmap bug fixed
+might still occur??
+
+swap down: node joins and goes to child to trigger swap from parent, node tries to register and catches old leaders swap request, node thinks it lost election
+solution: when node leaves down, leader must wait before attempting the swap
+
+swap problem: with empty parent frequencies we may end up with big detached subtrees
+solution: if on swapping up nobody answers, we split towards the parent
+
+split up why do 2 go away with 3 nodes
+
+leader leaving solution:
+already present nodes just start a new election
+problem: node registered but currently searching (shhhh)
+
+can leader searchfor?
