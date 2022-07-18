@@ -176,6 +176,7 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
     assert(length - *decoded >= sizeof(uint8_t) + MAC_SIZE);
 
   routing_id_t d;
+  memset(&d, 0, sizeof(routing_id_t));
   d.layer = buffer[*decoded];
   (*decoded)++;
 
