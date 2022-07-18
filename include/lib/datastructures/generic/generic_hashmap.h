@@ -25,7 +25,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     __ghm_hash_state_t state;                                                  \
   } name##_hash_entry_t;                                                       \
                                                                                \
-  MAKE_SPECIFIC_VECTOR_HEADER(K, K)                                            \
+  MAKE_SPECIFIC_VECTOR_HEADER(K, name##_key)                                   \
   MAKE_SPECIFIC_VECTOR_HEADER(name##_hash_entry_t, name##_hashentry)           \
                                                                                \
   typedef struct {                                                             \
@@ -38,7 +38,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
   void name##_hashmap_insert(name##_hashmap_t *hm, K key, V value);            \
   void name##_hashmap_remove(name##_hashmap_t *hm, K key);                     \
   bool name##_hashmap_exists(name##_hashmap_t *hm, K key);                     \
-  K##_vector_t *name##_hashmap_keys(name##_hashmap_t *hm);                     \
+  name##_key_vector_t *name##_hashmap_keys(name##_hashmap_t *hm);              \
   V name##_hashmap_get(name##_hashmap_t *hm, K key);                           \
   void name##_hashmap_clear(name##_hashmap_t *hm);                             \
   void name##_hashmap_destroy(name##_hashmap_t *hm);
@@ -191,11 +191,11 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     return index < name##_hashentry_vector_size(hm->entries);                  \
   }                                                                            \
                                                                                \
-  K##_vector_t *name##_hashmap_keys(name##_hashmap_t *hm) {                    \
+  name##_key_vector_t *name##_hashmap_keys(name##_hashmap_t *hm) {             \
     __##name##_hm_sanity_check(hm);                                            \
                                                                                \
-    K##_vector_t *keys =                                                       \
-        K##_vector_create_with_capacity(name##_hashmap_size(hm));              \
+    name##_key_vector_t *keys =                                                \
+        name##_key_vector_create_with_capacity(name##_hashmap_size(hm));       \
                                                                                \
     for (unsigned i = 0; i < name##_hashentry_vector_size(hm->entries); i++) { \
       name##_hash_entry_t entry = name##_hashentry_vector_at(hm->entries, i);  \
@@ -203,7 +203,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
         continue;                                                              \
       }                                                                        \
                                                                                \
-      K##_vector_append(keys, entry.key);                                      \
+      name##_key_vector_append(keys, entry.key);                               \
     }                                                                          \
                                                                                \
     return keys;                                                               \

@@ -9,6 +9,7 @@
 bool eq(int a, int b) { return a == b; }
 
 MAKE_SPECIFIC_HASHMAP_HEADER(int, int, ii)
+MAKE_SPECIFIC_VECTOR_SOURCE(int, ii_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(int, int, ii, eq)
 
 Test(hashmap, create) {
@@ -76,18 +77,18 @@ Test(hashmap, keys) {
     ii_hashmap_insert(hm, i, i + 20);
   }
 
-  int_vector_t *keys = ii_hashmap_keys(hm);
-  cr_assert(int_vector_size(keys) == 10);
+  ii_key_vector_t *keys = ii_hashmap_keys(hm);
+  cr_assert(ii_key_vector_size(keys) == 10);
 
   // NOTE: Keys werden nicht in der Reihenfolge zurückgegeben, in der sie
   // eingefügt wurden. Deswegen müssen wir diese inverse Prüfung machen
-  for (unsigned i = 0; i < int_vector_size(keys); i++) {
-    cr_assert(ii_hashmap_exists(hm, int_vector_at(keys, i)));
+  for (unsigned i = 0; i < ii_key_vector_size(keys); i++) {
+    cr_assert(ii_hashmap_exists(hm, ii_key_vector_at(keys, i)));
   }
 
   // NOTE: keys wurde innerhalb von ii_hashmap_keys() neu erstellt, wir müssen
   // den Vector wieder freigeben
-  int_vector_destroy(keys);
+  ii_key_vector_destroy(keys);
   ii_hashmap_destroy(hm);
 }
 
