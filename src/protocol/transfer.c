@@ -84,7 +84,19 @@ bool handle_do_split(message_t *msg) {
     transport_change_frequency(tree_node_rhs(gs.frequencies.current));
   } else {
     split = false;
-    // TODO node that does not split update cache
+    rc_key_vector_t *keys = cache_contents();
+
+    for (unsigned i = 0; i < rc_key_vector_size(keys); i++) {
+      routing_id_t current = rc_key_vector_at(keys, i);
+
+      if (id_order(gs.id.MAC, delim1.MAC) <= 0) {
+        cache_insert(current, tree_node_lhs(gs.frequencies.current));
+      }
+
+      if (id_order(gs.id.MAC, delim2.MAC) <= 0) {
+        cache_insert(current, tree_node_rhs(gs.frequencies.current));
+      }
+    }
   }
 
   if (split) {
