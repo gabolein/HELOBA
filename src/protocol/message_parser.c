@@ -85,6 +85,8 @@ void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload) {
 }
 
 void pack_split_payload(u8_vector_t *v, split_payload_t *payload) {
+  split_direction dir = payload->direction;
+  u8_vector_append(v, (uint8_t)dir);
   pack_routing_id(v, &payload->delim1);
   pack_routing_id(v, &payload->delim2);
 }
@@ -105,7 +107,7 @@ unsigned get_payload_size(message_t *msg) {
   case TRANSFER:
     return 2;
   case SPLIT:
-    return 7 + 7;
+    return 1 + 7 + 7;
   default:
     warnln("get_payload_size: case not handled");
     return 0;
@@ -257,6 +259,9 @@ transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
 split_payload_t unpack_split_payload(uint8_t *buffer, unsigned length,
                                      unsigned *decoded) {
   split_payload_t d;
+
+  d.direction = buffer[*decoded];
+  (*decoded)++;
 
   d.delim1 = unpack_routing_id(buffer, length, decoded);
   d.delim2 = unpack_routing_id(buffer, length, decoded);

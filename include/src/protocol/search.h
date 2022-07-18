@@ -6,7 +6,7 @@
 #include "src/protocol/message.h"
 
 typedef enum { CACHE, ORDER } search_hint_type_t;
-typedef enum { UP, DOWN } search_direction_t;
+typedef enum { SEARCH_UP, SEARCH_DOWN } search_direction_t;
 
 typedef struct {
   search_hint_type_t type;

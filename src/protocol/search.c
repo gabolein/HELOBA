@@ -64,8 +64,8 @@ void search_queue_add(search_hint_t hint) {
 void search_queue_expand_by_order() {
   if (gs.search.current_frequency ==
           tree_node_parent(gs.search.current_frequency) &&
-      gs.search.direction == UP) {
-    gs.search.direction = DOWN;
+      gs.search.direction == SEARCH_UP) {
+    gs.search.direction = SEARCH_DOWN;
   }
 
   frequency_t next_freqs[3] = {
@@ -79,12 +79,12 @@ void search_queue_expand_by_order() {
       continue;
     }
 
-    if (gs.search.direction == DOWN &&
+    if (gs.search.direction == SEARCH_DOWN &&
         next_freqs[i] == tree_node_parent(gs.search.current_frequency)) {
       continue;
     }
 
-    if (gs.search.direction == UP &&
+    if (gs.search.direction == SEARCH_UP &&
         next_freqs[i] != tree_node_parent(gs.search.current_frequency)) {
       continue;
     }
@@ -112,7 +112,7 @@ bool perform_search(routing_id_t to_find) {
   gs.search.to_find_id = to_find;
   checked_hashmap_clear(gs.search.checked_frequencies);
   gs.search.current_frequency = gs.frequencies.current;
-  gs.search.direction = UP;
+  gs.search.direction = SEARCH_UP;
   search_priority_queue_clear(gs.search.search_queue);
 
   search_hint_t start = {
