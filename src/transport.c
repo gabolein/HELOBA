@@ -5,6 +5,7 @@
 #include "lib/datastructures/u8_vector.h"
 #include "lib/logger.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/message_parser.h"
 #include "src/state.h"
 #include <stdint.h>
@@ -58,8 +59,7 @@ bool transport_send_message(message_t *msg, routing_id_t to) {
     return false;
   }
 
-  dbgln("Sending Message");
-  message_dbgln(msg);
+  dbgln("Sending Message:\n%s", format_message(msg));
   pack_message(send_vec, msg);
 
 #if defined(VIRTUAL)
@@ -99,8 +99,7 @@ bool transport_receive_message(message_t *msg) {
   }
 
   if (message_addressed_to(msg, gs.id)) {
-    dbgln("Received Message");
-    message_dbgln(msg);
+    dbgln("Received Message:\n%s", format_message(msg));
     return true;
   }
 

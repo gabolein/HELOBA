@@ -2,6 +2,7 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/datastructures/generic/generic_vector.h"
+#include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include <time.h>
