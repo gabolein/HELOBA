@@ -43,11 +43,26 @@ typedef struct {
   routing_id_t receiver_id;
 } message_header_t;
 
+// Verarbeiteter Cache Eintrag, der als Antwort auf DO FIND an andere Nodes
+// geschickt werden kann.
+//
+// f: Die Frequenz, auf der der Node mit der angefragten ID sein könnte
+// timedelta: Alter des Cacheeintrags in Mikrosekunden. Damit ist das maximale
+// Alter eines Cache Eintrags ~70 Minuten.
+// NOTE: Eigentlich sollte die Definition in cache.h stehen, wegen Circular
+// Includes packen wir es erstmal hierhin. Sollte wieder zurück geschoben
+// werden, sobald wir für message.h eine modulare Struktur wie bei den Handlers
+// haben.
+typedef struct {
+  frequency_t f;
+  unsigned timedelta_us;
+} cache_hint_t;
+
 typedef struct {
   // FIXME: unions sollten zu einem Minimum gehalten werden
   union {
     routing_id_t to_find;
-    frequency_t cached;
+    cache_hint_t cached;
   };
 } find_payload_t;
 

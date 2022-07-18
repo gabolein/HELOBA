@@ -3,7 +3,7 @@
 
 state_t gs;
 
-MAKE_SPECIFIC_VECTOR_SOURCE(routing_id_t, routing_id_t)
+MAKE_SPECIFIC_VECTOR_SOURCE(routing_id_t, club_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(routing_id_t, bool, club, routing_id_equal)
 
 void initialize_global_state() {

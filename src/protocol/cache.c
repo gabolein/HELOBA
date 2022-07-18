@@ -16,12 +16,6 @@ typedef struct {
   routing_id_t id;
 } cache_key_t;
 
-typedef struct {
-  routing_id_t id;
-  frequency_t f;
-  struct timespec timestamp;
-} cache_entry_t;
-
 int cache_key_cmp(cache_key_t a, cache_key_t b) {
   if (a.timestamp.tv_sec > b.timestamp.tv_sec) {
     return -1;
@@ -38,7 +32,7 @@ int cache_key_cmp(cache_key_t a, cache_key_t b) {
   return 0;
 }
 
-MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, cache_entry_t, rc)
+MAKE_SPECIFIC_VECTOR_SOURCE(routing_id_t, rc_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(routing_id_t, cache_entry_t, rc, routing_id_equal)
 
 MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(cache_key_t, ck)
@@ -50,12 +44,15 @@ rc_hashmap_t *rc_hm;
 ck_priority_queue_t *ck_pq;
 
 // TODO: cache_initialize() in main() aufrufen
+// FIXME: Tests für den Cache schreiben!
 void cache_initialize() {
   rc_hm = rc_hashmap_create();
   ck_pq = ck_priority_queue_create();
 }
 
 bool cache_hit(routing_id_t id) { return rc_hashmap_exists(rc_hm, id); }
+
+rc_key_vector_t *cache_contents() { return rc_hashmap_keys(rc_hm); }
 
 cache_hint_t cache_get(routing_id_t id) {
   assert(cache_hit(id));

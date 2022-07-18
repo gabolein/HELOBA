@@ -29,15 +29,15 @@ bool handle_list(__attribute__((unused)) command_param_t param) {
     return false;
   }
 
-  routing_id_t_vector_t *keys = club_hashmap_keys(gs.members);
-  unsigned nkeys = routing_id_t_vector_size(keys);
+  club_key_vector_t *keys = club_hashmap_keys(gs.members);
+  unsigned nkeys = club_key_vector_size(keys);
   for (size_t i = 0; i < nkeys; i++) {
-    routing_id_t id = routing_id_t_vector_at(keys, i);
+    routing_id_t id = club_key_vector_at(keys, i);
     printf("1. ");
     print_id(id.MAC);
   }
 
-  routing_id_t_vector_destroy(keys);
+  club_key_vector_destroy(keys);
   return true;
 }
 

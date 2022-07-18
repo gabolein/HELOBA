@@ -237,7 +237,7 @@ void message_dbgln(message_t *msg) {
     repr_append("Wanted: ", repr);
     message_format_id(msg->payload.find.to_find, repr);
     repr_append("\nFrequency: ", repr);
-    message_format_frequency(msg->payload.find.cached, repr);
+    message_format_frequency(msg->payload.find.cached.f, repr);
     break;
   case SWAP:
     repr_append("Target: ", repr);

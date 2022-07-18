@@ -38,17 +38,17 @@ int id_order(const void *arg1, const void *arg2) {
 }
 
 bool perform_split() {
-  routing_id_t_vector_t *keys = club_hashmap_keys(gs.members);
+  club_key_vector_t *keys = club_hashmap_keys(gs.members);
   unsigned nkeys;
-  if ((nkeys = routing_id_t_vector_size(keys)) == 0) {
+  if ((nkeys = club_key_vector_size(keys)) == 0) {
     return false;
   }
 
   qsort(keys->data, nkeys, sizeof(routing_id_t), &id_order);
 
   // NOTE nkeys/x -1??
-  routing_id_t delim1 = routing_id_t_vector_at(keys, nkeys / 4);
-  routing_id_t delim2 = routing_id_t_vector_at(keys, nkeys / 2);
+  routing_id_t delim1 = club_key_vector_at(keys, nkeys / 4);
+  routing_id_t delim2 = club_key_vector_at(keys, nkeys / 2);
 
   message_t split_msg = message_create(DO, SPLIT);
   split_msg.payload.split.delim1 = delim1;
@@ -58,11 +58,11 @@ bool perform_split() {
   transport_send_message(&split_msg, receivers);
 
   for (size_t i = 0; i <= nkeys / 2; i++) {
-    club_hashmap_remove(gs.members, routing_id_t_vector_at(keys, i));
+    club_hashmap_remove(gs.members, club_key_vector_at(keys, i));
     gs.scores.current--;
   }
 
-  routing_id_t_vector_destroy(keys);
+  club_key_vector_destroy(keys);
 
   return true;
 }

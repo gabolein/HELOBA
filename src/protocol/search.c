@@ -1,13 +1,14 @@
+#include "src/protocol/cache.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Search"
 
-#include "src/protocol/search.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_handler.h"
 #include "src/protocol/message_util.h"
+#include "src/protocol/search.h"
 #include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -39,7 +40,7 @@ bool frequency_eq(frequency_t a, frequency_t b) { return a == b; }
 MAKE_SPECIFIC_VECTOR_SOURCE(search_hint_t, search);
 MAKE_SPECIFIC_PRIORITY_QUEUE_SOURCE(search_hint_t, search, hint_cmp)
 
-MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, frequency_t)
+MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, checked_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
@@ -147,12 +148,8 @@ bool perform_search(routing_id_t to_find) {
 
       if (routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
         message_vector_destroy(responses);
-
-        // NOTE: Es wäre gut, einen Failsave einzubauen, falls der Leader auf
-        // der Frequenz nicht mehr aktiv ist und deswegen keiner antwortet. In
-        // dem Fall könnten wir selbst zum Leader werden.
         perform_registration();
-
+        cache_insert(current.header.sender_id, gs.frequencies.current);
         return true;
       }
 
@@ -160,7 +157,7 @@ bool perform_search(routing_id_t to_find) {
       // wenn wir noch mehr Informationen wie Timedelta mitsenden
       search_hint_t hint = {
           .type = CACHE,
-          .f = current.payload.find.cached,
+          .f = current.payload.find.cached.f,
       };
 
       search_queue_add(hint);
@@ -182,17 +179,22 @@ bool handle_do_find(message_t *msg) {
   }
 
   routing_id_t to_find = msg->payload.find.to_find;
-  routing_id_t self_id;
-  transport_get_id(self_id.MAC);
+  if (!routing_id_equal(to_find, gs.id)) {
+    if (cache_hit(to_find)) {
+      cache_hint_t hint = cache_get(to_find);
+      if (hint.f == gs.frequencies.current) {
+        return false;
+      }
 
-  if (!routing_id_equal(to_find, self_id)) {
-    return false;
+      message_t answer = message_create(WILL, FIND);
+      answer.payload.find = (find_payload_t){.cached = hint};
+    }
+  } else {
+    message_t reply = message_create(WILL, FIND);
+    // NOTE pack routing id checks for specific bit
+    reply.payload.find.to_find.layer = everyone;
+    transport_send_message(&reply, msg->header.sender_id);
   }
-
-  message_t reply = message_create(WILL, FIND);
-  // NOTE pack routing id checks for specific bit
-  reply.payload.find.to_find.layer = everyone;
-  transport_send_message(&reply, msg->header.sender_id);
 
   return true;
 }
