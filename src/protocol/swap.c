@@ -29,8 +29,13 @@ bool handle_do_migrate(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == MIGRATE);
 
-  if (msg->header.sender_id.layer != leader) {
+  if (!(msg->header.sender_id.layer & leader)) {
     dbgln("Received DO MIGRATE from non-leader, ignoring.");
+    return false;
+  }
+
+  if (gs.id.layer & leader) {
+    dbgln("Received DO MIGRATE as leader, ignoring.");
     return false;
   }
 
@@ -83,7 +88,7 @@ bool handle_do_swap(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SWAP);
 
-  if (!(gs.id.layer & leader) || msg->header.sender_id.layer != leader) {
+  if (!(gs.id.layer & leader) || !(msg->header.sender_id.layer & leader)) {
     dbgln("Only leaders should be able to swap, ignoring.");
     return false;
   }
