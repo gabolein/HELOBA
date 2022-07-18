@@ -4,7 +4,6 @@
 #include "lib/logger.h"
 #include "src/interface/interface.h"
 #include "src/protocol/message.h"
-#include "src/protocol/message_handler.h"
 #include "src/protocol/search.h"
 #include "src/protocol/swap.h"
 #include "src/protocol/transfer.h"
