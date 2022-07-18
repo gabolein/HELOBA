@@ -13,7 +13,6 @@ void pack_frequency(u8_vector_t *v, frequency_t freq);
 void pack_routing_id(u8_vector_t *v, routing_id_t *id);
 void pack_header(u8_vector_t *v, message_header_t *header);
 void pack_find_payload(u8_vector_t *v, find_payload_t *payload);
-void pack_update_payload(u8_vector_t *v, update_payload_t *payload);
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload);
 void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload);
 
@@ -25,8 +24,6 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
                                unsigned *decoded);
 find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded);
-update_payload_t unpack_update_payload(uint8_t *buffer, unsigned length,
-                                       unsigned *decoded);
 swap_payload_t unpack_swap_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded);
 transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
@@ -66,13 +63,16 @@ void pack_header(u8_vector_t *v, message_header_t *header) {
   pack_routing_id(v, &header->receiver_id);
 }
 
-void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
-  pack_routing_id(v, &payload->to_find);
+void pack_hint_payload(u8_vector_t *v, hint_payload_t *payload) {
+  pack_frequency(v, payload->hint.f);
+  u8_vector_append(v, (payload->hint.timedelta_us >> 24) & 0xff);
+  u8_vector_append(v, (payload->hint.timedelta_us >> 16) & 0xff);
+  u8_vector_append(v, (payload->hint.timedelta_us >> 8) & 0xff);
+  u8_vector_append(v, (payload->hint.timedelta_us >> 0) & 0xff);
 }
 
-void pack_update_payload(u8_vector_t *v, update_payload_t *payload) {
-  pack_frequency(v, payload->old);
-  pack_frequency(v, payload->updated);
+void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
+  pack_routing_id(v, &payload->to_find);
 }
 
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload) {
@@ -92,22 +92,22 @@ void pack_split_payload(u8_vector_t *v, split_payload_t *payload) {
 unsigned get_payload_size(message_t *msg) {
   // TODO replace magic numbers
   switch (msg->header.type) {
+  case HINT:
+    // Das ist ein Level zu viel
+    return sizeof(msg->payload.hint.hint.f) +
+           sizeof(msg->payload.hint.hint.timedelta_us);
   case FIND:
-
-    // TODO extend for cache
     return msg->payload.find.to_find.layer & specific ? 7 : 1;
-    break;
   case SWAP:
     return 2 + 1;
   case MIGRATE:
     return 2;
   case TRANSFER:
     return 2;
-    /*return action == WILL ? 2 : 0;*/
   case SPLIT:
     return 7 + 7;
   default:
-    warnln("get payload size: case not handled");
+    warnln("get_payload_size: case not handled");
     return 0;
   }
 }
@@ -137,6 +137,9 @@ void pack_message(u8_vector_t *v, message_t *msg) {
   pack_message_length(v, msg);
 
   switch (msg->header.type) {
+  case HINT:
+    pack_hint_payload(v, &msg->payload.hint);
+    break;
   case FIND:
     pack_find_payload(v, &msg->payload.find);
     break;
@@ -206,18 +209,28 @@ message_header_t unpack_header(uint8_t *buffer, unsigned length,
   return d;
 }
 
+hint_payload_t unpack_hint_payload(uint8_t *buffer, unsigned length,
+                                   unsigned *decoded) {
+  hint_payload_t d;
+  memset(&d.hint, 0, sizeof(d.hint));
+  d.hint.f = unpack_frequency(buffer, length, decoded);
+
+  assert(*decoded <= length);
+  assert(length - *decoded >= sizeof(d.hint.timedelta_us));
+
+  for (unsigned i = 0; i < sizeof(d.hint.timedelta_us); i++) {
+    d.hint.timedelta_us <<= 8;
+    d.hint.timedelta_us |= buffer[*decoded];
+    (*decoded)++;
+  }
+
+  return d;
+}
+
 find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded) {
   find_payload_t d;
   d.to_find = unpack_routing_id(buffer, length, decoded);
-  return d;
-}
-
-update_payload_t unpack_update_payload(uint8_t *buffer, unsigned length,
-                                       unsigned *decoded) {
-  update_payload_t d;
-  d.old = unpack_frequency(buffer, length, decoded);
-  d.updated = unpack_frequency(buffer, length, decoded);
   return d;
 }
 
@@ -258,6 +271,9 @@ message_t unpack_message(uint8_t *buffer, unsigned length) {
   d.header = unpack_header(buffer, length, &decoded);
 
   switch (d.header.type) {
+  case HINT:
+    d.payload.hint = unpack_hint_payload(buffer, length, &decoded);
+    break;
   case FIND:
     d.payload.find = unpack_find_payload(buffer, length, &decoded);
     break;
