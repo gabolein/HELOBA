@@ -13,11 +13,13 @@
 #include <stdint.h>
 
 #define MIN_SPLIT_SCORE 5
-#define MIN_SWAP_SCORE 10
+#define MIN_SWAP_SCORE 3
 #define MIN_LT_SWAP_RATIO -1.25
 #define MIN_GT_SWAP_RATIO 1.25
 
 float score_trajectory(uint8_t old, uint8_t new) {
+  if (old == 0)
+    return (float)new;
   float ratio = (float)new / (float)old;
   if (ratio >= 1.0) {
     return ratio;
@@ -27,12 +29,7 @@ float score_trajectory(uint8_t old, uint8_t new) {
 }
 
 void balance_frequency() {
-  if (gs.scores.current < MIN_SPLIT_SCORE) {
-    return;
-  }
-
-  if (gs.scores.current >= MIN_SPLIT_SCORE &&
-      gs.scores.current < MIN_SWAP_SCORE) {
+  if (gs.scores.current >= MIN_SPLIT_SCORE) {
     dbgln("There are currently %u Nodes on frequency %u, attempting to split.",
           gs.scores.current, gs.frequencies.current);
     perform_split();
