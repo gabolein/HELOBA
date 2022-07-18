@@ -67,11 +67,6 @@ typedef struct {
 } find_payload_t;
 
 typedef struct {
-  frequency_t old;
-  frequency_t updated;
-} update_payload_t;
-
-typedef struct {
   frequency_t with;
   uint8_t score;
 } swap_payload_t;
@@ -89,7 +84,6 @@ typedef struct {
   message_header_t header;
   union {
     find_payload_t find;
-    update_payload_t update;
     swap_payload_t swap;
     transfer_payload_t transfer;
     split_payload_t split;

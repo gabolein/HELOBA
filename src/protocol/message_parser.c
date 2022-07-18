@@ -13,7 +13,6 @@ void pack_frequency(u8_vector_t *v, frequency_t freq);
 void pack_routing_id(u8_vector_t *v, routing_id_t *id);
 void pack_header(u8_vector_t *v, message_header_t *header);
 void pack_find_payload(u8_vector_t *v, find_payload_t *payload);
-void pack_update_payload(u8_vector_t *v, update_payload_t *payload);
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload);
 void pack_transfer_payload(u8_vector_t *v, transfer_payload_t *payload);
 
@@ -25,8 +24,6 @@ routing_id_t unpack_routing_id(uint8_t *buffer, unsigned length,
                                unsigned *decoded);
 find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded);
-update_payload_t unpack_update_payload(uint8_t *buffer, unsigned length,
-                                       unsigned *decoded);
 swap_payload_t unpack_swap_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded);
 transfer_payload_t unpack_transfer_payload(uint8_t *buffer, unsigned length,
@@ -68,11 +65,6 @@ void pack_header(u8_vector_t *v, message_header_t *header) {
 
 void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
   pack_routing_id(v, &payload->to_find);
-}
-
-void pack_update_payload(u8_vector_t *v, update_payload_t *payload) {
-  pack_frequency(v, payload->old);
-  pack_frequency(v, payload->updated);
 }
 
 void pack_swap_payload(u8_vector_t *v, swap_payload_t *payload) {
@@ -210,14 +202,6 @@ find_payload_t unpack_find_payload(uint8_t *buffer, unsigned length,
                                    unsigned *decoded) {
   find_payload_t d;
   d.to_find = unpack_routing_id(buffer, length, decoded);
-  return d;
-}
-
-update_payload_t unpack_update_payload(uint8_t *buffer, unsigned length,
-                                       unsigned *decoded) {
-  update_payload_t d;
-  d.old = unpack_frequency(buffer, length, decoded);
-  d.updated = unpack_frequency(buffer, length, decoded);
   return d;
 }
 
