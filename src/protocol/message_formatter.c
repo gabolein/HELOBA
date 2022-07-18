@@ -137,7 +137,7 @@ char *format_routing_id(routing_id_t id) {
       append_helper(routing_id_vec, ":");
     }
 
-    append_helper(routing_id_vec, format_number("%03x", id.MAC[i]));
+    append_helper(routing_id_vec, format_number("%02hhx", id.MAC[i]));
   }
 
   char_vector_append(routing_id_vec, '\0');
