@@ -1,56 +1,14 @@
 META PROBLEMS
-
-registration: leader "election" upon changing frequency
-	naive approach:
-		1. change into frequency
-		2. send will transfer
-			listen for activity, repeat 2
-		3. no activity -> leader
-
-		Problem: many nodes change frequency at once without leader,
-		multiple may decide they are leader
-			"solution" on Telegram
-			other solution: try to coordinate time when they join new frequency on split
-
-		due to backoff they wont all send at once (problem: no backoff in virtual),
-		but also they will not hear the other message
-
-		backoff means someone else sent something: there must be a leader
-
-
-	
-	alternative:
-		newest node decides it is leader
-		activity?
-			yes: old leader sends info, no reply? send again
-				whoever gets reply won
-				other candidates that saw message give up
-			no: become leader, if somebody else wants to be leader 
-
-	ALL PROBLEMS COME FROM THE FACT THAT, WHEN THERE IS NO LEADER, WE MIGHT HAVE TIMING PROBLEMS. JOINING NODES MUST FIND AGREEMENT ON WHO WON THE RACE
-
-interface: perform split, list, goto (unregister + register), send?
-	split: easy once leader logic is done
-	goto: unregister (send will transfer to leader), change frequency, 
-		register (problem: registration)
-	send: look if enough time
-
-leader chores: send nodes to other frequencies
-
-	split: if over certain threshold (actually: if certain number of backoffs)
-
 mute: que pasa?
+
+TEST:
+swap
+cache
 
 test algo
 test beaglebone
-
-Problem: assumption: races do not happen because of backoff. We do not have backoff in virtual. If race was won, we must reject other queued up participants
-
-MINOR
-
 shutdown stuff
 transport: recv buffer and send vector
-cache
 backoff threshold way too big
 
 how does leader leave
@@ -62,13 +20,6 @@ react on do migrate?
 
 radio: asynchronous listen?
 
-add send migrate to swap logic
+backoff: transfer mode asynchronous? -> backoff broken
 
-MUY IMPORTANTE: PACK ALL KINDS OF MESSAGES
-
-To test:
-election race
-goto
-node leaves membership
-search
-swap up and down
+endlosschleife? three nodes register, they all leave, new node joins
