@@ -95,7 +95,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \
-    for (unsigned x = 0;; x++) {                                               \
+    for (unsigned x = 0; x < size; x++) {                                      \
       unsigned hash = (initial + x * delta) % size;                            \
       name##_hash_entry_t current =                                            \
           name##_hashentry_vector_at(hm->entries, hash);                       \
@@ -105,10 +105,12 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
         continue;                                                              \
                                                                                \
       if (current.state == __GHM_EMPTY)                                        \
-        return size;                                                           \
+        break;                                                                 \
                                                                                \
       return hash;                                                             \
     }                                                                          \
+                                                                               \
+    return size;                                                               \
   }                                                                            \
                                                                                \
   unsigned __##name##_hm_lookup_for_writing(name##_hashmap_t *hm, K key) {     \
@@ -126,7 +128,7 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     if (delta == 0)                                                            \
       delta = 1;                                                               \
                                                                                \
-    for (unsigned x = 0;; x++) {                                               \
+    for (unsigned x = 0; x < size; x++) {                                      \
       unsigned hash = (initial + x * delta) % size;                            \
                                                                                \
       name##_hash_entry_t current =                                            \
@@ -134,6 +136,8 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
       if (current.state == __GHM_EMPTY || current.state == __GHM_DELETED)      \
         return hash;                                                           \
     }                                                                          \
+                                                                               \
+    assert(false);                                                             \
   }                                                                            \
                                                                                \
   name##_hashmap_t *name##_hashmap_create() {                                  \

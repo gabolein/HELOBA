@@ -126,6 +126,18 @@ Test(hashmap, clear) {
   ii_hashmap_destroy(hm);
 }
 
+Test(hashmap, infinite_loop, .timeout = 2) {
+  ii_hashmap_t *hm = ii_hashmap_create();
+
+  for (unsigned i = 0; i < 10; i++) {
+    ii_hashmap_insert(hm, i, 42);
+    ii_hashmap_remove(hm, i);
+  }
+
+  ii_hashmap_exists(hm, 13);
+  ii_hashmap_destroy(hm);
+}
+
 Test(hashmap, destroy) {
   ii_hashmap_t *hm = ii_hashmap_create();
   ii_hashmap_destroy(hm);
