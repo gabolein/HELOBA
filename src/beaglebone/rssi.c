@@ -19,10 +19,10 @@
 static int8_t global_rssi_threshold = 0;
 static bool global_rssi_threshold_valid = false;
 
-bool detect_RSSI() {
+bool detect_RSSI(unsigned timeout_ms) {
   struct timespec start;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-  while (!hit_timeout(10, &start)) {
+  while (!hit_timeout(timeout_ms, &start)) {
     int8_t curr_rssi;
     if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold)
       return true;

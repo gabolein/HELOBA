@@ -60,19 +60,11 @@ bool radio_change_frequency(uint16_t frequency) {
 
 bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   bool ret = false;
-  bool detected_rssi = false;
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
-  while (!hit_timeout(100, &start_time)) {
-    detected_rssi = detect_RSSI();
-    if (detected_rssi) {
-      break;
-    }
-  }
-
-  if (!detected_rssi) {
+  if (!detect_RSSI(100)) {
     return false;
   }
 
@@ -193,4 +185,11 @@ bool radio_get_id(uint8_t out[MAC_SIZE]) {
   return true;
 }
 
-bool radio_channel_active() { return detect_RSSI(); }
+// FIXME: Hier fehlt noch ein Haufen Zeug:
+// 1. Warten bis im IDLE Mode
+// 2. In Receive Mode schalten
+// 3. detect_RSSI() aufrufen
+// 4. Zurück in IDLE Mode schalten
+bool radio_channel_active(unsigned timeout_ms) {
+  return detect_RSSI(timeout_ms);
+}

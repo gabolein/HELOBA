@@ -111,11 +111,6 @@ bool handle_do_split(message_t *msg) {
   return split;
 }
 
-bool election_filter(message_t *msg) {
-  return msg->header.sender_id.layer & leader ||
-         (message_action(msg) == WILL && message_type(msg) == TRANSFER);
-}
-
 bool join_filter(message_t *msg) {
   return msg->header.sender_id.layer & leader &&
          ((message_action(msg) == DO || message_action(msg) == DONT) &&
@@ -150,6 +145,20 @@ bool perform_unregistration(frequency_t to) {
   return true;
 }
 
+bool handle_join_answer(message_t *answer) {
+  assert(message_type(answer) == TRANSFER);
+  assert(message_action(answer) == DO || message_action(answer) == DONT);
+
+  if (message_action(answer) == DONT) {
+    dbgln("Leader rejected our join request.");
+    return false;
+  } else {
+    dbgln("Leader accepted our join request.");
+    gs.registered = true;
+    return true;
+  }
+}
+
 bool perform_registration() {
   // clang-format off
   // Leader election algorithm:
@@ -164,8 +173,6 @@ bool perform_registration() {
   // 6. if not already registered, send WILL TRANSFER
   // clang-format on
 
-  bool participating = true;
-  bool leader_detected = false;
   message_vector_t *received = message_vector_create();
 
   message_t join_request = message_create(WILL, TRANSFER);
@@ -173,85 +180,45 @@ bool perform_registration() {
       (transfer_payload_t){.to = gs.frequencies.current};
   routing_id_t receiver = routing_id_create(leader, NULL);
 
-  while (participating) {
+  while (true) {
     size_t listen_ms = random_number_between(0, 50);
-    struct timespec start_time;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
-    while (!hit_timeout(listen_ms, &start_time) && participating) {
-      if (transport_channel_active()) {
-        participating = false;
-      }
+    if (transport_channel_active(listen_ms)) {
+      break;
     }
 
-    if (participating) {
-      dbgln("Registration: starting election");
-      transport_send_message(&join_request, receiver);
-      // NOTE: selbst mit einem Timeout von 5000ms kommen hier keine Nachrichten
-      // an, obwohl der andere Node auf jeden Fall sendet, irgendetwas
-      // funktioniert in dieser Funktion noch nicht.
-      collect_messages(100, UINT_MAX, election_filter, received);
+    dbgln("Starting election");
+    transport_send_message(&join_request, receiver);
 
-      if (message_vector_size(received) == 0) {
-        dbgln("Nobody active on frequency, I am electing myself as leader.");
-        gs.id.layer |= leader;
-        participating = false;
+    if (transport_channel_active(100)) {
+      collect_messages(50, 1, join_filter, received);
+
+      if (message_vector_size(received) > 0) {
+        message_t answer = message_vector_at(received, 0);
+        return handle_join_answer(&answer);
       }
-
-      for (unsigned i = 0; i < message_vector_size(received) && participating;
-           i++) {
-        message_t current = message_vector_at(received, i);
-        if (current.header.sender_id.layer & leader) {
-          leader_detected = true;
-          participating = false;
-
-          if (message_action(&current) == DONT) {
-            dbgln("Leader rejected our join request.");
-            return false;
-          } else {
-            dbgln("Leader accepted our join request.");
-            gs.registered = true;
-            return true;
-          }
-        }
-      }
-
-      message_vector_clear(received);
+    } else {
+      dbgln("Nobody active on frequency, I am electing myself as leader.");
+      gs.id.layer |= leader;
+      gs.registered = true;
+      return true;
     }
+
+    message_vector_clear(received);
   }
 
-  if (gs.id.layer & leader) {
-    gs.registered = true;
-    dbgln("Registration result: became leader");
-    return true;
-  }
-
-  if (!leader_detected) {
-    // NOTE: wir landen hier auch im Normalfall, wenn es schon einen Leader auf
-    // der Frequenz gibt. Wir sollten dann irgendwie einen Weg finden, nicht in
-    // diesem Timeout zu landen.
-    dbgln("Registration: No Leader detected, sleeping for a bit.");
-    sleep_ms(500);
-  }
-
-  dbgln("Registration: sending WILL TRANSFER");
+  dbgln("Lost Leader election race, sleeping until election is finished.");
+  // TODO: in Config packen, testen wie lange Election maximal dauert
+  sleep_ms(500);
   transport_send_message(&join_request, receiver);
-  // NOTE: ist es sicher, dass der received vector hier wieder leer ist?
-  collect_messages(50, 1, join_filter, received);
 
+  collect_messages(50, 1, join_filter, received);
   if (message_vector_size(received) == 0) {
     warnln("Leader didn't answer join request.");
     return false;
   }
 
   message_t answer = message_vector_at(received, 0);
-  if (message_action(&answer) == DONT) {
-    dbgln("Leader rejected our join request.");
-    return false;
-  } else {
-    dbgln("Leader accepted our join request.");
-    gs.registered = true;
-    return true;
-  }
+  return handle_join_answer(&answer);
 }
 
 bool handle_do_transfer(message_t *msg) {

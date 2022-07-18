@@ -6,6 +6,8 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_parser.h"
+#include "src/state.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>
@@ -160,20 +162,47 @@ bool virtual_get_id(uint8_t *out) {
   return true;
 }
 
-// NOTE: Es kann sein, dass wir unsere eigenen gesendeten Nachrichten empfangen,
-// diese Funktion sollte also nur aufgerufen werden, bevor wir etwas gesendet
-// haben, um mit der Radio Variante konsistente Ergebisse zu liefern
-bool virtual_channel_active() {
+static uint8_t active_buf[MAX_MSG_LEN];
+
+// NOTE: Wir müssen hier Nachrichten parsen, weil wir mit UDP Multicast unsere
+// eigenen Nachrichten empfangen. Diese Nachricht müssen wir rausfiltern, wenn
+// wir wirklich prüfen wollen, ob der Channel aktiv ist, d.h. jemand anderes als
+// wir sendet.
+bool virtual_channel_active(unsigned timeout_ms) {
   struct pollfd fds;
   fds.fd = virt_fd;
   fds.events = POLLIN;
 
-  int ret;
-  // NOTE: Timeout sollte wahrscheinlich kleiner sein
-  if ((ret = poll(&fds, 1, 0)) < 0) {
-    perror("poll");
-    return false;
+  struct timespec start;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+  while (!hit_timeout(timeout_ms, &start)) {
+    int ret = poll(&fds, 1, 0);
+    if (ret <= 0) {
+      if (ret < 0) {
+        perror("poll");
+      }
+
+      continue;
+    }
+
+    ret = recv(virt_fd, active_buf, MAX_MSG_LEN, MSG_PEEK);
+    if (ret < 0) {
+      dbgln("Couldn't receive message: %s", strerror(errno));
+      return true;
+    }
+
+    message_t msg = unpack_message(active_buf, ret);
+    if (!message_is_valid(&msg)) {
+      warnln("Received invalied message, still assuming channel is active.");
+      return true;
+    }
+
+    if (!routing_id_equal(msg.header.sender_id, gs.id)) {
+      return true;
+    } else {
+      recv(virt_fd, active_buf, MAX_MSG_LEN, 0);
+    }
   }
 
-  return ret != 0;
+  return false;
 }

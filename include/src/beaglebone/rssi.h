@@ -12,7 +12,7 @@ void start_receiver_blocking();
 void enable_preamble_detection();
 void disable_preamble_detection();
 
-bool detect_RSSI();
+bool detect_RSSI(unsigned timeout_ms);
 bool read_RSSI(int8_t *);
 bool calculate_RSSI_threshold(int8_t *);
 void set_rssi_threshold(int8_t threshold);

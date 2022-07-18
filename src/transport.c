@@ -85,31 +85,26 @@ bool transport_receive_message(message_t *msg) {
   }
 
   *msg = unpack_message(recv_buffer, length);
-  bool valid = message_is_valid(msg) && message_addressed_to(msg, gs.id);
-
-  if (valid) {
-    dbgln("Received Message");
-    message_dbgln(msg);
-  }
-
-  return valid;
-}
-
-bool transport_receive_message_unverified(message_t *msg) {
-  unsigned length = sizeof(recv_buffer);
-#if defined(VIRTUAL)
-  bool ret = virtual_receive_packet(recv_buffer, &length);
-#else
-  bool ret = radio_receive_packet(recv_buffer, &length);
-#endif
-
-  if (ret == false) {
+  if (!message_is_valid(msg)) {
+    warnln("Received message is not valid.");
     return false;
   }
 
-  *msg = unpack_message(recv_buffer, length);
-  return message_is_valid(msg) &&
-         !routing_id_equal(msg->header.sender_id, gs.id);
+  // NOTE: Im VIRTUAL Modus bekommen wir wegen der Funktionsweise von UDP
+  // Multicast unsere eigenen Nachrichten, die wollen wir natürlich nicht
+  // empfangen. Im Radio Modus ist es natürlich auch ok, diese Nachrichten
+  // wegzuwerfen, weil die IDs im Netzwerk einzigartig sein müssen.
+  if (routing_id_equal(msg->header.sender_id, gs.id)) {
+    return false;
+  }
+
+  if (message_addressed_to(msg, gs.id)) {
+    dbgln("Received Message");
+    message_dbgln(msg);
+    return true;
+  }
+
+  return false;
 }
 
 bool transport_get_id(uint8_t *out) {
@@ -120,10 +115,10 @@ bool transport_get_id(uint8_t *out) {
 #endif
 }
 
-bool transport_channel_active() {
+bool transport_channel_active(unsigned timeout_ms) {
 #if defined(VIRTUAL)
-  return virtual_channel_active();
+  return virtual_channel_active(timeout_ms);
 #else
-  return radio_channel_active();
+  return radio_channel_active(timeout_ms);
 #endif
 }
