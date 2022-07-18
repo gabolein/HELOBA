@@ -75,7 +75,13 @@ typedef struct {
   frequency_t to;
 } transfer_payload_t;
 
+typedef enum {
+  SPLIT_UP,
+  SPLIT_DOWN
+} split_direction;
+
 typedef struct {
+  split_direction direction;
   routing_id_t delim1;
   routing_id_t delim2;
 } split_payload_t;

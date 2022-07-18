@@ -37,7 +37,7 @@ int id_order(const void *arg1, const void *arg2) {
   return 0;
 }
 
-bool perform_split() {
+bool perform_split(split_direction direction) {
   club_key_vector_t *keys = club_hashmap_keys(gs.members);
   unsigned nkeys;
   if ((nkeys = club_key_vector_size(keys)) == 0) {
@@ -46,11 +46,11 @@ bool perform_split() {
 
   qsort(keys->data, nkeys, sizeof(routing_id_t), &id_order);
 
-  // NOTE nkeys/x -1??
   routing_id_t delim1 = club_key_vector_at(keys, nkeys / 4);
   routing_id_t delim2 = club_key_vector_at(keys, nkeys / 2);
 
   message_t split_msg = message_create(DO, SPLIT);
+  split_msg.payload.split.direction = direction;
   split_msg.payload.split.delim1 = delim1;
   split_msg.payload.split.delim2 = delim2;
   routing_id_t receivers = routing_id_create(everyone, NULL);
@@ -72,43 +72,49 @@ bool handle_do_split(message_t *msg) {
   assert(message_type(msg) == SPLIT);
   assert(!(gs.id.layer & leader));
 
-  bool split = true;
-  frequency_t destination;
+  split_direction direction = msg->payload.split.direction;
   routing_id_t delim1 = msg->payload.split.delim1;
   routing_id_t delim2 = msg->payload.split.delim2;
 
-  if (id_order(gs.id.MAC, delim1.MAC) <= 0) {
-    destination = tree_node_lhs(gs.frequencies.current);
-  } else if (id_order(gs.id.MAC, delim2.MAC) <= 0) {
-    destination = tree_node_rhs(gs.frequencies.current);
-    transport_change_frequency(tree_node_rhs(gs.frequencies.current));
-  } else {
-    split = false;
+  // Not splittig, update cache
+  if (id_order(gs.id.MAC, delim2.MAC) > 0) {
     rc_key_vector_t *keys = cache_contents();
-
     for (unsigned i = 0; i < rc_key_vector_size(keys); i++) {
       routing_id_t current = rc_key_vector_at(keys, i);
 
-      if (id_order(gs.id.MAC, delim1.MAC) <= 0) {
-        cache_insert(current, tree_node_lhs(gs.frequencies.current));
-      }
-
-      if (id_order(gs.id.MAC, delim2.MAC) <= 0) {
-        cache_insert(current, tree_node_rhs(gs.frequencies.current));
+      if (cache_get(current).f != gs.frequencies.current
+          || id_order(current.MAC, delim2.MAC) >= 0) 
+        continue;
+      
+      
+      if (direction == SPLIT_UP) { 
+        cache_insert(current, tree_node_parent(gs.frequencies.current));
+      } else {
+        if (id_order(current.MAC, delim1.MAC) <= 0) {
+          cache_insert(current, tree_node_lhs(gs.frequencies.current));
+        }
+        if (id_order(current.MAC, delim2.MAC) <= 0) {
+          cache_insert(current, tree_node_rhs(gs.frequencies.current));
+        }
       }
     }
+    return false;
   }
 
-  if (split) {
-    transport_change_frequency(destination);
-    perform_registration();
-    message_t join_request = message_create(WILL, TRANSFER);
-    join_request.payload.transfer = (transfer_payload_t){.to = destination};
-    routing_id_t receiver = routing_id_create(leader, NULL);
-    transport_send_message(&join_request, receiver);
+  // Splitting, destination depends on direction
+  frequency_t destination;
+  if (direction == SPLIT_UP) {
+    destination = tree_node_parent(gs.frequencies.current);
+  } else {
+    destination = id_order(gs.id.MAC, delim1.MAC) <= 0 ? 
+      tree_node_lhs(gs.frequencies.current)
+      : tree_node_rhs(gs.frequencies.current);
   }
 
-  return split;
+  transport_change_frequency(destination);
+  perform_registration();
+
+  return true;
 }
 
 bool join_filter(message_t *msg) {

@@ -7,6 +7,7 @@
 #include "src/protocol/transfer.h"
 #include "src/state.h"
 #include "src/transport.h"
+#include "src/protocol/message.h"
 
 bool handle_freq(__attribute__((unused)) command_param_t param) {
   dbgln("Current frequency: %u", gs.frequencies.current);
@@ -52,7 +53,7 @@ bool handle_split(__attribute__((unused)) command_param_t param) {
     dbgln("Node is not a leader and therefore cannot perform split.");
     return false;
   }
-  perform_split();
+  perform_split(SPLIT_DOWN);
   return true;
 }
 

@@ -32,7 +32,7 @@ void balance_frequency() {
   if (gs.scores.current >= MIN_SPLIT_SCORE) {
     dbgln("There are currently %u Nodes on frequency %u, attempting to split.",
           gs.scores.current, gs.frequencies.current);
-    perform_split();
+    perform_split(SPLIT_DOWN);
   }
 
   // FIXME: Diese ganzen Conditions müssen überarbeitet werden, dieser Fall z.B.
@@ -48,7 +48,10 @@ void balance_frequency() {
 
   if (ratio > 0 && ratio > MIN_GT_SWAP_RATIO && f != parent) {
     dbgln("Try to swap with parent");
-    perform_swap(parent);
+    if (perform_swap(parent) == TIMEOUT) {
+      dbgln("Splitting upwards ...");
+      perform_split(SPLIT_UP);
+    }
     gs.scores.previous = gs.scores.current;
   } else if (ratio < 0 && ratio < MIN_LT_SWAP_RATIO) {
     bool ret = false;

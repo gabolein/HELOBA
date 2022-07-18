@@ -5,18 +5,16 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
+#include "src/protocol/transfer.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
 
-bool handle_do_migrate(message_t *msg);
 void accept_swap(routing_id_t receiver);
 void reject_swap(routing_id_t receiver);
 void perform_migrate(frequency_t with);
-bool handle_do_swap(message_t *msg);
 bool swap_reply_filter(message_t *msg);
-bool perform_swap(frequency_t with);
 
 extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
 
@@ -119,7 +117,7 @@ bool swap_reply_filter(message_t *msg) {
          message_type(msg) == SWAP;
 }
 
-bool perform_swap(frequency_t with) {
+swap_return_val perform_swap(frequency_t with) {
   if (!is_valid_tree_node(with)) {
     warnln("Can't swap with frequency %u, is invalid.", with);
     return false;
@@ -141,10 +139,10 @@ bool perform_swap(frequency_t with) {
   collect_messages(10, 1, swap_reply_filter, replies);
 
   if (message_vector_empty(replies)) {
-    warnln("Didn't receive answer from frequency %u, assuming failure.", with);
+    warnln("Didn't receive answer from frequency %u, assuming missing.", with);
     message_vector_destroy(replies);
     transport_change_frequency(gs.frequencies.previous);
-    return false;
+    return TIMEOUT;
   }
 
   message_t reply = message_vector_at(replies, 0);
@@ -152,10 +150,10 @@ bool perform_swap(frequency_t with) {
     dbgln("Frequency %u doesn't want to swap, aborting.", with);
     message_vector_destroy(replies);
     transport_change_frequency(gs.frequencies.previous);
-    return false;
+    return REJECTED;
   }
 
   transport_change_frequency(gs.frequencies.previous);
   perform_migrate(with);
-  return true;
+  return SUCCESS;
 }
