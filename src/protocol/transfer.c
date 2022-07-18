@@ -272,6 +272,11 @@ bool handle_will_transfer(message_t *msg) {
     transport_send_message(&response, msg->header.sender_id);
   }
 
+  if ((gs.id.layer & leader) && f != gs.frequencies.current) {
+    cache_insert(nonleader, f);
+    return true;
+  }
+
   if (cache_hit(nonleader)) {
     if (f != gs.frequencies.current) {
       cache_insert(nonleader, f);
