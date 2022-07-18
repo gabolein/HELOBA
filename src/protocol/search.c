@@ -105,7 +105,7 @@ void search_state_initialize() {
 
 bool search_response_filter(message_t *msg) {
   return message_action(msg) == WILL &&
-         (message_type(msg) == FIND || message_type(msg) == CACHE);
+         (message_type(msg) == FIND || message_type(msg) == HINT);
 }
 
 bool perform_search(routing_id_t to_find) {

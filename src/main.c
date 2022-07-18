@@ -5,10 +5,11 @@
 #include "lib/time_util.h"
 #include "src/event_loop.h"
 #include "src/interface/interface.h"
+#include "src/protocol/cache.h"
+#include "src/protocol/message_formatter.h"
 #include "src/state.h"
 #include "src/transport.h"
 #include "src/virtual_transport.h"
-#include "src/protocol/cache.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -27,6 +28,7 @@ int main() {
 
   initialize_global_state();
   cache_initialize();
+  formatter_initialize();
 
   if (!transport_initialize()) {
     dbgln("Couldn't initialize transport.");
