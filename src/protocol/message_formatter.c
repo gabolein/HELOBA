@@ -186,7 +186,10 @@ char *format_message(message_t *msg) {
     append_helper(message_vec, format_number("%u", msg->payload.transfer.to));
     break;
   case SPLIT:
-    append_helper(message_vec, "First Delimeter: ");
+    append_helper(message_vec, "Direction: ");
+    append_helper(message_vec,
+                  msg->payload.split.direction == SPLIT_UP ? "UP" : "DOWN");
+    append_helper(message_vec, "\nFirst Delimeter: ");
     append_helper(message_vec, format_routing_id(msg->payload.split.delim1));
     append_helper(message_vec, "\nSecond Delimeter: ");
     append_helper(message_vec, format_routing_id(msg->payload.split.delim2));
