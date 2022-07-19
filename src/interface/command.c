@@ -117,5 +117,8 @@ interface_commands get_command(char *command) {
   if (strcmp(command, "id") == 0)
     return ID;
 
+  if (strcmp(command, "help") == 0)
+    return HELP;
+
   return UNKNOWN;
 }

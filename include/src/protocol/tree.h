@@ -1,6 +1,9 @@
 #ifndef TREE_H
 #define TREE_H
 
+#define FREQUENCY_BASE 800
+#define FREQUENCY_CEILING 950
+
 // FIXME: braucht eigentlich nur die Deklaration von frequency_t, irgendwie
 // aufteilen?
 #include "src/protocol/message.h"

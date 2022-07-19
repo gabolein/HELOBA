@@ -2,9 +2,6 @@
 #include "src/protocol/message.h"
 #include <assert.h>
 
-#define FREQUENCY_BASE 800
-#define FREQUENCY_CEILING 950
-
 // Returns whether f is inside the frequency
 // band [FREQUENCY_BASE, FREQUENCY_CEILING]
 bool is_valid_tree_node(frequency_t f) {

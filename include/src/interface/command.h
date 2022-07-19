@@ -4,7 +4,7 @@
 #include "src/protocol/message.h"
 #include <stdbool.h>
 
-#define INTERFACE_COMMAND_COUNT 8
+#define INTERFACE_COMMAND_COUNT 9
 
 typedef enum {
   SEARCHFOR,
@@ -14,6 +14,7 @@ typedef enum {
   GOTO,
   SPLIT_NODES,
   ID,
+  HELP,
   UNKNOWN
 } interface_commands;
 
