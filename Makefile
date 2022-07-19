@@ -1,27 +1,27 @@
 CC = gcc
-BUILD_DIR = build
+CFLAGS = -Wall -Wextra
+CPPFLAGS = -Iinclude -DVIRTUAL
+LDFLAGS = -lm -lpthread
+SRC = $(shell find -name '*.c')
 
-# FIXME: bessere Lösung dafür finden
 ifeq ($(MAKECMDGOALS),test)
-SRC = $(shell find test src lib -name '*.c' ! -wholename src/main.c)
-CFLAGS = -Wall -Wextra -ggdb -O0 -fsanitize=address
-CPPFLAGS = -Iinclude -DVIRTUAL
-LDFLAGS = -lcriterion -lm -lpthread -fsanitize=address
+SRC := $(filter-out ./src/main.c, $(SRC))
 else
-SRC = $(shell find src lib -name '*.c')
-CFLAGS = -Wall -Wextra -ggdb -O0 -fsanitize=address
-CPPFLAGS = -Iinclude -DVIRTUAL
-LDFLAGS = -lm -lpthread -fsanitize=address
+SRC := $(filter-out ./test/%, $(SRC))
 endif
 
 ifneq (,$(findstring -DVIRTUAL,$(CPPFLAGS)))
-SRC := $(filter-out src/beaglebone/%, $(SRC))
+SRC := $(filter-out ./src/beaglebone/%, $(SRC))
 else
-SRC := $(filter-out src/virtual_transport.c, $(SRC))
+SRC := $(filter-out ./src/virtual_transport.c, $(SRC))
 endif
 
+BUILD_DIR = build
 OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 DEP = $(OBJ:.o=.d)
+
+# include auto generated targets
+-include $(DEP)
 
 $(OBJ):$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -30,22 +30,30 @@ $(OBJ):$(BUILD_DIR)/%.o: %.c
 $(BUILD_DIR)/program: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: test run build clean deploy
+.PHONY: build run test debug release clean deploy
 
-.DEFAULT_GOAL = run
+.DEFAULT_GOAL = debug
 
-test: run
+build: $(BUILD_DIR)/program
 
 run: build
 	./$(BUILD_DIR)/program
 
-build: $(BUILD_DIR)/program
+test: CFLAGS += -ggdb -O0 -fsanitize=address
+test: LDFLAGS += -lcriterion -fsanitize=address
+test: run
+
+debug: CFLAGS += -ggdb -O0 -fsanitize=address
+debug: LDFLAGS += -fsanitize=address
+debug: run
+
+# FIXME: CPPFLAGS += -DNDEBUG sollte Debugoutput strippen, egal welches Loglevel gesetzt ist
+release: CFLAGS += -s -O2
+release: CPPFLAGS += -DNDEBUG
+release: run
 
 clean:
 	rm -rf $(BUILD_DIR)
 
 deploy:
-	rsync -r --exclude=build/ --delete . debian@beaglebone.local:~/ppl_deployment/
-
-# include auto generated targets
--include $(DEP)
+	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@beaglebone.local:~/ppl_deployment/
