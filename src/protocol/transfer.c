@@ -7,6 +7,7 @@
 #include "lib/time_util.h"
 #include "src/protocol/cache.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -234,60 +235,70 @@ bool handle_do_transfer(message_t *msg) {
   return perform_registration();
 }
 
+bool handle_register(routing_id_t registering) {
+  if (!(gs.id.layer & leader)) {
+    return true;
+  }
+
+  if (!club_hashmap_exists(gs.members, registering)) {
+    club_hashmap_insert(gs.members, registering, true);
+    gs.scores.current++;
+    dbgln("Will Transfer: Node is registering. Membercount: %u",
+          gs.scores.current);
+  }
+
+  // NOTE: Also send to registering nodes if they are already registered?
+  message_t response = message_create(DO, TRANSFER);
+  response.payload.transfer =
+      (transfer_payload_t){.to = gs.frequencies.current};
+  transport_send_message(&response, registering);
+
+  return true;
+}
+
+bool handle_unregister(routing_id_t unregistering) {
+  if (gs.id.layer & leader) {
+    if (!club_hashmap_exists(gs.members, unregistering)) {
+      warnln("Not registered node %s is trying to unregister.",
+             format_routing_id(unregistering));
+      return false;
+    }
+
+    club_hashmap_remove(gs.members, unregistering);
+    gs.scores.current--;
+    dbgln("Node %s is unregistering. Membercount: %u",
+          format_routing_id(unregistering), gs.scores.current);
+    return true;
+  }
+
+  if (unregistering.layer & leader) {
+    dbgln("Current Leader %s is leaving.", format_routing_id(unregistering));
+    perform_registration();
+  }
+
+  return true;
+}
+
 bool handle_will_transfer(message_t *msg) {
   assert(message_action(msg) == WILL);
   assert(message_type(msg) == TRANSFER);
 
   frequency_t f = msg->payload.transfer.to;
-  routing_id_t sender = msg->header.sender_id;
+  routing_id_t transfering = msg->header.sender_id;
 
-  // trying to leave
-  // TODO refactor
-  if (f != gs.frequencies.current) {
-
-    if (gs.id.layer & leader) {
-
-      if (!club_hashmap_exists(gs.members, sender)) {
-        warnln("Will Transfer:"
-               "not registered node is trying to unregister.");
-        return false;
-      }
-
-      club_hashmap_remove(gs.members, sender);
-      gs.scores.current--;
-      dbgln("Will Transfer: Node is unregistering."
-            " Membercount: %u",
-            gs.scores.current);
-
-      // leader update cache
-      cache_insert(sender, f);
-      return true;
-    } else {
-      if (sender.layer & leader) {
-        // leader trying to leave
-        warnln("Leader leaving enter election");
-        perform_registration();
-      }
-    }
-  } else {
-    // trying to join
-    if (gs.id.layer & leader) {
-      if (!club_hashmap_exists(gs.members, sender)) {
-        club_hashmap_insert(gs.members, sender, true);
-        gs.scores.current++;
-        dbgln("Will Transfer: Node is registering."
-              " Membercount: %u",
-              gs.scores.current);
-      }
-      // NOTE also send to registering nodes if they are already registered?
-      message_t response = message_create(DO, TRANSFER);
-      response.payload.transfer = (transfer_payload_t){.to = f};
-      transport_send_message(&response, msg->header.sender_id);
-    }
+  if (f != gs.frequencies.current && !handle_unregister(transfering)) {
+    warnln("Could not unregister Node %s.", format_routing_id(transfering));
+    return false;
   }
 
-  if (cache_hit(sender)) {
-    cache_insert(sender, f);
+  if (f == gs.frequencies.current && !handle_register(transfering)) {
+    warnln("Could not register Node %s.", format_routing_id(transfering));
+    return false;
+  }
+
+  if (cache_hit(transfering) ||
+      ((gs.id.layer & leader) && f != gs.frequencies.current)) {
+    cache_insert(transfering, f);
   }
 
   return true;
