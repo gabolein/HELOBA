@@ -1,6 +1,6 @@
 #include "lib/random.h"
 #include <criterion/criterion.h>
-#include <criterion/new/assert.h>
+#include <math.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
