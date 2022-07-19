@@ -14,7 +14,8 @@ bool is_valid_tree_node(frequency_t f) {
 // Returns the parent frequency, if it lies inside our frequency bounds,
 // or f itself.
 frequency_t tree_node_parent(frequency_t f) {
-  frequency_t parent = FREQUENCY_BASE + (f - FREQUENCY_BASE) / 2 - 1;
+  // NOTE: Ist Underflow, wenn f = FREQUENCY_BASE, schlimm?
+  frequency_t parent = FREQUENCY_BASE + (f - FREQUENCY_BASE - 1) / 2;
   return is_valid_tree_node(parent) ? parent : f;
 }
 
