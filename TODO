@@ -40,5 +40,11 @@ swap problem: with empty parent frequencies we may end up with big detached subt
 solution: if on swapping up nobody answers, we split towards the parent
 like this we also distribute our load upwards and it eventually meets up with the top 
 
-FAILURE TOLERANCE
-leader does not answer join request, timeout and try again
+
+leader leaving solution:
+already present nodes just start a new election
+problem: node registered but currently searching (shhhh)
+
+will transfer from leader -> start election
+
+can leader searchfor?
