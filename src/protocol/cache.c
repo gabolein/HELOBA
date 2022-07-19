@@ -54,6 +54,14 @@ void cache_initialize() {
   ck_pq = ck_priority_queue_create();
 }
 
+// TODO call on shutdown
+void cache_teardown() {
+  assert(rc_hm != NULL);
+  assert(ck_pq != NULL);
+  rc_hashmap_destroy(rc_hm);
+  ck_priority_queue_destroy(ck_pq);
+}
+
 bool cache_hit(routing_id_t id) { return rc_hashmap_exists(rc_hm, id); }
 
 rc_key_vector_t *cache_contents() { return rc_hashmap_keys(rc_hm); }
