@@ -14,33 +14,22 @@ bool is_valid_tree_node(frequency_t f) {
 // Returns the parent frequency, if it lies inside our frequency bounds,
 // or f itself.
 frequency_t tree_node_parent(frequency_t f) {
-  if (!is_valid_tree_node(f)) {
-    return f;
-  }
-
-  return FREQUENCY_BASE + (f - FREQUENCY_BASE) / 2;
+  frequency_t parent = FREQUENCY_BASE + (f - FREQUENCY_BASE) / 2 - 1;
+  return is_valid_tree_node(parent) ? parent : f;
 }
 
 // Returns the lhs frequency, if it lies inside our frequency bounds,
 // or f itself.
 frequency_t tree_node_lhs(frequency_t f) {
-  if (!is_valid_tree_node(f)) {
-    return f;
-  }
-
   frequency_t lhs = FREQUENCY_BASE + (f - FREQUENCY_BASE) * 2 + 1;
-  return lhs > FREQUENCY_CEILING ? f : lhs;
+  return is_valid_tree_node(lhs) ? lhs : f;
 }
 
 // Returns the rhs frequency, if it lies inside our frequency bounds,
 // or f itself.
 frequency_t tree_node_rhs(frequency_t f) {
-  if (!is_valid_tree_node(f)) {
-    return f;
-  }
-
   frequency_t rhs = FREQUENCY_BASE + (f - FREQUENCY_BASE) * 2 + 2;
-  return rhs > FREQUENCY_CEILING ? f : rhs;
+  return is_valid_tree_node(rhs) ? rhs : f;
 }
 
 unsigned tree_node_height(frequency_t f) {
