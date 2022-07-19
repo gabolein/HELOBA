@@ -138,8 +138,6 @@ swap_return_val perform_swap(frequency_t with) {
   routing_id_t receiver = routing_id_create(leader, NULL);
 
   transport_change_frequency(with);
-  // NOTE: Wenn wir alle nonleader überhaupt noch muten wollen, dann sollte das
-  // hier gemacht werden.
   transport_send_message(&swap_start, receiver);
 
   message_vector_t *replies = message_vector_create();
