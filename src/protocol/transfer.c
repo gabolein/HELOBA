@@ -82,12 +82,11 @@ bool handle_do_split(message_t *msg) {
     for (unsigned i = 0; i < rc_key_vector_size(keys); i++) {
       routing_id_t current = rc_key_vector_at(keys, i);
 
-      if (cache_get(current).f != gs.frequencies.current
-          || id_order(current.MAC, delim2.MAC) >= 0) 
+      if (cache_get(current).f != gs.frequencies.current ||
+          id_order(current.MAC, delim2.MAC) >= 0)
         continue;
-      
-      
-      if (direction == SPLIT_UP) { 
+
+      if (direction == SPLIT_UP) {
         cache_insert(current, tree_node_parent(gs.frequencies.current));
       } else {
         if (id_order(current.MAC, delim1.MAC) <= 0) {
@@ -106,9 +105,9 @@ bool handle_do_split(message_t *msg) {
   if (direction == SPLIT_UP) {
     destination = tree_node_parent(gs.frequencies.current);
   } else {
-    destination = id_order(gs.id.MAC, delim1.MAC) <= 0 ? 
-      tree_node_lhs(gs.frequencies.current)
-      : tree_node_rhs(gs.frequencies.current);
+    destination = id_order(gs.id.MAC, delim1.MAC) <= 0
+                      ? tree_node_lhs(gs.frequencies.current)
+                      : tree_node_rhs(gs.frequencies.current);
   }
 
   transport_change_frequency(destination);
