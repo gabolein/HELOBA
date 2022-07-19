@@ -288,11 +288,7 @@ bool handle_will_transfer(message_t *msg) {
   }
 
   if (cache_hit(sender)) {
-    if (f != gs.frequencies.current) {
-      cache_insert(sender, f);
-    } else {
-      cache_remove(sender);
-    }
+    cache_insert(sender, f);
   }
 
   return true;
