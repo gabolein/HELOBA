@@ -210,11 +210,12 @@ bool perform_registration(frequency_t to) {
   sleep_ms(500);
   transport_send_message(&join_request, receiver);
 
-  // NOTE: was wenn Leader nicht antwortet?
   collect_messages(50, 1, join_filter, received);
   if (message_vector_size(received) == 0) {
-    warnln("Leader didn't answer join request.");
-    return false;
+    warnln("Leader didn't answer join request, retrying.");
+    // NOTE: Endlosschleife sollte hier nicht möglich sein, sollten wir aber
+    // trotzdem nochmal genau prüfen.
+    return perform_registration(to);
   }
 
   message_t answer = message_vector_at(received, 0);

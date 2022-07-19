@@ -23,13 +23,11 @@ u8_vector_t *send_vec;
 bool transport_initialize() {
   send_vec = u8_vector_create();
 
-#if !defined(VIRTUAL)
-  if (!radio_transport_initialize()) {
-    return false;
-  }
+#if defined(VIRTUAL)
+  return true;
+#else
+  return radio_transport_initialize();
 #endif
-
-  return transport_change_frequency(800);
 }
 
 bool transport_change_frequency(uint16_t frequency) {

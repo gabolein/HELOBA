@@ -4,6 +4,7 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "src/protocol/message.h"
 #include "src/protocol/search.h"
+#include <time.h>
 
 MAKE_SPECIFIC_HASHMAP_HEADER(routing_id_t, bool, club)
 typedef struct {
@@ -27,6 +28,7 @@ typedef struct {
   routing_id_t id;
   bool registered;
   frequency_t frequency;
+  struct timespec last_swap;
   search_state_t search;
   migrate_state_t migrate;
 } state_t;
