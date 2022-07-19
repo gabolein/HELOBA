@@ -210,6 +210,7 @@ bool perform_registration(frequency_t to) {
   sleep_ms(500);
   transport_send_message(&join_request, receiver);
 
+  // NOTE: was wenn Leader nicht antwortet?
   collect_messages(50, 1, join_filter, received);
   if (message_vector_size(received) == 0) {
     warnln("Leader didn't answer join request.");

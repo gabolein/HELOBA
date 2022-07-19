@@ -1,3 +1,6 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "State"
+
 #include "src/state.h"
 #include "src/transport.h"
 
