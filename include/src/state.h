@@ -26,7 +26,7 @@ typedef struct {
   score_state_t scores;
   routing_id_t id;
   bool registered;
-  frequency_state_t frequencies;
+  frequency_t frequency;
   search_state_t search;
   migrate_state_t migrate;
 } state_t;

@@ -108,10 +108,10 @@ bool search_response_filter(message_t *msg) {
          (message_type(msg) == FIND || message_type(msg) == HINT);
 }
 
-bool perform_search(routing_id_t to_find) {
+bool perform_search(routing_id_t to_find, frequency_t *found) {
   gs.search.to_find_id = to_find;
   checked_hashmap_clear(gs.search.checked_frequencies);
-  gs.search.current_frequency = gs.frequencies.current;
+  gs.search.current_frequency = gs.frequency;
   gs.search.direction = SEARCH_UP;
   search_priority_queue_clear(gs.search.search_queue);
 
@@ -155,14 +155,16 @@ bool perform_search(routing_id_t to_find) {
       message_t current = message_vector_at(responses, i);
 
       if (message_type(&current) == FIND) {
+        // NOTE: Bei anderen Suchvarianten, z.B. nach Hash wird dieser Check
+        // nicht gebraucht
         if (!routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
           warnln("Got FIND response from Node we didn't search.");
           return false;
         }
 
         message_vector_destroy(responses);
-        perform_registration();
-        cache_insert(current.header.sender_id, gs.frequencies.current);
+        cache_insert(current.header.sender_id, gs.search.current_frequency);
+        *found = gs.search.current_frequency;
         return true;
       } else if (message_type(&current) == HINT) {
         search_hint_t hint = {
@@ -194,7 +196,7 @@ bool handle_do_find(message_t *msg) {
   if (!routing_id_equal(to_find, gs.id)) {
     if (cache_hit(to_find)) {
       cache_hint_t hint = cache_get(to_find);
-      if (hint.f == gs.frequencies.current) {
+      if (hint.f == gs.frequency) {
         return true;
       }
 

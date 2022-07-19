@@ -11,7 +11,7 @@
 #include "src/transport.h"
 
 bool handle_freq(__attribute__((unused)) command_param_t param) {
-  printf("Current frequency: %u\n", gs.frequencies.current);
+  printf("Current frequency: %u\n", gs.frequency);
   return true;
 }
 
@@ -54,24 +54,21 @@ bool handle_goto(command_param_t param) {
   }
 
   transport_change_frequency(param.freq);
-  return perform_registration();
+  return perform_registration(param.freq);
 }
 
 bool handle_searchfor(command_param_t param) {
   param.to_find.layer = specific;
-  if (!perform_search(param.to_find)) {
+  frequency_t found;
+
+  if (!perform_search(param.to_find, &found)) {
     warnln("Couldn't find requested node");
     return false;
   }
 
-  dbgln("Found requested node, is on frequency %u", gs.frequencies.current);
-  // FIXME: Das ist falsch, es muss sich die erste Frequenz irgendwo gemerkt
-  // werden.
-  transport_change_frequency(gs.frequencies.previous);
-
-  // NOTE: previous ist richtig, weil transport_change_frequency() automatisch
-  // previous und current anpasst
-  command_param_t wrap = {.freq = gs.frequencies.previous};
+  dbgln("Found requested node, is on frequency %u", gs.frequency);
+  transport_change_frequency(gs.frequency);
+  command_param_t wrap = {.freq = found};
   return handle_goto(wrap);
 }
 

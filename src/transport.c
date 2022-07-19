@@ -33,21 +33,11 @@ bool transport_initialize() {
 }
 
 bool transport_change_frequency(uint16_t frequency) {
-  bool ret;
 #if defined(VIRTUAL)
-  ret = virtual_change_frequency(frequency);
+  return virtual_change_frequency(frequency);
 #else
-  ret = radio_change_frequency(frequency);
+  return radio_change_frequency(frequency);
 #endif
-
-  if (!ret) {
-    return false;
-  }
-
-  gs.frequencies.previous = gs.frequencies.current;
-  gs.frequencies.current = frequency;
-
-  return true;
 }
 
 bool transport_send_message(message_t *msg, routing_id_t to) {

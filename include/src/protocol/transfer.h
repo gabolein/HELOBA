@@ -8,7 +8,7 @@ void register_automatic_transfer_handlers();
 
 bool perform_split(split_direction);
 bool perform_unregistration(frequency_t to);
-bool perform_registration();
+bool perform_registration(frequency_t to);
 bool handle_do_split(message_t *);
 bool handle_will_transfer(message_t *);
 bool handle_do_transfer(message_t *);

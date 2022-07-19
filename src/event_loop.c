@@ -31,7 +31,7 @@ float score_trajectory(uint8_t old, uint8_t new) {
 void balance_frequency() {
   if (gs.scores.current >= MIN_SPLIT_SCORE) {
     dbgln("There are currently %u Nodes on frequency %u, attempting to split.",
-          gs.scores.current, gs.frequencies.current);
+          gs.scores.current, gs.frequency);
     perform_split(SPLIT_DOWN);
   }
 
@@ -41,7 +41,7 @@ void balance_frequency() {
   // die oft miteinander reden, auseinander gebrochen werden.
   // NOTE removed min split condition to allow nodes to swap down,
   // could lead to too many swaps up
-  frequency_t f = gs.frequencies.current;
+  frequency_t f = gs.frequency;
   frequency_t parent = tree_node_parent(f), lhs = tree_node_lhs(f),
               rhs = tree_node_rhs(f);
   float ratio = score_trajectory(gs.scores.previous, gs.scores.current);
@@ -81,7 +81,8 @@ void event_loop_initialize() {
 
   // NOTE: können wir im Event Loop irgendwie in einem Fall landen, in dem wir
   // nicht registriert sind? Oder wird das alles von den Handlers übernommen?
-  perform_registration();
+  transport_change_frequency(800);
+  perform_registration(800);
 }
 
 void event_loop_run() {

@@ -83,18 +83,18 @@ bool handle_do_split(message_t *msg) {
     for (unsigned i = 0; i < rc_key_vector_size(keys); i++) {
       routing_id_t current = rc_key_vector_at(keys, i);
 
-      if (cache_get(current).f != gs.frequencies.current ||
+      if (cache_get(current).f != gs.frequency ||
           id_order(current.MAC, delim2.MAC) >= 0)
         continue;
 
       if (direction == SPLIT_UP) {
-        cache_insert(current, tree_node_parent(gs.frequencies.current));
+        cache_insert(current, tree_node_parent(gs.frequency));
       } else {
         if (id_order(current.MAC, delim1.MAC) <= 0) {
-          cache_insert(current, tree_node_lhs(gs.frequencies.current));
+          cache_insert(current, tree_node_lhs(gs.frequency));
         }
         if (id_order(current.MAC, delim2.MAC) <= 0) {
-          cache_insert(current, tree_node_rhs(gs.frequencies.current));
+          cache_insert(current, tree_node_rhs(gs.frequency));
         }
       }
     }
@@ -104,17 +104,15 @@ bool handle_do_split(message_t *msg) {
   // Splitting, destination depends on direction
   frequency_t destination;
   if (direction == SPLIT_UP) {
-    destination = tree_node_parent(gs.frequencies.current);
+    destination = tree_node_parent(gs.frequency);
   } else {
     destination = id_order(gs.id.MAC, delim1.MAC) <= 0
-                      ? tree_node_lhs(gs.frequencies.current)
-                      : tree_node_rhs(gs.frequencies.current);
+                      ? tree_node_lhs(gs.frequency)
+                      : tree_node_rhs(gs.frequency);
   }
 
   transport_change_frequency(destination);
-  perform_registration();
-
-  return true;
+  return perform_registration(destination);
 }
 
 bool join_filter(message_t *msg) {
@@ -124,7 +122,7 @@ bool join_filter(message_t *msg) {
 }
 
 bool perform_unregistration(frequency_t to) {
-  if (to == gs.frequencies.current) {
+  if (to == gs.frequency) {
     warnln("Trying to leave for current frequency.\n");
     return false;
   }
@@ -155,11 +153,12 @@ bool handle_join_answer(message_t *answer) {
   } else {
     dbgln("Leader accepted our join request.");
     gs.registered = true;
+    gs.frequency = answer->payload.transfer.to;
     return true;
   }
 }
 
-bool perform_registration() {
+bool perform_registration(frequency_t to) {
   // clang-format off
   // Leader election algorithm:
   // 1. listen for random time N \in [MIN, MAX]
@@ -176,8 +175,7 @@ bool perform_registration() {
   message_vector_t *received = message_vector_create();
 
   message_t join_request = message_create(WILL, TRANSFER);
-  join_request.payload.transfer =
-      (transfer_payload_t){.to = gs.frequencies.current};
+  join_request.payload.transfer = (transfer_payload_t){.to = to};
   routing_id_t receiver = routing_id_create(leader, NULL);
 
   while (true) {
@@ -200,6 +198,7 @@ bool perform_registration() {
       dbgln("Nobody active on frequency, I am electing myself as leader.");
       gs.id.layer |= leader;
       gs.registered = true;
+      gs.frequency = to;
       return true;
     }
 
@@ -232,7 +231,7 @@ bool handle_do_transfer(message_t *msg) {
 
   frequency_t destination = msg->payload.transfer.to;
   transport_change_frequency(destination);
-  return perform_registration();
+  return perform_registration(destination);
 }
 
 bool handle_register(routing_id_t registering) {
@@ -249,8 +248,7 @@ bool handle_register(routing_id_t registering) {
 
   // NOTE: Also send to registering nodes if they are already registered?
   message_t response = message_create(DO, TRANSFER);
-  response.payload.transfer =
-      (transfer_payload_t){.to = gs.frequencies.current};
+  response.payload.transfer = (transfer_payload_t){.to = gs.frequency};
   transport_send_message(&response, registering);
 
   return true;
@@ -273,7 +271,7 @@ bool handle_unregister(routing_id_t unregistering) {
 
   if (unregistering.layer & leader) {
     dbgln("Current Leader %s is leaving.", format_routing_id(unregistering));
-    perform_registration();
+    perform_registration(gs.frequency);
   }
 
   return true;
@@ -286,18 +284,17 @@ bool handle_will_transfer(message_t *msg) {
   frequency_t f = msg->payload.transfer.to;
   routing_id_t transfering = msg->header.sender_id;
 
-  if (f != gs.frequencies.current && !handle_unregister(transfering)) {
+  if (f != gs.frequency && !handle_unregister(transfering)) {
     warnln("Could not unregister Node %s.", format_routing_id(transfering));
     return false;
   }
 
-  if (f == gs.frequencies.current && !handle_register(transfering)) {
+  if (f == gs.frequency && !handle_register(transfering)) {
     warnln("Could not register Node %s.", format_routing_id(transfering));
     return false;
   }
 
-  if (cache_hit(transfering) ||
-      ((gs.id.layer & leader) && f != gs.frequencies.current)) {
+  if (cache_hit(transfering) || ((gs.id.layer & leader) && f != gs.frequency)) {
     cache_insert(transfering, f);
   }
 

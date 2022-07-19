@@ -5,8 +5,8 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
-#include "src/protocol/transfer.h"
 #include "src/protocol/message_util.h"
+#include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
@@ -47,13 +47,19 @@ bool handle_do_migrate(message_t *msg) {
       timestamp_cmp(migration_blocked, current) == 1)
     return false;
 
-  return transport_change_frequency(destination);
+  if (!transport_change_frequency(destination)) {
+    warnln("Could not change to frequency %u.", destination);
+    return false;
+  }
+
+  gs.frequency = destination;
+  return true;
 }
 
 void accept_swap(routing_id_t receiver) {
   message_t answer = message_create(WILL, SWAP);
   answer.payload.swap = (swap_payload_t){
-      .with = gs.frequencies.current,
+      .with = gs.frequency,
       .score = gs.scores.current,
   };
 
@@ -65,7 +71,7 @@ void accept_swap(routing_id_t receiver) {
 void reject_swap(routing_id_t receiver) {
   message_t answer = message_create(WONT, SWAP);
   answer.payload.swap = (swap_payload_t){
-      .with = gs.frequencies.current,
+      .with = gs.frequency,
       .score = gs.scores.current,
   };
 
@@ -80,6 +86,7 @@ void perform_migrate(frequency_t with) {
   routing_id_t receivers = routing_id_create(everyone, NULL);
   transport_send_message(&migrate, receivers);
   transport_change_frequency(with);
+  gs.frequency = with;
 }
 
 bool handle_do_swap(message_t *msg) {
@@ -92,15 +99,15 @@ bool handle_do_swap(message_t *msg) {
   }
 
   frequency_t f = msg->payload.swap.with;
-  if (!is_valid_tree_node(f) || f == gs.frequencies.current) {
+  if (!is_valid_tree_node(f) || f == gs.frequency) {
     dbgln("Sent frequency is invalid, ignoring.");
     reject_swap(msg->header.sender_id);
     return false;
   }
 
   uint8_t score = msg->payload.swap.score;
-  if ((score <= gs.scores.current && tree_node_gt(gs.frequencies.current, f)) ||
-      (score >= gs.scores.current && tree_node_gt(f, gs.frequencies.current))) {
+  if ((score <= gs.scores.current && tree_node_gt(gs.frequency, f)) ||
+      (score >= gs.scores.current && tree_node_gt(f, gs.frequency))) {
     dbgln("Tree Order is still preserved, I see no reason to swap.");
     reject_swap(msg->header.sender_id);
     return true;
@@ -126,7 +133,7 @@ swap_return_val perform_swap(frequency_t with) {
   message_t swap_start = message_create(DO, SWAP);
   swap_start.payload.swap = (swap_payload_t){
       .score = gs.scores.current,
-      .with = gs.frequencies.current,
+      .with = gs.frequency,
   };
   routing_id_t receiver = routing_id_create(leader, NULL);
 
@@ -141,7 +148,7 @@ swap_return_val perform_swap(frequency_t with) {
   if (message_vector_empty(replies)) {
     warnln("Didn't receive answer from frequency %u, assuming missing.", with);
     message_vector_destroy(replies);
-    transport_change_frequency(gs.frequencies.previous);
+    transport_change_frequency(gs.frequency);
     return TIMEOUT;
   }
 
@@ -149,11 +156,11 @@ swap_return_val perform_swap(frequency_t with) {
   if (message_action(&reply) == WONT) {
     dbgln("Frequency %u doesn't want to swap, aborting.", with);
     message_vector_destroy(replies);
-    transport_change_frequency(gs.frequencies.previous);
+    transport_change_frequency(gs.frequency);
     return REJECTED;
   }
 
-  transport_change_frequency(gs.frequencies.previous);
+  transport_change_frequency(gs.frequency);
   perform_migrate(with);
   return SUCCESS;
 }
