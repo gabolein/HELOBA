@@ -2,6 +2,7 @@
 #include "src/protocol/message.h"
 #include "src/protocol/message_formatter.h"
 #include <criterion/criterion.h>
+#include <criterion/logging.h>
 #include <criterion/internal/assert.h>
 #include <unistd.h>
 
@@ -107,9 +108,11 @@ Test(cache, insert_renew_timeout, .init = setup_cache, .fini = teardown_cache) {
 
     if (i == 32) {
       cr_assert(cache_hit(renewed_id));
+      cache_insert(renewed_id, 800);
     }
 
     cache_insert(cache_id, 800 + i);
+    cr_assert(cache_hit(renewed_id));
   }
 
   for (unsigned i = 0; i < 33; i++) {
@@ -119,6 +122,7 @@ Test(cache, insert_renew_timeout, .init = setup_cache, .fini = teardown_cache) {
     if (i == 1) {
       cr_assert(!cache_hit(cache_id));
     } else {
+      printf("current index %u\n", i);
       cr_assert(cache_hit(cache_id));
       cr_assert(cache_get(cache_id).f == 800 + i);
     }
