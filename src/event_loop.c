@@ -1,3 +1,4 @@
+#include "src/protocol/message_formatter.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Event Loop"
 
@@ -11,61 +12,6 @@
 #include "src/state.h"
 #include "src/transport.h"
 #include <stdint.h>
-
-#define MIN_SPLIT_SCORE 5
-#define MIN_SWAP_SCORE 2
-#define MIN_LT_SWAP_RATIO -1.25
-#define MIN_GT_SWAP_RATIO 1.25
-
-float score_trajectory(uint8_t old, uint8_t new) {
-  if (old == 0)
-    return (float)new;
-  float ratio = (float)new / (float)old;
-  if (ratio >= 1.0) {
-    return ratio;
-  }
-
-  return -((float)old / (float)new);
-}
-
-void balance_frequency() {
-  if (gs.scores.current >= MIN_SPLIT_SCORE) {
-    dbgln("There are currently %u Nodes on frequency %u, attempting to split.",
-          gs.scores.current, gs.frequency);
-    perform_split(SPLIT_DOWN);
-  }
-
-  // FIXME: Diese ganzen Conditions müssen überarbeitet werden, dieser Fall z.B.
-  // kommt kaum vor, erst wenn SPLIT nicht mehr möglich ist. SPLIT ist auch
-  // nicht besonders gut für den Throughput im Netzwerk, weil geclusterte Nodes,
-  // die oft miteinander reden, auseinander gebrochen werden.
-  // NOTE removed min split condition to allow nodes to swap down,
-  // could lead to too many swaps up
-  frequency_t f = gs.frequency;
-  frequency_t parent = tree_node_parent(f), lhs = tree_node_lhs(f),
-              rhs = tree_node_rhs(f);
-  float ratio = score_trajectory(gs.scores.previous, gs.scores.current);
-
-  if (ratio > 0 && ratio > MIN_GT_SWAP_RATIO && f != parent) {
-    dbgln("Try to swap with parent");
-    if (perform_swap(parent) == TIMEOUT) {
-      dbgln("Splitting upwards ...");
-      perform_split(SPLIT_UP);
-    }
-    gs.scores.previous = gs.scores.current;
-  } else if (ratio < 0 && ratio < MIN_LT_SWAP_RATIO) {
-    bool ret = false;
-    dbgln("Try to swap with child");
-    if (f != lhs) {
-      ret = perform_swap(lhs);
-    }
-
-    if (!ret && f != rhs) {
-      ret = perform_swap(rhs);
-    }
-    gs.scores.previous = gs.scores.current;
-  }
-}
 
 typedef bool (*handler_f)(message_t *msg);
 handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
@@ -91,7 +37,8 @@ void event_loop_run() {
   if (transport_receive_message(&received)) {
     if (auto_handlers[message_action(&received)][message_type(&received)] ==
         NULL) {
-      warnln("No automatic handler registered for received message!");
+      warnln("No automatic handler registered for received message:\n%s",
+             format_message(&received));
       return;
     }
 

@@ -9,7 +9,7 @@ CPPFLAGS = -Iinclude -DVIRTUAL
 LDFLAGS = -lcriterion -lm -lpthread -fsanitize=address
 else
 SRC = $(shell find src lib -name '*.c')
-CFLAGS = -std=gnu11 -Wall -Wextra -ggdb -O0 -fsanitize=address
+CFLAGS = -Wall -Wextra -ggdb -O0 -fsanitize=address
 CPPFLAGS = -Iinclude -DVIRTUAL
 LDFLAGS = -lm -lpthread -fsanitize=address
 endif

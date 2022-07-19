@@ -1,11 +1,12 @@
+#include "lib/random.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Swap"
 
-#include "src/protocol/swap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
+#include "src/protocol/swap.h"
 #include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -15,6 +16,8 @@ void accept_swap(routing_id_t receiver);
 void reject_swap(routing_id_t receiver);
 void perform_migrate(frequency_t with);
 bool swap_reply_filter(message_t *msg);
+
+#define MIN_SPLIT_SCORE 5
 
 extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
 
@@ -161,4 +164,77 @@ swap_return_val perform_swap(frequency_t with) {
   transport_change_frequency(gs.frequency);
   perform_migrate(with);
   return SUCCESS;
+}
+
+void balance_frequency() {
+  if (gs.scores.current >= MIN_SPLIT_SCORE) {
+    dbgln("There are currently %u Nodes on frequency %u, attempting to split.",
+          gs.scores.current, gs.frequency);
+    perform_split(SPLIT_DOWN);
+  }
+
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+  struct timespec next_swap = timestamp_add_ms(gs.last_swap, 50);
+  if (timestamp_cmp(next_swap, now) == 1) {
+    return;
+  }
+
+  if (gs.scores.previous == gs.scores.current) {
+    clock_gettime(CLOCK_MONOTONIC_RAW, &gs.last_swap);
+    return;
+  }
+
+  frequency_t old = gs.frequency;
+  if (gs.scores.previous < gs.scores.current) {
+    while (gs.frequency != tree_node_parent(gs.frequency)) {
+      dbgln("Trying to swap with parent frequency %u",
+            tree_node_parent(gs.frequency));
+      // FIXME: Das ist eine einfache, aber keine gute Lösung für das Problem,
+      // dass mehrere Teilbäume durch leere Frequenzen geteilt werden können.
+      swap_return_val ret = perform_swap(tree_node_parent(gs.frequency));
+
+      if (ret == TIMEOUT) {
+        dbgln("Splitting upwards");
+        perform_split(SPLIT_UP);
+        break;
+      } else if (ret == REJECTED) {
+        break;
+      }
+    }
+  } else {
+    while (gs.frequency != tree_node_lhs(gs.frequency) ||
+           gs.frequency != tree_node_rhs(gs.frequency)) {
+      frequency_t order[2];
+      size_t choice = random_number_between(0, 2);
+
+      if (choice == 0) {
+        order[0] = tree_node_lhs(gs.frequency);
+        order[1] = tree_node_rhs(gs.frequency);
+      } else {
+        order[0] = tree_node_rhs(gs.frequency);
+        order[1] = tree_node_lhs(gs.frequency);
+      }
+
+      swap_return_val ret = REJECTED;
+      for (unsigned i = 0; i < 2 && ret != SUCCESS; i++) {
+        if (!is_valid_tree_node(order[i])) {
+          continue;
+        }
+
+        dbgln("Trying to swap with child frequency %u", order[i]);
+        ret = perform_swap(order[i]);
+      }
+
+      if (ret != SUCCESS) {
+        break;
+      }
+    }
+  }
+
+  if (old != gs.frequency) {
+    gs.scores.previous = gs.scores.current;
+  }
+
+  clock_gettime(CLOCK_MONOTONIC_RAW, &gs.last_swap);
 }
