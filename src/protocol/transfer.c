@@ -71,7 +71,11 @@ bool perform_split(split_direction direction) {
 bool handle_do_split(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == SPLIT);
-  assert(!(gs.id.layer & leader));
+
+  if (gs.id.layer & leader) {
+    warnln("Am leader, will ignore received DO SPLIT.");
+    return false;
+  }
 
   split_direction direction = msg->payload.split.direction;
   routing_id_t delim1 = msg->payload.split.delim1;
@@ -98,6 +102,7 @@ bool handle_do_split(message_t *msg) {
         }
       }
     }
+
     return false;
   }
 
