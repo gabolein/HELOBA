@@ -3,6 +3,7 @@
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/random.h"
 #include "src/beaglebone/rssi.h"
+#include "src/beaglebone/radio_transport.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ bool check_backoff_timeout() {
 }
 
 bool collision_detection() {
-  if (detect_RSSI(5)) {
+  if (radio_channel_active(5)) {
     set_new_backoff();
     return false;
   }
