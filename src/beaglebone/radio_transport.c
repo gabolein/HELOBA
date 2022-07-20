@@ -159,6 +159,12 @@ bool radio_transport_initialize() {
   write_default_register_configuration();
   cc1200_cmd(SNOP);
   dbgln("CC1200 Status: %s", get_status_cc1200_str());
+
+  int8_t rssi_threshold;
+  if (!calculate_RSSI_threshold(&rssi_threshold)) {
+    warnln("Couldn't compute RSSI threshold.");
+    return false;
+  }
   return true;
 }
 
