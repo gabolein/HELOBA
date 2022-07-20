@@ -69,7 +69,10 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   enable_preamble_detection();
   start_receiver_blocking();
 
+  dbgln("Detected RSSI, starting reception of packet.");
+
   if (!fifo_wait(RADIO_FIRST_BYTE_WAIT_TIME_MS)) {
+    warnln("Didn't receive anything after preamble.");
     ret = false;
     goto cleanup;
   }
