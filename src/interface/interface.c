@@ -2,6 +2,7 @@
 #define LOG_LABEL "Interface"
 
 #include "lib/logger.h"
+#include "src/config.h"
 #include "src/protocol/message.h"
 #include "src/protocol/tree.h"
 #define _GNU_SOURCE

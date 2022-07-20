@@ -1,4 +1,5 @@
 #include "src/protocol/tree.h"
+#include "src/config.h"
 #include "src/protocol/message.h"
 #include <assert.h>
 
