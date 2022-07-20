@@ -98,7 +98,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
   // überhaupt nicht erst angenommen?
   dbgln("Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u",
-        recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
+        recv_length + 1, status[0], status[1] & (1 << 7) ? "OK" : ":(",
         status[1] & ~(1 << 7));
 
   *length = recv_length + 1;
