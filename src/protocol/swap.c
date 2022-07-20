@@ -1,12 +1,13 @@
-#include "lib/random.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Swap"
 
+#include "src/protocol/swap.h"
 #include "lib/logger.h"
+#include "lib/random.h"
 #include "lib/time_util.h"
+#include "src/config.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
-#include "src/protocol/swap.h"
 #include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
 #include "src/state.h"
@@ -45,7 +46,7 @@ bool handle_do_migrate(message_t *msg) {
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC_RAW, &current);
   struct timespec migration_blocked =
-      timestamp_add_ms(gs.migrate.last_migrate, 10);
+      timestamp_add_ms(gs.migrate.last_migrate, MIGRATION_BLOCK_DURATION_MS);
   if (destination == gs.migrate.old &&
       timestamp_cmp(migration_blocked, current) == 1)
     return false;
@@ -144,7 +145,7 @@ swap_return_val perform_swap(frequency_t with) {
   transport_send_message(&swap_start, receiver);
 
   message_vector_t *replies = message_vector_create();
-  collect_messages(10, 1, swap_reply_filter, replies);
+  collect_messages(SWAP_RESPONSE_TIMEOUT_MS, 1, swap_reply_filter, replies);
 
   if (message_vector_empty(replies)) {
     warnln("Didn't receive answer from frequency %u, assuming missing.", with);
@@ -175,7 +176,8 @@ void balance_frequency() {
 
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-  struct timespec next_swap = timestamp_add_ms(gs.last_swap, 50);
+  struct timespec next_swap =
+      timestamp_add_ms(gs.last_swap, SWAP_BLOCK_DURATION_MS);
   if (timestamp_cmp(next_swap, now) == 1) {
     return;
   }
@@ -195,6 +197,8 @@ void balance_frequency() {
       swap_return_val ret = perform_swap(tree_node_parent(gs.frequency));
 
       if (ret == TIMEOUT) {
+        // FIXME: Das nach oben splitten führt gerade noch zu Problemen,
+        // deswegen haben wir es erstmal rausgenommen
         // dbgln("Splitting upwards");
         // perform_split(SPLIT_UP);
         break;

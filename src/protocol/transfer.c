@@ -5,6 +5,7 @@
 #include "lib/logger.h"
 #include "lib/random.h"
 #include "lib/time_util.h"
+#include "src/config.h"
 #include "src/protocol/cache.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_formatter.h"
@@ -184,7 +185,7 @@ bool perform_registration(frequency_t to) {
   routing_id_t receiver = routing_id_create(leader, NULL);
 
   while (true) {
-    size_t listen_ms = random_number_between(0, 50);
+    size_t listen_ms = random_number_between(0, TRANSFER_RESPONSE_TIMEOUT_MS);
     if (transport_channel_active(listen_ms)) {
       break;
     }
@@ -192,8 +193,8 @@ bool perform_registration(frequency_t to) {
     dbgln("Starting election");
     transport_send_message(&join_request, receiver);
 
-    if (transport_channel_active(100)) {
-      collect_messages(50, 1, join_filter, received);
+    if (transport_channel_active(TRANSFER_RESPONSE_TIMEOUT_MS)) {
+      collect_messages(TRANSFER_RESPONSE_TIMEOUT_MS, 1, join_filter, received);
 
       if (message_vector_size(received) > 0) {
         message_t answer = message_vector_at(received, 0);
@@ -215,7 +216,7 @@ bool perform_registration(frequency_t to) {
   sleep_ms(500);
   transport_send_message(&join_request, receiver);
 
-  collect_messages(50, 1, join_filter, received);
+  collect_messages(TRANSFER_RESPONSE_TIMEOUT_MS, 1, join_filter, received);
   if (message_vector_size(received) == 0) {
     warnln("Leader didn't answer join request, retrying.");
     // NOTE: Endlosschleife sollte hier nicht möglich sein, sollten wir aber

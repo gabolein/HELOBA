@@ -8,6 +8,7 @@
 #include "src/beaglebone/frequency.h"
 #include "src/beaglebone/registers.h"
 #include "src/beaglebone/rssi.h"
+#include "src/config.h"
 #include <SPIv1.h>
 #include <net/if.h>
 #include <stddef.h>
@@ -23,9 +24,6 @@
 #define RXFIFO_ADDRESS 0x3F
 #define TXFIFO_ADDRESS 0x3F
 #define MAX_PACKET_LENGTH 0xFF
-#define FIRST_BYTE_WAIT_TIME 2
-#define NEXT_BYTE_WAIT_TIME 1
-#define SEND_PACKET_TIMEOUT 300 // 8 (?) backoffs + buffer
 
 uint8_t rx_fifo_length() {
   int recv_bytes;
@@ -71,7 +69,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   enable_preamble_detection();
   start_receiver_blocking();
 
-  if (!fifo_wait(FIRST_BYTE_WAIT_TIME)) {
+  if (!fifo_wait(RADIO_FIRST_BYTE_WAIT_TIME_MS)) {
     ret = false;
     goto cleanup;
   }
@@ -85,7 +83,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   uint8_t status[PACKET_STATUS_LENGTH];
   for (size_t i = 0; i < recv_length + PACKET_STATUS_LENGTH; i++) {
-    if (!fifo_wait(NEXT_BYTE_WAIT_TIME)) {
+    if (!fifo_wait(RADIO_NEXT_BYTE_WAIT_TIME_MS)) {
       warnln("Expected to receive %u bytes, only got %lu.", recv_length, i);
       ret = false;
       goto cleanup;
@@ -120,7 +118,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
-  while (!hit_timeout(SEND_PACKET_TIMEOUT, &start_time)) {
+  while (!hit_timeout(RADIO_BACKOFF_TIMEOUT_MS, &start_time)) {
     if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
       dbgln("Backoff timeout not expired yet.");
       continue;
@@ -136,6 +134,8 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     }
     cc1200_cmd(STX);
 
+    // NOTE: sind wir hier sicher, dass unsere gesendete Nachricht auf jeden
+    // Fall nicht angekommen ist?
     if (!collision_detection()) {
       dbgln("Second scan unsuccessful. Backing off");
       continue;
