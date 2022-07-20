@@ -8,6 +8,7 @@
 #include "src/config.h"
 #include "src/protocol/cache.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/message_util.h"
 #include "src/protocol/transfer.h"
 #include "src/protocol/tree.h"
@@ -164,6 +165,9 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
         message_vector_destroy(responses);
         cache_insert(current.header.sender_id, gs.search.current_frequency);
         *found = gs.search.current_frequency;
+        dbgln("Took %u hops to find Node %s",
+              checked_hashmap_size(gs.search.checked_frequencies),
+              format_routing_id(gs.search.to_find_id));
         return true;
       } else if (message_type(&current) == HINT) {
         search_hint_t hint = {
@@ -180,6 +184,11 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
     search_queue_expand_by_order();
   }
 
+  // if we really didn't find anyone, we should have checked all frequencies
+  dbgln("Could not find Node %s, checked %u/%u frequencies",
+        format_routing_id(gs.search.to_find_id),
+        checked_hashmap_size(gs.search.checked_frequencies),
+        FREQUENCY_CEILING - FREQUENCY_BASE);
   return false;
 }
 
