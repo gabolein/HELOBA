@@ -198,11 +198,9 @@ bool radio_get_id(uint8_t out[MAC_SIZE]) {
   return true;
 }
 
-// FIXME: Hier fehlt noch ein Haufen Zeug:
-// 1. Warten bis im IDLE Mode
-// 2. In Receive Mode schalten
-// 3. detect_RSSI() aufrufen
-// 4. Zurück in IDLE Mode schalten
 bool radio_channel_active(unsigned timeout_ms) {
-  return detect_RSSI(timeout_ms);
+  start_receiver_blocking();
+  bool ret = detect_RSSI(timeout_ms);
+  cc1200_cmd(SIDLE);
+  return ret;
 }
