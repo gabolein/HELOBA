@@ -168,6 +168,7 @@ bool radio_transport_initialize() {
     warnln("Couldn't compute RSSI threshold.");
     return false;
   }
+  set_rssi_threshold(rssi_threshold);
   return true;
 }
 
