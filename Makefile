@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-CPPFLAGS = -Iinclude -DVIRTUAL
+CPPFLAGS = -Iinclude #-DVIRTUAL
 LDFLAGS = -lm -lpthread
 SRC = $(shell find -name '*.c')
 

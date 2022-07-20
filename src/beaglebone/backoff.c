@@ -31,7 +31,7 @@ bool check_backoff_timeout() {
 }
 
 bool collision_detection() {
-  if (detect_RSSI()) {
+  if (detect_RSSI(5)) {
     set_new_backoff();
     return false;
   }
