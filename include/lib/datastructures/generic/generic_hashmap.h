@@ -168,8 +168,11 @@ bool __ghm_should_rehash(unsigned slots_used, unsigned current_size);
     };                                                                         \
                                                                                \
     unsigned index = __##name##_hm_lookup_for_writing(hm, key);                \
+    if (name##_hashentry_vector_at(hm->entries, index).state != __GHM_USED) {  \
+      hm->used_count++;                                                        \
+    }                                                                          \
+                                                                               \
     name##_hashentry_vector_insert_at(hm->entries, index, added);              \
-    hm->used_count++;                                                          \
                                                                                \
     if (__ghm_should_rehash(hm->used_count,                                    \
                             name##_hashentry_vector_size(hm->entries)))        \
