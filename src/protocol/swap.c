@@ -195,8 +195,8 @@ void balance_frequency() {
       swap_return_val ret = perform_swap(tree_node_parent(gs.frequency));
 
       if (ret == TIMEOUT) {
-        dbgln("Splitting upwards");
-        perform_split(SPLIT_UP);
+        // dbgln("Splitting upwards");
+        // perform_split(SPLIT_UP);
         break;
       } else if (ret == REJECTED) {
         break;
