@@ -1,5 +1,9 @@
+#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LABEL "Interface"
+
 #include "lib/logger.h"
 #include "src/protocol/message.h"
+#include "src/protocol/tree.h"
 #define _GNU_SOURCE
 #include "lib/time_util.h"
 #include "src/interface/command.h"
@@ -35,19 +39,20 @@ bool strtol_check_error(long number) {
 }
 
 bool parse_goto(char *freq_str, frequency_t *freq) {
-  long temp_freq;
-  if (!strtol_check_error(temp_freq = strtol(freq_str, NULL, 10)))
+  long temp_freq = strtol(freq_str, NULL, 10);
+  if (errno == ERANGE || errno == EINVAL || (errno != 0 && temp_freq == 0)) {
     return false;
+  }
 
-  if (temp_freq < 800 || 950 < temp_freq)
+  if (temp_freq < FREQUENCY_BASE || FREQUENCY_CEILING < temp_freq) {
     return false;
+  }
 
   *freq = temp_freq;
   return true;
 }
 
 bool parse_searchfor(char *to_find_str, routing_id_t *to_find) {
-
   if (sscanf(to_find_str, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &to_find->MAC[0],
              &to_find->MAC[1], &to_find->MAC[2], &to_find->MAC[3],
              &to_find->MAC[4], &to_find->MAC[5]) != 6)
@@ -83,9 +88,23 @@ void wait_command_fetched() {
   }
 }
 
-void *interface_collect_user_input(void *arg) {
+void print_help() {
+  printf("=== General Commands\n"
+         "help: Print this message\n"
+         "id: Print own ID\n"
+         "freq: Print current frequency\n"
+         "goto <f>: Go to frequency f ∈ [%u, %u]\n"
+         "searchfor <MAC>: Search for a Node with a given MAC address\n"
+         "=== Leader Commands\n"
+         "list: List all registered Nodes\n"
+         "split: Execute SPLIT command\n",
+         FREQUENCY_BASE, FREQUENCY_CEILING);
+}
 
-  printf("\nInsert command\n");
+void print_prompt() { printf("\nf> "); }
+
+void *interface_collect_user_input(void *arg) {
+  print_prompt();
 
   char *args[MAX_ARGC];
   int argc;
@@ -141,14 +160,14 @@ void *interface_collect_user_input(void *arg) {
         pthread_mutex_unlock(&interface_lock);
         wait_command_fetched();
       } else {
-        warnln("Invalid frequency input. Valid frequencies are in range "
-               "[800, 950].");
+        printf("Invalid frequency input. Valid frequencies are ∈ [%u, %u].",
+               FREQUENCY_BASE, FREQUENCY_CEILING);
       }
       break;
     }
 
     case SEND:
-      warnln("Send currently not supported.");
+      printf("Send is currently not supported.");
       break;
 
     case SEARCHFOR: {
@@ -162,16 +181,21 @@ void *interface_collect_user_input(void *arg) {
         pthread_mutex_unlock(&interface_lock);
         wait_command_fetched();
       } else {
-        warnln("Invalid address input. Try a 6 Byte MAC address.");
+        printf("Invalid address input. Try a 6 Byte MAC address.");
       }
       break;
     }
 
+    case HELP:
+      print_help();
+      break;
+
     default:
-      warnln("Unknown command. Commands: id, goto, list, searchfor, freq, "
-             "split, send");
+      printf("Unknown command \"%s\"\n", args[0]);
+      print_help();
     }
-    printf("\nInsert command\n");
+
+    print_prompt();
   }
   free(line);
   return NULL;

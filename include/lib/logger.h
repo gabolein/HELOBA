@@ -18,12 +18,20 @@
 #define LOG_LABEL "???"
 #endif
 
+#if defined(NDEBUG)
+
+#define dbgln(...)
+#define warnln(...)
+#define panicln(...) exit(0)
+
+#else
+
 #if LOG_LEVEL >= DEBUG_LEVEL
 #define dbgln(...)                                                             \
   do {                                                                         \
-    printf("(" LOG_LABEL ") ");                                                \
-    printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    fprintf(stderr, "(" LOG_LABEL ") ");                                       \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    fprintf(stderr, "\n");                                                     \
   } while (0)
 #else
 #define dbgln(...)
@@ -32,9 +40,9 @@
 #if LOG_LEVEL >= WARNING_LEVEL
 #define warnln(...)                                                            \
   do {                                                                         \
-    printf("[WARNING] (" LOG_LABEL ") ");                                      \
-    printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    fprintf(stderr, "[WARNING] (" LOG_LABEL ") ");                             \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    fprintf(stderr, "\n");                                                     \
   } while (0)
 #else
 #define warnln(...)
@@ -43,13 +51,15 @@
 #if LOG_LEVEL >= PANIC_LEVEL
 #define panicln(...)                                                           \
   do {                                                                         \
-    printf("[PANIC] (" LOG_LABEL ") ");                                        \
-    printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    fprintf(stderr, "[PANIC] (" LOG_LABEL ") ");                               \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    fprintf(stderr, "\n");                                                     \
     exit(0);                                                                   \
   } while (0)
 #else
 #define panicln(...)
+#endif
+
 #endif
 
 #endif
