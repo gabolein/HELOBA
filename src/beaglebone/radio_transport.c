@@ -133,6 +133,10 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     // NOTE blocking? Would we hear our own RSSI?
     cc1200_cmd(STX);
 
+    do {
+      cc1200_cmd(SNOP);
+    } while (get_status_cc1200() != 0);
+
     // NOTE: sind wir hier sicher, dass unsere gesendete Nachricht auf jeden
     // Fall nicht angekommen ist?
     if (!collision_detection()) {
@@ -142,6 +146,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
 
     reset_backoff_attempts();
     dbgln("Transmission successful.");
+
     return true;
   }
 
