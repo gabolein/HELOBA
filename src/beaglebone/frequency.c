@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define CRYSTAL_FREQUENCY (40 * MHz)
 #define FREQ_OFF 0
@@ -38,6 +39,7 @@ uint8_t read_LO_divider_value() {
     // FIXME: assert() wird in release-builds mit NDEBUG rauskompiliert, Weg
     // finden das zu verhindern
     assert(false);
+    exit(0);
   }
 }
 

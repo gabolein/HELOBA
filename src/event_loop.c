@@ -27,8 +27,8 @@ void event_loop_initialize() {
 
   // NOTE: können wir im Event Loop irgendwie in einem Fall landen, in dem wir
   // nicht registriert sind? Oder wird das alles von den Handlers übernommen?
-  transport_change_frequency(800);
-  perform_registration(800);
+  transport_change_frequency(820);
+  perform_registration(820);
 }
 
 void event_loop_run() {
