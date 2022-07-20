@@ -91,7 +91,7 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
     if (i < buffer[0]) {
       buffer[i + 1] = rx_fifo_pop();
     } else {
-      status[i + 1 - buffer[0]] = rx_fifo_pop();
+      status[i - buffer[0]] = rx_fifo_pop();
     }
   }
 
