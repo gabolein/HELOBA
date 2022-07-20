@@ -109,6 +109,7 @@ cleanup:
   disable_preamble_detection();
   // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
   cc1200_cmd(SIDLE);
+  dbgln("Flushing FIFO");
   cc1200_cmd(SFRX);
   return ret;
 }
@@ -132,6 +133,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     for (size_t i = 0; i < length; i++) {
       tx_fifo_push(buffer[i]);
     }
+    // NOTE blocking? Would we hear our own RSSI?
     cc1200_cmd(STX);
 
     // NOTE: sind wir hier sicher, dass unsere gesendete Nachricht auf jeden
@@ -146,6 +148,7 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     return true;
   }
 
+  warnln("Too many backoffs. Aborting sending operation");
   return false;
 }
 

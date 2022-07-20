@@ -101,6 +101,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
 void set_rssi_threshold(int8_t threshold) {
   global_rssi_threshold = threshold;
   global_rssi_threshold_valid = true;
+  dbgln("RSSI threshold set to %d", threshold);
 }
 
 int8_t get_rssi_threshold() {
