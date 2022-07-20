@@ -14,6 +14,7 @@ ifneq (,$(findstring -DVIRTUAL,$(CPPFLAGS)))
 SRC := $(filter-out ./src/beaglebone/%, $(SRC))
 else
 SRC := $(filter-out ./src/virtual_transport.c, $(SRC))
+LDFLAGS += -lspi -lprussdrvd
 endif
 
 BUILD_DIR = build
