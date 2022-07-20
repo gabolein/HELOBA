@@ -18,6 +18,7 @@
 
 #if !defined(VIRTUAL)
 
+#define RSSI_PADDING 20
 #define RADIO_FIRST_BYTE_WAIT_TIME_MS 2
 #define RADIO_NEXT_BYTE_WAIT_TIME_MS 1
 #define RADIO_BACKOFF_TIMEOUT_MS 300 // 8 (?) backoffs + buffer

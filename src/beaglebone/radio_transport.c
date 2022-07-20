@@ -118,13 +118,11 @@ cleanup:
 }
 
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
-
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
   while (!hit_timeout(RADIO_BACKOFF_TIMEOUT_MS, &start_time)) {
     if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
-      dbgln("Backoff timeout not expired yet.");
       continue;
     }
 

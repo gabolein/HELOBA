@@ -1,10 +1,11 @@
+#include "src/config.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "RSSI"
 
-#include "src/beaglebone/rssi.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/beaglebone/registers.h"
+#include "src/beaglebone/rssi.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <limits.h>
@@ -81,7 +82,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
     }
 
     f_rssi = (float)rssi;
-    threshold = threshold + (f_rssi - threshold) / ++samples;
+    threshold += (f_rssi - threshold) / ++samples;
   }
 
   dbgln("Collected %lu samples, got %lu errors", samples, errors);
@@ -89,6 +90,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
   if (errors > samples)
     return false;
 
+  threshold += RSSI_PADDING;
   assert(threshold >= INT8_MIN && threshold <= INT8_MAX);
 
   *out = (int8_t)round(threshold);
