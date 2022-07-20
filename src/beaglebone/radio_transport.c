@@ -61,15 +61,12 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   start_receiver_blocking();
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
-  if (!detect_RSSI(100)) {
+  if (!detect_RSSI(1000)) {
     return false;
   }
 
   enable_preamble_detection();
-  start_receiver_blocking();
-
   dbgln("Detected RSSI, starting reception of packet.");
-
   if (!fifo_wait(RADIO_FIRST_BYTE_WAIT_TIME_MS)) {
     warnln("Didn't receive anything after preamble.");
     ret = false;
