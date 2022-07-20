@@ -73,35 +73,35 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
     goto cleanup;
   }
 
-  uint8_t recv_length = rx_fifo_pop();
-  if (recv_length > *length) {
+  buffer[0] = rx_fifo_pop();
+  if (buffer[0] + 1 > *length) {
     warnln("Buffer with size=%u is too small to receive packet with size=%u.",
-           *length, recv_length);
+           *length, buffer[0] + 1);
     return false;
   }
 
   uint8_t status[PACKET_STATUS_LENGTH];
-  for (size_t i = 0; i < recv_length + PACKET_STATUS_LENGTH; i++) {
+  for (size_t i = 0; i < buffer[0] + PACKET_STATUS_LENGTH; i++) {
     if (!fifo_wait(RADIO_NEXT_BYTE_WAIT_TIME_MS)) {
-      warnln("Expected to receive %u bytes, only got %lu.", recv_length, i);
+      warnln("Expected to receive %u more bytes, only got %lu.", buffer[0], i);
       ret = false;
       goto cleanup;
     }
 
-    if (i < recv_length) {
-      buffer[i] = rx_fifo_pop();
+    if (i < buffer[0]) {
+      buffer[i + 1] = rx_fifo_pop();
     } else {
-      status[i - recv_length] = rx_fifo_pop();
+      status[i + 1 - buffer[0]] = rx_fifo_pop();
     }
   }
 
   // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
   // überhaupt nicht erst angenommen?
   dbgln("Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u",
-        recv_length + 1, status[0], status[1] & (1 << 7) ? "OK" : ":(",
+        buffer[0] + 1, status[0], status[1] & (1 << 7) ? "OK" : ":(",
         status[1] & ~(1 << 7));
 
-  *length = recv_length + 1;
+  *length = buffer[0] + 1;
   ret = true;
 
 cleanup:
