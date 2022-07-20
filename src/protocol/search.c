@@ -5,6 +5,7 @@
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/config.h"
 #include "src/protocol/cache.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_util.h"
@@ -19,8 +20,6 @@ extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
 void register_automatic_search_handlers() {
   auto_handlers[DO][FIND] = handle_do_find;
 }
-
-#define WILL_FIND_RECV_TIMEOUT 10
 
 int hint_cmp(search_hint_t a, search_hint_t b) {
   if (a.type == CACHE && b.type == ORDER) {
@@ -148,7 +147,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
     // d.h. den Fall haben wir nur, wenn der gesuchte Node überhaupt nicht
     // im Baum ist.
     message_vector_t *responses = message_vector_create();
-    collect_messages(WILL_FIND_RECV_TIMEOUT, 5, search_response_filter,
+    collect_messages(FIND_RESPONSE_TIMEOUT_MS, 5, search_response_filter,
                      responses);
 
     for (unsigned i = 0; i < message_vector_size(responses); i++) {
