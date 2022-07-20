@@ -1,11 +1,11 @@
-#include "src/config.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "RSSI"
 
+#include "src/beaglebone/rssi.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/beaglebone/registers.h"
-#include "src/beaglebone/rssi.h"
+#include "src/config.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <limits.h>
@@ -25,9 +25,12 @@ bool detect_RSSI(unsigned timeout_ms) {
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   while (!hit_timeout(timeout_ms, &start)) {
     int8_t curr_rssi;
-    if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold)
+    if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold) {
+      dbgln("Detected signal with strength %i", curr_rssi);
       return true;
+    }
   }
+
   return false;
 }
 
