@@ -58,8 +58,6 @@ bool radio_change_frequency(uint16_t frequency) {
 
 bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   bool ret = false;
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
   if (!detect_RSSI(100)) {
