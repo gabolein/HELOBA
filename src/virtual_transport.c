@@ -113,7 +113,6 @@ bool virtual_change_frequency(uint16_t frequency) {
     return false;
   }
 
-  dbgln("Changed frequency to %u.", frequency);
   return true;
 }
 

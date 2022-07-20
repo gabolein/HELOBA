@@ -32,10 +32,16 @@ bool transport_initialize() {
 
 bool transport_change_frequency(uint16_t frequency) {
 #if defined(VIRTUAL)
-  return virtual_change_frequency(frequency);
+  bool ret = virtual_change_frequency(frequency);
 #else
-  return radio_change_frequency(frequency);
+  bool ret = radio_change_frequency(frequency);
 #endif
+
+  if (ret) {
+    dbgln("Changed frequency to %u.", frequency);
+  }
+
+  return ret;
 }
 
 bool transport_send_message(message_t *msg, routing_id_t to) {
