@@ -43,11 +43,13 @@ Test(hashmap, insert) {
 Test(hashmap, insert_same_key) {
   ii_hashmap_t *hm = ii_hashmap_create();
 
-  ii_hashmap_insert(hm, 13, 42);
-  ii_hashmap_insert(hm, 13, 37);
+  for (unsigned i = 0; i < 20; i++) {
+    ii_hashmap_insert(hm, i + 13, i + 42);
+    ii_hashmap_insert(hm, i + 13, i + 37);
+    cr_assert(ii_hashmap_get(hm, i + 13) == (int)i + 37);
+  }
 
-  cr_assert(ii_hashmap_get(hm, 13) == 37);
-
+  cr_assert(ii_hashmap_size(hm) == 20);
   ii_hashmap_destroy(hm);
 }
 

@@ -240,9 +240,14 @@ void hashmap_insert(hashmap_t *hm, int key, int value) {
       .state = USED,
   };
 
+  // FIXME: Das sollten nicht wir prüfen müssen, __hm_lookup_for_writing sollte
+  // ein Enum zurückgeben, was diese Information enthält.
   unsigned index = __hm_lookup_for_writing(hm, key);
+  if (hashentry_vector_at(hm->entries, index).state != USED) {
+    hm->used_count++;
+  }
+
   hashentry_vector_insert_at(hm->entries, index, added);
-  hm->used_count++;
 
   // NOTE: Es ist sehr wichtig, nach jedem insert zu prüfen, ob die HashMap
   // vergrößert werden muss. Ansonsten kann es passieren, dass die HashMap voll
