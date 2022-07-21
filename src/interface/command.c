@@ -66,7 +66,6 @@ bool handle_searchfor(command_param_t param) {
     return false;
   }
 
-  dbgln("Found requested node, is on frequency %u", gs.frequency);
   transport_change_frequency(gs.frequency);
   command_param_t wrap = {.freq = found};
   return handle_goto(wrap);

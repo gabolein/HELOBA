@@ -1,4 +1,4 @@
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL PANIC_LEVEL
 #define LOG_LABEL "Parse"
 
 #include "lib/datastructures/u8_vector.h"

@@ -56,6 +56,7 @@ void search_queue_add(search_hint_t hint) {
     return;
   }
 
+  dbgln("Adding hint %u", hint.f);
   checked_hashmap_insert(gs.search.checked_frequencies, hint.f, true);
   search_priority_queue_push(gs.search.search_queue, hint);
 }
@@ -115,6 +116,13 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
   gs.search.direction = SEARCH_UP;
   search_priority_queue_clear(gs.search.search_queue);
 
+  if (cache_hit(to_find)) {
+    search_hint_t cache_hint = {
+      .type = CACHE,
+      .f = cache_get(to_find).f
+    };
+    search_priority_queue_push(gs.search.search_queue, cache_hint);
+  }
   search_hint_t start = {
       .type = ORDER,
       .f = gs.search.current_frequency,
