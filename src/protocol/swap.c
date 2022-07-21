@@ -18,8 +18,6 @@ void reject_swap(routing_id_t receiver);
 void perform_migrate(frequency_t with);
 bool swap_reply_filter(message_t *msg);
 
-#define MIN_SPLIT_SCORE 5
-
 extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
 
 void register_automatic_swap_handlers() {
