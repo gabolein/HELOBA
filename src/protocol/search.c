@@ -51,13 +51,7 @@ MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, checked_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
-  if (checked_hashmap_exists(gs.search.checked_frequencies, hint.f) &&
-      hint.type == ORDER) {
-    return;
-  }
-
   dbgln("Adding hint %u", hint.f);
-  checked_hashmap_insert(gs.search.checked_frequencies, hint.f, true);
   search_priority_queue_push(gs.search.search_queue, hint);
 }
 
@@ -131,12 +125,12 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
   };
   search_priority_queue_push(gs.search.search_queue, start);
 
-  while (true) {
-    if (search_priority_queue_size(gs.search.search_queue) == 0) {
-      break;
+  while (search_priority_queue_size(gs.search.search_queue) > 0) {
+    search_hint_t next_hint = search_priority_queue_pop(gs.search.search_queue);
+    if (checked_hashmap_exists(gs.search.checked_frequencies, next_hint.f)) {
+      continue;
     }
 
-    search_hint_t next_hint = search_priority_queue_pop(gs.search.search_queue);
     transport_change_frequency(next_hint.f);
     gs.search.current_frequency = next_hint.f;
     checked_hashmap_insert(gs.search.checked_frequencies, next_hint.f, true);
@@ -176,7 +170,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
         cache_insert(current.header.sender_id, gs.search.current_frequency);
         *found = gs.search.current_frequency;
         dbgln("Took %u hops to find Node %s",
-              checked_hashmap_size(gs.search.checked_frequencies),
+              checked_hashmap_size(gs.search.checked_frequencies) - 1,
               format_routing_id(gs.search.to_find_id));
         return true;
       } else if (message_type(&current) == HINT) {
