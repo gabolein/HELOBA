@@ -185,7 +185,6 @@ void balance_frequency() {
     return;
   }
 
-  frequency_t old = gs.frequency;
   if (gs.scores.previous < gs.scores.current) {
     while (gs.frequency != tree_node_parent(gs.frequency)) {
       dbgln("Trying to swap with parent frequency %u",
@@ -234,9 +233,6 @@ void balance_frequency() {
     }
   }
 
-  if (old != gs.frequency) {
-    gs.scores.previous = gs.scores.current;
-  }
-
+  gs.scores.previous = gs.scores.current;
   clock_gettime(CLOCK_MONOTONIC_RAW, &gs.last_swap);
 }
