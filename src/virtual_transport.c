@@ -1,13 +1,14 @@
+#include "src/config.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Virtual Transport"
 
-#include "src/virtual_transport.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
 #include "src/state.h"
+#include "src/virtual_transport.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>
@@ -34,7 +35,7 @@ static char multicast_addr[IPADDR_MAX_LEN] = {0};
 int virt_fd;
 
 bool frequency_is_valid(uint16_t frequency) {
-  return frequency >= 800 && frequency <= 950;
+  return frequency >= FREQUENCY_BASE && frequency <= FREQUENCY_CEILING;
 }
 
 struct in_addr get_frequency_multicast_addr(uint16_t frequency) {

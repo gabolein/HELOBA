@@ -1,10 +1,11 @@
-#include "src/protocol/message_formatter.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Event Loop"
 
 #include "lib/logger.h"
+#include "src/config.h"
 #include "src/interface/interface.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/search.h"
 #include "src/protocol/swap.h"
 #include "src/protocol/transfer.h"
@@ -27,8 +28,8 @@ void event_loop_initialize() {
 
   // NOTE: können wir im Event Loop irgendwie in einem Fall landen, in dem wir
   // nicht registriert sind? Oder wird das alles von den Handlers übernommen?
-  transport_change_frequency(800);
-  perform_registration(800);
+  transport_change_frequency(FREQUENCY_BASE);
+  perform_registration(FREQUENCY_BASE);
 }
 
 void event_loop_run() {
