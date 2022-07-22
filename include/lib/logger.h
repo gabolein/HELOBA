@@ -40,7 +40,7 @@
 #if LOG_LEVEL >= WARNING_LEVEL
 #define warnln(...)                                                            \
   do {                                                                         \
-    fprintf(stderr, "[WARNING] (" LOG_LABEL ") ");                             \
+    fprintf(stderr, "\x1b[33;4m[WARNING]\x1b[0m (" LOG_LABEL ") ");            \
     fprintf(stderr, __VA_ARGS__);                                              \
     fprintf(stderr, "\n");                                                     \
   } while (0)
@@ -51,7 +51,7 @@
 #if LOG_LEVEL >= PANIC_LEVEL
 #define panicln(...)                                                           \
   do {                                                                         \
-    fprintf(stderr, "[PANIC] (" LOG_LABEL ") ");                               \
+    fprintf(stderr, "\x1b[31;4m[PANIC]\x1b[0m (" LOG_LABEL ") ");              \
     fprintf(stderr, __VA_ARGS__);                                              \
     fprintf(stderr, "\n");                                                     \
     exit(0);                                                                   \
