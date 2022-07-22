@@ -1,4 +1,4 @@
-#define LOG_LEVEL PANIC_LEVEL
+#define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Swap"
 
 #include "src/protocol/swap.h"
