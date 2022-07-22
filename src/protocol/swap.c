@@ -146,7 +146,7 @@ swap_return_val perform_swap(frequency_t with) {
   collect_messages(SWAP_RESPONSE_TIMEOUT_MS, 1, swap_reply_filter, replies);
 
   if (message_vector_empty(replies)) {
-    warnln("Didn't receive answer from frequency %u, assuming missing.", with);
+    warnln("Didn't receive answer from frequency %u, assuming empty.", with);
     message_vector_destroy(replies);
     transport_change_frequency(gs.frequency);
     return TIMEOUT;

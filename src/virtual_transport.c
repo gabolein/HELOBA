@@ -194,7 +194,7 @@ bool virtual_channel_active(unsigned timeout_ms) {
 
     message_t msg = unpack_message(active_buf, ret);
     if (!message_is_valid(&msg)) {
-      warnln("Received invalied message, still assuming channel is active.");
+      warnln("Received invalid message, still assuming channel is active.");
       return true;
     }
 
