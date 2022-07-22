@@ -96,6 +96,7 @@ char *format_type(message_type_t type) {
 
 char *format_routing_id(routing_id_t id) {
   char_vector_clear(routing_id_vec);
+  char_vector_append(routing_id_vec, '<');
 
   bool printed_once = false;
 
@@ -121,15 +122,14 @@ char *format_routing_id(routing_id_t id) {
     }
   }
 
-  if (printed_once) {
-    append_helper(routing_id_vec, ", ");
-  }
-
-  append_helper(routing_id_vec, "MAC ");
   if (!(id.layer & specific)) {
-    append_helper(routing_id_vec, "<empty>");
+    char_vector_append(routing_id_vec, '>');
     char_vector_append(routing_id_vec, '\0');
     return routing_id_vec->data;
+  }
+
+  if (printed_once) {
+    char_vector_append(routing_id_vec, ' ');
   }
 
   for (unsigned i = 0; i < MAC_SIZE; i++) {
@@ -140,6 +140,7 @@ char *format_routing_id(routing_id_t id) {
     append_helper(routing_id_vec, format_number("%02hhx", id.MAC[i]));
   }
 
+  char_vector_append(routing_id_vec, '>');
   char_vector_append(routing_id_vec, '\0');
   return routing_id_vec->data;
 }
@@ -147,21 +148,20 @@ char *format_routing_id(routing_id_t id) {
 char *format_message(message_t *msg) {
   char_vector_clear(message_vec);
 
-  append_helper(message_vec, "Action: ");
   append_helper(message_vec, format_action(msg->header.action));
-  append_helper(message_vec, "\nType: ");
+  char_vector_append(message_vec, ' ');
   append_helper(message_vec, format_type(msg->header.type));
-  append_helper(message_vec, "\nFrom: ");
+  append_helper(message_vec, " From: ");
   append_helper(message_vec, format_routing_id(msg->header.sender_id));
-  append_helper(message_vec, "\nTo: ");
+  append_helper(message_vec, ", To: ");
   append_helper(message_vec, format_routing_id(msg->header.receiver_id));
-  char_vector_append(message_vec, '\n');
+  append_helper(message_vec, ", Payload: { ");
 
   switch (msg->header.type) {
   case HINT:
     append_helper(message_vec, "Frequency: ");
     append_helper(message_vec, format_number("%u", msg->payload.hint.hint.f));
-    append_helper(message_vec, "\nTimedelta: ");
+    append_helper(message_vec, ", Timedelta: ");
     append_helper(message_vec,
                   format_number("%u", msg->payload.hint.hint.timedelta_us));
     append_helper(message_vec, "us");
@@ -173,7 +173,7 @@ char *format_message(message_t *msg) {
   case SWAP:
     append_helper(message_vec, "Target: ");
     append_helper(message_vec, format_number("%u", msg->payload.swap.with));
-    append_helper(message_vec, "\nScore: ");
+    append_helper(message_vec, ", Score: ");
     append_helper(message_vec, format_number("%u", msg->payload.swap.score));
     break;
   case TRANSFER:
@@ -189,13 +189,14 @@ char *format_message(message_t *msg) {
     append_helper(message_vec, "Direction: ");
     append_helper(message_vec,
                   msg->payload.split.direction == SPLIT_UP ? "UP" : "DOWN");
-    append_helper(message_vec, "\nFirst Delimeter: ");
+    append_helper(message_vec, ", LHS Bound: ");
     append_helper(message_vec, format_routing_id(msg->payload.split.delim1));
-    append_helper(message_vec, "\nSecond Delimeter: ");
+    append_helper(message_vec, ", RHS Bound: ");
     append_helper(message_vec, format_routing_id(msg->payload.split.delim2));
     break;
   };
 
+  append_helper(message_vec, " }");
   char_vector_append(message_vec, '\0');
   return message_vec->data;
 }

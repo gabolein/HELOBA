@@ -47,7 +47,7 @@ bool transport_send_message(message_t *msg, routing_id_t to) {
     return false;
   }
 
-  dbgln("Sending Message:\n%s", format_message(msg));
+  dbgln("Sending %s", format_message(msg));
   pack_message(send_vec, msg);
 
 #if defined(VIRTUAL)
@@ -87,7 +87,7 @@ bool transport_receive_message(message_t *msg) {
   }
 
   if (message_addressed_to(msg, gs.id)) {
-    dbgln("Received Message:\n%s", format_message(msg));
+    dbgln("Received %s", format_message(msg));
     return true;
   }
 
