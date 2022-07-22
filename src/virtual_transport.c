@@ -1,14 +1,14 @@
-#include "src/config.h"
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Virtual Transport"
 
+#include "src/virtual_transport.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/config.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_parser.h"
 #include "src/state.h"
-#include "src/virtual_transport.h"
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
 #include <assert.h>
@@ -158,8 +158,8 @@ bool virtual_receive_packet(uint8_t *buffer, unsigned *length) {
 bool virtual_get_id(uint8_t *out) {
   assert(sizeof(pid_t) <= MAC_SIZE);
   pid_t pid = getpid();
+  memset(out, 0, MAC_SIZE);
   memcpy(out, &pid, sizeof(pid));
-  memset(out + sizeof(pid), 0, MAC_SIZE - sizeof(pid_t));
   return true;
 }
 

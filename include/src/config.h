@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #define FREQUENCY_BASE 820
-#define FREQUENCY_CEILING 950
+#define FREQUENCY_CEILING 850
 
 // FIXME: Wir sollten uns für Timeouts auf eine Einheit festlegen und dann
 // #defines für jede Einheit bereitstellen, mit der zu dieser Einheit
@@ -16,6 +16,11 @@
 #define MIGRATION_BLOCK_DURATION_MS 10
 #define SWAP_BLOCK_DURATION_MS 1000
 #define MIN_SPLIT_SCORE 5
+
+// NOTE: Es wäre interessant, die aktuelle Cachegröße abhängig vom Alter des
+// letzten Eintrags zu machen. Diese statische Größe sollte aber erstmal
+// ausreichen.
+#define CACHE_SIZE 8
 
 #if !defined(VIRTUAL)
 

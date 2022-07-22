@@ -1,4 +1,4 @@
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Interface"
 
 #include "lib/logger.h"

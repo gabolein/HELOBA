@@ -1,10 +1,10 @@
-#include "src/protocol/message_formatter.h"
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Command"
 
-#include "lib/logger.h"
 #include "src/interface/command.h"
+#include "lib/logger.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/search.h"
 #include "src/protocol/transfer.h"
 #include "src/state.h"

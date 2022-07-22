@@ -1,15 +1,15 @@
-#include <stdint.h>
-#include <string.h>
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Message"
 
+#include "src/protocol/message.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
-#include "src/protocol/message.h"
 #include "src/state.h"
 #include "src/transport.h"
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 MAKE_SPECIFIC_VECTOR_SOURCE(message_t, message)
 

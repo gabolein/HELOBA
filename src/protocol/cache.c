@@ -1,20 +1,16 @@
+#include "src/config.h"
 #define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Cache"
 
-#include "src/protocol/cache.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
+#include "src/protocol/cache.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_formatter.h"
 #include <time.h>
-
-// NOTE: Es wäre interessant, die aktuelle Cachegröße abhängig vom Alter des
-// letzten Eintrags zu machen. Diese statische Größe sollte aber erstmal
-// ausreichen.
-static unsigned cache_size = 32;
 
 typedef struct {
   struct timespec timestamp;
@@ -117,7 +113,7 @@ void cache_insert(routing_id_t id, frequency_t f) {
 
   if (cache_hit(id)) {
     cache_remove(id);
-  } else if (rc_hashmap_size(rc_hm) == cache_size) {
+  } else if (rc_hashmap_size(rc_hm) == CACHE_SIZE) {
     cache_key_t oldest = ck_priority_queue_peek(ck_pq);
     cache_remove(oldest.id);
   }

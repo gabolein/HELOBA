@@ -1,4 +1,4 @@
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Transfer"
 
 #include "src/protocol/transfer.h"
@@ -154,6 +154,7 @@ bool perform_unregistration(frequency_t to) {
     gs.scores.previous = 0;
     club_hashmap_clear(gs.members);
   }
+
   return true;
 }
 

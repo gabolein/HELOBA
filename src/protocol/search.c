@@ -51,7 +51,6 @@ MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, checked_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
-  dbgln("Adding hint %u", hint.f);
   search_priority_queue_push(gs.search.search_queue, hint);
 }
 

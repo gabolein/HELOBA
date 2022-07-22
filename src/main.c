@@ -1,4 +1,5 @@
-#define LOG_LEVEL DEBUG_LEVEL
+#include <sys/types.h>
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Main"
 
 #include "lib/logger.h"
