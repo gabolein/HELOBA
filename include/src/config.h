@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define FREQUENCY_BASE 800
+#define FREQUENCY_BASE 820
 #define FREQUENCY_CEILING 950
 
 // FIXME: Wir sollten uns für Timeouts auf eine Einheit festlegen und dann
