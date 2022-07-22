@@ -60,7 +60,15 @@ bool perform_split(split_direction direction) {
   transport_send_message(&split_msg, receivers);
 
   for (size_t i = 0; i <= nkeys / 2; i++) {
-    club_hashmap_remove(gs.members, club_key_vector_at(keys, i));
+    routing_id_t removed = club_key_vector_at(keys, i);
+    club_hashmap_remove(gs.members, removed);
+
+    if (i <= nkeys / 4) {
+      cache_insert(removed, tree_node_lhs(gs.frequency));
+    } else {
+      cache_insert(removed, tree_node_rhs(gs.frequency));
+    }
+
     gs.scores.current--;
   }
 
