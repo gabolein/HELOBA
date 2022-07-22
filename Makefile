@@ -17,6 +17,7 @@ SRC := $(filter-out ./src/virtual_transport.c, $(SRC))
 endif
 
 BUILD_DIR = build
+BIN=heloba
 OBJ = $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 DEP = $(OBJ:.o=.d)
 
@@ -27,17 +28,17 @@ $(OBJ):$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 
-$(BUILD_DIR)/program: $(OBJ)
+$(BUILD_DIR)/$(BIN): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: build run test debug release clean deploy
 
 .DEFAULT_GOAL = debug
 
-build: $(BUILD_DIR)/program
+build: $(BUILD_DIR)/$(BIN)
 
 run: build
-	./$(BUILD_DIR)/program
+	./$(BUILD_DIR)/$(BIN)
 
 test: CFLAGS += -ggdb -O0 -fsanitize=address
 test: LDFLAGS += -lcriterion -fsanitize=address
