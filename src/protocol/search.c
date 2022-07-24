@@ -59,6 +59,10 @@ MAKE_SPECIFIC_VECTOR_SOURCE(frequency_t, checked_key)
 MAKE_SPECIFIC_HASHMAP_SOURCE(frequency_t, bool, checked, frequency_eq)
 
 void search_queue_add(search_hint_t hint) {
+  if (checked_hashmap_exists(gs.search.checked_frequencies, hint.f)) {
+    return;
+  }
+
   search_priority_queue_push(gs.search.search_queue, hint);
 }
 
@@ -104,7 +108,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
         .f = cache_get(to_find).f,
         .timedelta_us = cache_get(to_find).timedelta_us,
     };
-    search_priority_queue_push(gs.search.search_queue, cache_hint);
+    search_queue_add(cache_hint);
   }
 
   frequency_t f = gs.frequency;
@@ -112,7 +116,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
       .type = ORDER,
       .f = f,
   };
-  search_priority_queue_push(gs.search.search_queue, start);
+  search_queue_add(start);
 
   while (search_priority_queue_size(gs.search.search_queue) > 0) {
     search_hint_t next_hint = search_priority_queue_pop(gs.search.search_queue);
@@ -167,10 +171,8 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
   }
 
   // if we really didn't find anyone, we should have checked all frequencies
-  dbgln("Could not find Node %s, checked %u/%u frequencies",
-        format_routing_id(to_find),
-        checked_hashmap_size(gs.search.checked_frequencies),
-        FREQUENCY_CEILING - FREQUENCY_BASE + 1);
+  assert(checked_hashmap_size(gs.search.checked_frequencies) ==
+         FREQUENCY_CEILING - FREQUENCY_BASE + 1);
   return false;
 }
 
