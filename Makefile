@@ -44,8 +44,7 @@ test: CFLAGS += -ggdb -O0 -fsanitize=address
 test: LDFLAGS += -lcriterion -fsanitize=address
 test: run
 
-debug: CFLAGS += -ggdb -O0 -fsanitize=address
-debug: LDFLAGS += -fsanitize=address
+debug: CFLAGS += -ggdb -O0
 debug: run
 
 # FIXME: CPPFLAGS += -DNDEBUG sollte Debugoutput strippen, egal welches Loglevel gesetzt ist

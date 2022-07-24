@@ -31,7 +31,10 @@ static struct timespec timeout_start;
 // Restriktion, weil wir im Moment nur Suche nach ID unterstützen und kein
 // weiteres Overlay Protokoll haben, was Suche nach Hash, Gruppe, etc
 // ermöglicht.
-routing_id_t get_random_network_node() {
+// NOTE: Anscheinend verursacht fread() in /usr/bin/killall5 Memory Leaks,
+// dagegen können wir nichts tun, deswegen Instrumentation für diese Funktion
+// ausschalten.
+__attribute__((no_sanitize_address)) routing_id_t get_random_network_node() {
   unsigned char buf[256];
   u8_vector_t *pidof_output = u8_vector_create();
   FILE *pipe = popen("pidof heloba", "r");
@@ -56,6 +59,10 @@ routing_id_t get_random_network_node() {
     }
 
     cpid = 10 * cpid + (c - '0');
+  }
+
+  if (int_vector_size(converted_pids) == 0) {
+    return gs.id;
   }
 
   unsigned rd = random_number_between(0, int_vector_size(converted_pids));
@@ -111,7 +118,7 @@ void event_loop_run() {
     balance_frequency();
   }
 
-  if (hit_timeout(timeout_ms, &timeout_start)) {
+  if (hit_timeout(timeout_ms, &timeout_start) && !(gs.id.layer & leader)) {
     routing_id_t target = get_random_network_node();
     if (routing_id_equal(target, gs.id)) {
       timeout_ms = random_number_between(250, 1000);
@@ -128,9 +135,12 @@ void event_loop_run() {
       return;
     }
 
-    transport_change_frequency(gs.frequency);
-    perform_unregistration(found);
-    transport_change_frequency(found);
+    if (found != gs.frequency) {
+      transport_change_frequency(gs.frequency);
+      perform_unregistration(found);
+      transport_change_frequency(found);
+    }
+
     perform_registration(found);
 
     timeout_ms = random_number_between(250, 1000);
