@@ -6,8 +6,6 @@
 #include "src/protocol/message.h"
 
 typedef enum { CACHE, ORDER } search_hint_type_t;
-typedef enum { SEARCH_UP, SEARCH_DOWN } search_direction_t;
-
 typedef struct {
   search_hint_type_t type;
   frequency_t f;
@@ -19,9 +17,6 @@ MAKE_SPECIFIC_PRIORITY_QUEUE_HEADER(search_hint_t, search)
 MAKE_SPECIFIC_HASHMAP_HEADER(frequency_t, bool, checked)
 
 typedef struct {
-  search_direction_t direction;
-  frequency_t current_frequency;
-  routing_id_t to_find_id;
   search_priority_queue_t *search_queue;
   checked_hashmap_t *checked_frequencies;
 } search_state_t;

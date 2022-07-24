@@ -39,6 +39,14 @@ int hint_cmp(search_hint_t a, search_hint_t b) {
     }
   }
 
+  if (a.type == ORDER && b.type == ORDER) {
+    if (tree_node_gt(a.f, b.f)) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+
   return 0;
 }
 
@@ -55,31 +63,15 @@ void search_queue_add(search_hint_t hint) {
 }
 
 // TOOD: besseren Namen finden
-void search_queue_expand_by_order() {
-  if (gs.search.current_frequency ==
-          tree_node_parent(gs.search.current_frequency) &&
-      gs.search.direction == SEARCH_UP) {
-    gs.search.direction = SEARCH_DOWN;
-  }
-
+void search_queue_expand_by_order(frequency_t f) {
   frequency_t next_freqs[3] = {
-      tree_node_parent(gs.search.current_frequency),
-      tree_node_lhs(gs.search.current_frequency),
-      tree_node_rhs(gs.search.current_frequency),
+      tree_node_parent(f),
+      tree_node_lhs(f),
+      tree_node_rhs(f),
   };
 
   for (unsigned i = 0; i < 3; i++) {
-    if (next_freqs[i] == gs.search.current_frequency) {
-      continue;
-    }
-
-    if (gs.search.direction == SEARCH_DOWN &&
-        next_freqs[i] == tree_node_parent(gs.search.current_frequency)) {
-      continue;
-    }
-
-    if (gs.search.direction == SEARCH_UP &&
-        next_freqs[i] != tree_node_parent(gs.search.current_frequency)) {
+    if (next_freqs[i] == f) {
       continue;
     }
 
@@ -103,10 +95,7 @@ bool search_response_filter(message_t *msg) {
 }
 
 bool perform_search(routing_id_t to_find, frequency_t *found) {
-  gs.search.to_find_id = to_find;
   checked_hashmap_clear(gs.search.checked_frequencies);
-  gs.search.current_frequency = gs.frequency;
-  gs.search.direction = SEARCH_UP;
   search_priority_queue_clear(gs.search.search_queue);
 
   if (cache_hit(to_find)) {
@@ -118,9 +107,10 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
     search_priority_queue_push(gs.search.search_queue, cache_hint);
   }
 
+  frequency_t f = gs.frequency;
   search_hint_t start = {
       .type = ORDER,
-      .f = gs.search.current_frequency,
+      .f = f,
   };
   search_priority_queue_push(gs.search.search_queue, start);
 
@@ -130,26 +120,15 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
       continue;
     }
 
-    transport_change_frequency(next_hint.f);
-    gs.search.current_frequency = next_hint.f;
-    checked_hashmap_insert(gs.search.checked_frequencies, next_hint.f, true);
+    f = next_hint.f;
+    transport_change_frequency(f);
+    checked_hashmap_insert(gs.search.checked_frequencies, f, true);
 
     message_t scan = message_create(DO, FIND);
-    scan.payload.find = (find_payload_t){.to_find = gs.search.to_find_id};
+    scan.payload.find = (find_payload_t){.to_find = to_find};
     routing_id_t receivers = routing_id_create(everyone, NULL);
     transport_send_message(&scan, receivers);
 
-    // NOTE: Wenn wir keine Antworten bekommen, kann es sein, dass
-    // 1. niemand auf der Frequenz ist
-    // 2. niemand auf der Frequenz weiß, wo der gesuchte Node ist
-    // Im ersten Fall würde es keinen Sinn machen, weiter zu suchen, weil alle
-    // darunter liegenden Frequenzen auch garantiert leer sein werden. Wir
-    // sollten also auch noch prüfen, ob auf der Frequenz irgendwelche
-    // Nachrichten verschickt werden.
-    // NOTE: Nach weiterem Nachdenken ist das glaube ich doch nicht so wichtig,
-    // weil wir essentiell eine Breitensuche durch den gesamten Baum machen,
-    // d.h. den Fall haben wir nur, wenn der gesuchte Node überhaupt nicht
-    // im Baum ist.
     message_vector_t *responses = message_vector_create();
     collect_messages(FIND_RESPONSE_TIMEOUT_MS, 5, search_response_filter,
                      responses);
@@ -160,17 +139,17 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
       if (message_type(&current) == FIND) {
         // NOTE: Bei anderen Suchvarianten, z.B. nach Hash wird dieser Check
         // nicht gebraucht
-        if (!routing_id_equal(current.header.sender_id, gs.search.to_find_id)) {
+        if (!routing_id_equal(current.header.sender_id, to_find)) {
           warnln("Got FIND response from Node we didn't search.");
-          return false;
+          continue;
         }
 
-        message_vector_destroy(responses);
-        cache_insert(current.header.sender_id, gs.search.current_frequency);
-        *found = gs.search.current_frequency;
+        cache_insert(current.header.sender_id, f);
+        *found = f;
         dbgln("Took %u hops to find Node %s",
               checked_hashmap_size(gs.search.checked_frequencies) - 1,
-              format_routing_id(gs.search.to_find_id));
+              format_routing_id(to_find));
+        message_vector_destroy(responses);
         return true;
       } else if (message_type(&current) == HINT) {
         search_hint_t hint = {
@@ -184,14 +163,14 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
     }
 
     message_vector_destroy(responses);
-    search_queue_expand_by_order();
+    search_queue_expand_by_order(f);
   }
 
   // if we really didn't find anyone, we should have checked all frequencies
   dbgln("Could not find Node %s, checked %u/%u frequencies",
-        format_routing_id(gs.search.to_find_id),
+        format_routing_id(to_find),
         checked_hashmap_size(gs.search.checked_frequencies),
-        FREQUENCY_CEILING - FREQUENCY_BASE);
+        FREQUENCY_CEILING - FREQUENCY_BASE + 1);
   return false;
 }
 
