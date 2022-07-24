@@ -19,31 +19,23 @@
 #endif
 
 #if defined(NDEBUG)
-
-#define dbgln(...)
-#define warnln(...)
-#define panicln(...) exit(0)
-
+#define log__impl(slug, fmt, ...)
 #else
+#define log__impl(slug, fmt, ...)                                              \
+  fprintf(stderr, slug " " fmt "%s", __VA_ARGS__);
+#endif
 
+// TODO: Variadic Function schreiben, dann können wir auch Sachen wie PID etc
+// vor den Log String schreiben.
 #if LOG_LEVEL >= DEBUG_LEVEL
-#define dbgln(...)                                                             \
-  do {                                                                         \
-    fprintf(stderr, "(" LOG_LABEL ") ");                                       \
-    fprintf(stderr, __VA_ARGS__);                                              \
-    fprintf(stderr, "\n");                                                     \
-  } while (0)
+#define dbgln(...) log__impl("(" LOG_LABEL ")", __VA_ARGS__, "\n")
 #else
 #define dbgln(...)
 #endif
 
 #if LOG_LEVEL >= WARNING_LEVEL
 #define warnln(...)                                                            \
-  do {                                                                         \
-    fprintf(stderr, "\x1b[33;4m[WARNING]\x1b[0m (" LOG_LABEL ") ");            \
-    fprintf(stderr, __VA_ARGS__);                                              \
-    fprintf(stderr, "\n");                                                     \
-  } while (0)
+  log__impl("\x1b[33;4m[WARNING]\x1b[0m (" LOG_LABEL ")", __VA_ARGS__, "\n")
 #else
 #define warnln(...)
 #endif
@@ -51,15 +43,11 @@
 #if LOG_LEVEL >= PANIC_LEVEL
 #define panicln(...)                                                           \
   do {                                                                         \
-    fprintf(stderr, "\x1b[31;4m[PANIC]\x1b[0m (" LOG_LABEL ") ");              \
-    fprintf(stderr, __VA_ARGS__);                                              \
-    fprintf(stderr, "\n");                                                     \
+    log__impl("\x1b[31;4m[PANIC]\x1b[0m (" LOG_LABEL ")", __VA_ARGS__, "\n");  \
     exit(0);                                                                   \
   } while (0)
 #else
 #define panicln(...)
-#endif
-
 #endif
 
 #endif
