@@ -26,7 +26,7 @@ inline message_action_t message_action(message_t *msg) {
 inline message_type_t message_type(message_t *msg) { return msg->header.type; }
 
 inline bool message_from_leader(message_t *msg) {
-  return msg->header.sender_id.layer == leader;
+  return msg->header.sender_id.layer & leader;
 }
 
 bool message_is_command(message_t *msg) {

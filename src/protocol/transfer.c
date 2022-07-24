@@ -241,7 +241,7 @@ bool handle_do_transfer(message_t *msg) {
   assert(message_action(msg) == DO);
   assert(message_type(msg) == TRANSFER);
 
-  if (msg->header.sender_id.layer != leader) {
+  if (!(msg->header.sender_id.layer & leader)) {
     dbgln("Received DO TRANSFER from non-leader, ignoring.");
     return false;
   }
