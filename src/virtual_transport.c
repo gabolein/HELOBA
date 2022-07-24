@@ -188,8 +188,8 @@ bool virtual_channel_active(unsigned timeout_ms) {
 
     ret = recv(virt_fd, active_buf, MAX_MSG_LEN, MSG_PEEK);
     if (ret < 0) {
-      dbgln("Couldn't receive message: %s", strerror(errno));
-      return true;
+      warnln("Couldn't receive message: %s", strerror(errno));
+      continue;
     }
 
     message_t msg = unpack_message(active_buf, ret);

@@ -1,13 +1,13 @@
-#include "src/config.h"
-#define LOG_LEVEL DEBUG_LEVEL
+#define LOG_LEVEL WARNING_LEVEL
 #define LOG_LABEL "Cache"
 
+#include "src/protocol/cache.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/datastructures/generic/generic_priority_queue.h"
 #include "lib/datastructures/generic/generic_vector.h"
 #include "lib/logger.h"
 #include "lib/time_util.h"
-#include "src/protocol/cache.h"
+#include "src/config.h"
 #include "src/protocol/message.h"
 #include "src/protocol/message_formatter.h"
 #include <time.h>
