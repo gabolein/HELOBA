@@ -9,8 +9,8 @@
 // konvertiert wird. Viele von diesen Timeouts sind viel zu groß und könnten
 // wahrscheinlich auch im Mikrosekundenbereich liegen. Jedenfalls müssen wir uns
 // mit diesem Ansatz nicht auf eine Einheit festlegen.
-#define FIND_RESPONSE_TIMEOUT_MS 10
-#define SWAP_RESPONSE_TIMEOUT_MS 10
+#define FIND_RESPONSE_TIMEOUT_MS 50
+#define SWAP_RESPONSE_TIMEOUT_MS 50
 #define TRANSFER_RESPONSE_TIMEOUT_MS 50
 
 #define MIGRATION_BLOCK_DURATION_MS 10
