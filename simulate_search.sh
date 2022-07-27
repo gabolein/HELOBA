@@ -24,5 +24,5 @@ echo "Successfully Completed Searches: $completed_searches/$total_searches ($sea
 echo "Search Stats - Hops needed"
 grep -oP "Took\s+\K[0-9]+" search_log.txt | perl -M'List::Util qw(sum max min)' -MPOSIX -0777 -a -ne 'printf "%-7s : %d\n"x4, "Min", min(@F), "Max", max(@F), "Average", sum(@F)/@F,  "Median", sum( (sort {$a<=>$b} @F)[ int( $#F/2 ), ceil( $#F/2 ) ] )/2;'
 
-nswaps=$(rg "Sending SWAP \| ACK" search_log.txt | wc -l)
+nswaps=$(rg "Sending DO SWAP" search_log.txt | wc -l)
 echo "Conducted $nswaps SWAPs"
