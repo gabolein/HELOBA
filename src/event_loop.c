@@ -139,9 +139,8 @@ void event_loop_run() {
       transport_change_frequency(gs.frequency);
       perform_unregistration(found);
       transport_change_frequency(found);
+      perform_registration(found);
     }
-
-    perform_registration(found);
 
     timeout_ms = random_number_between(250, 1000);
     clock_gettime(CLOCK_MONOTONIC_RAW, &timeout_start);
