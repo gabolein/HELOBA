@@ -31,7 +31,7 @@ $(OBJ):$(BUILD_DIR)/%.o: %.c
 $(BUILD_DIR)/$(BIN): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: build debug release run test clean deploy
+.PHONY: build debug release simulation run test clean deploy
 
 .DEFAULT_GOAL = debug
 
@@ -44,6 +44,9 @@ debug: build
 release: CFLAGS += -s -O2
 release: CPPFLAGS += -DNDEBUG
 release: build
+
+simulation: CFLAGS += -s -O2
+simulation: build
 
 run: build
 	./$(BUILD_DIR)/$(BIN)

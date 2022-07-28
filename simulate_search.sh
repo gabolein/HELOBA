@@ -1,13 +1,13 @@
 #!/bin/zsh
 
-nnodes=25
-simulation_runtime=30
+nnodes=100
+simulation_runtime=60
 
 echo "Starting HELOBA Simulation with $nnodes Nodes running for $simulation_runtime seconds"
 
 rm search_log.txt
 make -s clean
-make -s build
+make -s simulation
 repeat $nnodes { ./build/heloba < /dev/null &>> search_log.txt& }
 
 nstarted=$(ps aux | rg heloba | wc -l)
