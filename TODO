@@ -14,10 +14,8 @@ problem: node registered but currently searching
 no problem, next node coming becomes leader
 
 BEAGLEBONE PROBLEMS
-leader in midst of operation, other node sends message, message lost
-do we need to do asynchronous to fix this? just go into receive mode and let fifo handle it
+leader in midst of operation, other node sends message, message lost -> long enough preamble fixes it
 
-backoff: transfer mode asynchronous? -> backoff broken
 
 SWAP PROBLEMS
 
@@ -29,3 +27,10 @@ like this we also distribute our load upwards and it eventually meets up with th
 (currently disabled)
 
 we readjusted swap logic to try to swap based on timeout
+
+RADIO 
+
+try to shorten preamble such that sending operation does not last as long
+try to reduce timeouts
+
+adjust backoff timeout accordingly
