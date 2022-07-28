@@ -7,7 +7,7 @@ echo "Starting HELOBA Simulation with $nnodes Nodes running for $simulation_runt
 
 rm search_log.txt
 make -s clean
-make -s build
+make -s simulation
 repeat $nnodes { ./build/heloba < /dev/null &>> search_log.txt& }
 
 nstarted=$(pgrep heloba | wc -l)
