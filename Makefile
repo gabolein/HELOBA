@@ -31,11 +31,19 @@ $(OBJ):$(BUILD_DIR)/%.o: %.c
 $(BUILD_DIR)/$(BIN): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-.PHONY: build run test debug release clean deploy
+.PHONY: build debug release run test clean deploy
 
 .DEFAULT_GOAL = debug
 
 build: $(BUILD_DIR)/$(BIN)
+
+debug: CFLAGS += -ggdb -O0 -fsanitize=address
+debug: LDFLAGS += -fsanitize=address
+debug: build
+
+release: CFLAGS += -s -O2
+release: CPPFLAGS += -DNDEBUG
+release: build
 
 run: build
 	./$(BUILD_DIR)/$(BIN)
@@ -43,14 +51,6 @@ run: build
 test: CFLAGS += -ggdb -O0 -fsanitize=address
 test: LDFLAGS += -lcriterion -fsanitize=address
 test: run
-
-debug: CFLAGS += -ggdb -O0
-debug: run
-
-# FIXME: CPPFLAGS += -DNDEBUG sollte Debugoutput strippen, egal welches Loglevel gesetzt ist
-release: CFLAGS += -s -O2
-release: CPPFLAGS += -DNDEBUG
-release: run
 
 clean:
 	rm -rf $(BUILD_DIR)
