@@ -176,6 +176,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
   // if we really didn't find anyone, we should have checked all frequencies
   assert(checked_hashmap_size(gs.search.checked_frequencies) ==
          FREQUENCY_CEILING - FREQUENCY_BASE + 1);
+  transport_change_frequency(gs.frequency);
   return false;
 }
 
