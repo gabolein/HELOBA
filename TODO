@@ -34,3 +34,8 @@ try to shorten preamble such that sending operation does not last as long
 try to reduce timeouts
 
 adjust backoff timeout accordingly
+
+Problem: sometimes the registration message is not received by the leader / CRC is broken
+
+thought its bc of short timeout but seems independent
+tried to reduce RSSI threshold, let's see if that works
