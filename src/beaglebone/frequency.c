@@ -3,8 +3,10 @@
 
 #include "src/beaglebone/frequency.h"
 #include "lib/logger.h"
+/*#include "lib/time_util.h"*/
 #include "src/beaglebone/backoff.h"
 #include "src/beaglebone/registers.h"
+#include "src/config.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <stdbool.h>
@@ -115,6 +117,10 @@ void set_transceiver_frequency(uint32_t freq) {
   // Radio erst in IDLE Mode setzen, bevor Registerwerte geändert werden (siehe
   // User Guide Section 9.13)
   cc1200_cmd(SIDLE);
+  do {
+    cc1200_cmd(SNOP);
+  } while (get_status_cc1200() != 0);
+  sleep_ms(FREQUENCY_SLEEP_TIME_MS);
 
   uint8_t lo_divider = determine_LO_divider_value_from_frequency(freq);
   write_LO_divider_value(lo_divider);
@@ -123,6 +129,12 @@ void set_transceiver_frequency(uint32_t freq) {
   uint32_t hw_freq =
       ((uint64_t)freq * lo_divider << 16) / CRYSTAL_FREQUENCY - (FREQ_OFF >> 2);
   write_hardware_frequency_to_register(hw_freq);
+
+  cc1200_cmd(SIDLE);
+  do {
+    cc1200_cmd(SNOP);
+  } while (get_status_cc1200() != 0);
+  sleep_ms(FREQUENCY_SLEEP_TIME_MS);
 }
 
 void print_transceiver_frequency() {

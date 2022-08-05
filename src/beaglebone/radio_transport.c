@@ -61,7 +61,8 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   start_receiver_blocking();
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
-  if (!detect_RSSI(1000)) {
+  if (!detect_RSSI(RADIO_RECV_BLOCK_WAIT_TIME_MS)) {
+    cc1200_cmd(SIDLE);
     return false;
   }
 
@@ -97,19 +98,26 @@ bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
 
   // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
   // überhaupt nicht erst angenommen?
-  dbgln("Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u",
+  dbgln("Received message. Length: %u, RSSI: %d, CRC: %s, Link Quality: %u",
         buffer[0] + 1, status[0], status[1] & (1 << 7) ? "OK" : ":(",
         status[1] & ~(1 << 7));
 
-  *length = buffer[0] + 1;
-  ret = true;
+  if (!(status[1] & (1 << 7))) {
+      ret = false;
+  } else {
+    *length = buffer[0] + 1;
+    ret = true;
+  }
 
 cleanup:
   disable_preamble_detection();
   // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
-  cc1200_cmd(SIDLE);
   dbgln("Flushing FIFO");
   cc1200_cmd(SFRX);
+  cc1200_cmd(SIDLE);
+  do {
+    cc1200_cmd(SNOP);
+  } while (get_status_cc1200() != 0);
   return ret;
 }
 
@@ -162,6 +170,7 @@ bool radio_transport_initialize() {
 
   cc1200_cmd(SRES);
   write_default_register_configuration();
+  disable_preamble_detection();
   cc1200_cmd(SNOP);
   dbgln("CC1200 Status: %s", get_status_cc1200_str());
 

@@ -59,8 +59,7 @@ clean:
 deploy:
 	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@beaglebone.local:~/ppl_deployment/
 
+# for testing on multiple Beaglebones. IP Adresses to be replaced
 maxiDeploy:
-	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@10.42.0.92:~/ppl_deployment/
-	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@10.42.0.156:~/ppl_deployment/
-	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@10.42.0.213:~/ppl_deployment/
-	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@10.42.0.50:~/ppl_deployment/
+	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@192.168.178.121:~/ppl_deployment/
+	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@192.168.178.143:~/ppl_deployment/

@@ -25,8 +25,8 @@ bool detect_RSSI(unsigned timeout_ms) {
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   while (!hit_timeout(timeout_ms, &start)) {
     int8_t curr_rssi;
-    if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold) {
-      dbgln("Detected signal with strength %i", curr_rssi);
+    if (read_RSSI(&curr_rssi) && (curr_rssi >= global_rssi_threshold)) {
+      dbgln("Detected signal with strength %d", curr_rssi);
       return true;
     }
   }
@@ -49,6 +49,11 @@ void start_receiver_blocking() {
   cc1200_cmd(SRX);
 
   do {
+    if (get_status_cc1200() == 6) {
+      warnln("Unexpected RXFIFO Error. Flushin'.");
+      cc1200_cmd(SFRX);
+      cc1200_cmd(SRX);
+    }
     cc1200_cmd(SNOP);
   } while (get_status_cc1200() != 1);
 }
@@ -87,6 +92,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
     f_rssi = (float)rssi;
     threshold += (f_rssi - threshold) / ++samples;
   }
+  cc1200_cmd(SIDLE);
 
   dbgln("Collected %lu samples, got %lu errors", samples, errors);
 
