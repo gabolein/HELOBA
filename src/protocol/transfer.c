@@ -186,7 +186,6 @@ bool perform_registration(frequency_t to) {
   // 5. Timeout for time T or until leader message received (until we're sure election is finished)
   // 6. if not already registered, send WILL TRANSFER
   // clang-format on
-
   message_vector_t *received = message_vector_create();
 
   message_t join_request = message_create(WILL, TRANSFER);

@@ -14,7 +14,7 @@
 #define TRANSFER_RESPONSE_TIMEOUT_MS 50
 
 #define MIGRATION_BLOCK_DURATION_MS 10
-#define SWAP_BLOCK_DURATION_MS 1000
+#define SWAP_BLOCK_DURATION_MS 5000
 #define MIN_SPLIT_SCORE 5
 
 // NOTE: Es wäre interessant, die aktuelle Cachegröße abhängig vom Alter des

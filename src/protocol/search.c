@@ -4,6 +4,7 @@
 #include "src/protocol/search.h"
 #include "lib/datastructures/generic/generic_hashmap.h"
 #include "lib/logger.h"
+#include "lib/random.h"
 #include "lib/time_util.h"
 #include "src/config.h"
 #include "src/protocol/cache.h"
@@ -68,10 +69,12 @@ void search_queue_add(search_hint_t hint) {
 
 // TOOD: besseren Namen finden
 void search_queue_expand_by_order(frequency_t f) {
+  unsigned rd = random_number_between(0, 2);
+
   frequency_t next_freqs[3] = {
       tree_node_parent(f),
-      tree_node_lhs(f),
-      tree_node_rhs(f),
+      rd == 0 ? tree_node_lhs(f) : tree_node_rhs(f),
+      rd == 0 ? tree_node_rhs(f) : tree_node_lhs(f),
   };
 
   for (unsigned i = 0; i < 3; i++) {
@@ -173,6 +176,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
   // if we really didn't find anyone, we should have checked all frequencies
   assert(checked_hashmap_size(gs.search.checked_frequencies) ==
          FREQUENCY_CEILING - FREQUENCY_BASE + 1);
+  transport_change_frequency(gs.frequency);
   return false;
 }
 

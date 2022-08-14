@@ -1,4 +1,4 @@
-#define LOG_LEVEL WARNING_LEVEL
+#define LOG_LEVEL DEBUG_LEVEL
 #define LOG_LABEL "Swap"
 
 #include "src/protocol/swap.h"
@@ -160,6 +160,7 @@ swap_return_val perform_swap(frequency_t with) {
     return REJECTED;
   }
 
+  dbgln("Swapping with frequency %u.", with);
   transport_change_frequency(gs.frequency);
   perform_migrate(with);
   return SUCCESS;

@@ -31,6 +31,8 @@ static struct timespec timeout_start;
 // Restriktion, weil wir im Moment nur Suche nach ID unterstützen und kein
 // weiteres Overlay Protokoll haben, was Suche nach Hash, Gruppe, etc
 // ermöglicht.
+// FIXME: Dieser Teil sollte komplett ins bash script verschoben werden. Dort
+// kann man einfach find <ID> zum stdin eines zufälligen Prozesses pipen.
 // NOTE: Anscheinend verursacht fread() in /usr/bin/killall5 Memory Leaks,
 // dagegen können wir nichts tun, deswegen Instrumentation für diese Funktion
 // ausschalten.
@@ -139,9 +141,8 @@ void event_loop_run() {
       transport_change_frequency(gs.frequency);
       perform_unregistration(found);
       transport_change_frequency(found);
+      perform_registration(found);
     }
-
-    perform_registration(found);
 
     timeout_ms = random_number_between(250, 1000);
     clock_gettime(CLOCK_MONOTONIC_RAW, &timeout_start);
