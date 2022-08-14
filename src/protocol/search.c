@@ -15,6 +15,7 @@
 #include "src/protocol/tree.h"
 #include "src/state.h"
 #include "src/transport.h"
+#include <limits.h>
 #include <time.h>
 
 extern handler_f auto_handlers[MESSAGE_ACTION_COUNT][MESSAGE_TYPE_COUNT];
@@ -137,7 +138,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
     transport_send_message(&scan, receivers);
 
     message_vector_t *responses = message_vector_create();
-    collect_messages(FIND_RESPONSE_TIMEOUT_MS, 5, search_response_filter,
+    collect_messages(FIND_RESPONSE_TIMEOUT_MS, UINT_MAX, search_response_filter,
                      responses);
 
     for (unsigned i = 0; i < message_vector_size(responses); i++) {
@@ -158,11 +159,12 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
               format_routing_id(to_find));
         message_vector_destroy(responses);
         return true;
-      } else if (message_type(&current) == HINT) {
+      } else if (message_type(&current) == HINT &&
+                 routing_id_equal(to_find, current.payload.hint.id)) {
         search_hint_t hint = {
             .type = CACHE,
-            .f = current.payload.hint.hint.f,
-            .timedelta_us = current.payload.hint.hint.timedelta_us,
+            .f = current.payload.hint.f,
+            .timedelta_us = current.payload.hint.timedelta_us,
         };
 
         search_queue_add(hint);
@@ -197,7 +199,7 @@ bool handle_do_find(message_t *msg) {
       }
 
       message_t reply = message_create(WILL, HINT);
-      reply.payload.hint = (hint_payload_t){.hint = hint};
+      reply.payload.hint = hint;
       transport_send_message(&reply, msg->header.sender_id);
     }
   } else {

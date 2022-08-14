@@ -54,13 +54,10 @@ typedef struct {
 // werden, sobald wir für message.h eine modulare Struktur wie bei den Handlers
 // haben.
 typedef struct {
+  routing_id_t id;
   frequency_t f;
   unsigned timedelta_us;
 } cache_hint_t;
-
-typedef struct {
-  cache_hint_t hint;
-} hint_payload_t;
 
 typedef struct {
   routing_id_t to_find;
@@ -75,10 +72,7 @@ typedef struct {
   frequency_t to;
 } transfer_payload_t;
 
-typedef enum {
-  SPLIT_UP,
-  SPLIT_DOWN
-} split_direction;
+typedef enum { SPLIT_UP, SPLIT_DOWN } split_direction;
 
 typedef struct {
   split_direction direction;
@@ -89,7 +83,7 @@ typedef struct {
 typedef struct {
   message_header_t header;
   union {
-    hint_payload_t hint;
+    cache_hint_t hint;
     find_payload_t find;
     swap_payload_t swap;
     transfer_payload_t transfer;

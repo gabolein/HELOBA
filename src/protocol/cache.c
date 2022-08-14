@@ -74,6 +74,7 @@ cache_hint_t cache_get(routing_id_t id) {
   clock_gettime(CLOCK_BOOTTIME, &now);
   processed.timedelta_us = (now.tv_sec - raw.timestamp.tv_sec) * 1000000 +
                            (now.tv_nsec - raw.timestamp.tv_nsec) / 1000;
+  processed.id = raw.id;
   processed.f = raw.f;
 
   dbgln("Returning from Cache: %s -> %u (%.2dm:%.2ds:%.4dms old)",

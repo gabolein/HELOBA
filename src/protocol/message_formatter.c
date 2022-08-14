@@ -159,11 +159,13 @@ char *format_message(message_t *msg) {
 
   switch (msg->header.type) {
   case HINT:
-    append_helper(message_vec, "Frequency: ");
-    append_helper(message_vec, format_number("%u", msg->payload.hint.hint.f));
+    append_helper(message_vec, "ID: ");
+    append_helper(message_vec, format_routing_id(msg->payload.hint.id));
+    append_helper(message_vec, ", Frequency: ");
+    append_helper(message_vec, format_number("%u", msg->payload.hint.f));
     append_helper(message_vec, ", Timedelta: ");
     append_helper(message_vec,
-                  format_number("%u", msg->payload.hint.hint.timedelta_us));
+                  format_number("%u", msg->payload.hint.timedelta_us));
     append_helper(message_vec, "us");
     break;
   case FIND:

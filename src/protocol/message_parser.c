@@ -63,12 +63,13 @@ void pack_header(u8_vector_t *v, message_header_t *header) {
   pack_routing_id(v, &header->receiver_id);
 }
 
-void pack_hint_payload(u8_vector_t *v, hint_payload_t *payload) {
-  pack_frequency(v, payload->hint.f);
-  u8_vector_append(v, (payload->hint.timedelta_us >> 24) & 0xff);
-  u8_vector_append(v, (payload->hint.timedelta_us >> 16) & 0xff);
-  u8_vector_append(v, (payload->hint.timedelta_us >> 8) & 0xff);
-  u8_vector_append(v, (payload->hint.timedelta_us >> 0) & 0xff);
+void pack_hint_payload(u8_vector_t *v, cache_hint_t *payload) {
+  pack_routing_id(v, &payload->id);
+  pack_frequency(v, payload->f);
+  u8_vector_append(v, (payload->timedelta_us >> 24) & 0xff);
+  u8_vector_append(v, (payload->timedelta_us >> 16) & 0xff);
+  u8_vector_append(v, (payload->timedelta_us >> 8) & 0xff);
+  u8_vector_append(v, (payload->timedelta_us >> 0) & 0xff);
 }
 
 void pack_find_payload(u8_vector_t *v, find_payload_t *payload) {
@@ -95,9 +96,8 @@ unsigned get_payload_size(message_t *msg) {
   // TODO replace magic numbers
   switch (msg->header.type) {
   case HINT:
-    // Das ist ein Level zu viel
-    return sizeof(msg->payload.hint.hint.f) +
-           sizeof(msg->payload.hint.hint.timedelta_us);
+    return (msg->payload.hint.id.layer & specific ? 7 : 1) +
+           sizeof(msg->payload.hint.f) + sizeof(msg->payload.hint.timedelta_us);
   case FIND:
     return msg->payload.find.to_find.layer & specific ? 7 : 1;
   case SWAP:
@@ -211,18 +211,19 @@ message_header_t unpack_header(uint8_t *buffer, unsigned length,
   return d;
 }
 
-hint_payload_t unpack_hint_payload(uint8_t *buffer, unsigned length,
-                                   unsigned *decoded) {
-  hint_payload_t d;
-  memset(&d.hint, 0, sizeof(d.hint));
-  d.hint.f = unpack_frequency(buffer, length, decoded);
+cache_hint_t unpack_hint_payload(uint8_t *buffer, unsigned length,
+                                 unsigned *decoded) {
+  cache_hint_t d;
+  memset(&d, 0, sizeof(d));
+  d.id = unpack_routing_id(buffer, length, decoded);
+  d.f = unpack_frequency(buffer, length, decoded);
 
   assert(*decoded <= length);
-  assert(length - *decoded >= sizeof(d.hint.timedelta_us));
+  assert(length - *decoded >= sizeof(d.timedelta_us));
 
-  for (unsigned i = 0; i < sizeof(d.hint.timedelta_us); i++) {
-    d.hint.timedelta_us <<= 8;
-    d.hint.timedelta_us |= buffer[*decoded];
+  for (unsigned i = 0; i < sizeof(d.timedelta_us); i++) {
+    d.timedelta_us <<= 8;
+    d.timedelta_us |= buffer[*decoded];
     (*decoded)++;
   }
 
