@@ -59,14 +59,17 @@ bool handle_goto(command_param_t param) {
 
 bool handle_searchfor(command_param_t param) {
   param.to_find.layer = specific;
-  frequency_t found;
-
-  if (!perform_search(param.to_find, &found)) {
-    warnln("Couldn't find requested node");
+  if (routing_id_equal(param.to_find, gs.id)) {
+    warnln("Can't search for own id!");
     return false;
   }
 
-  transport_change_frequency(gs.frequency);
+  frequency_t found;
+  if (!perform_search(param.to_find, &found)) {
+    warnln("Couldn't find requested node %s", format_routing_id(param.to_find));
+    return false;
+  }
+
   command_param_t wrap = {.freq = found};
   return handle_goto(wrap);
 }
@@ -88,6 +91,11 @@ static interface_handler_f interface_handlers[INTERFACE_COMMAND_COUNT - 1] = {
 
 bool handle_interface_command(interface_commands command,
                               command_param_t param) {
+  // Wir verhindern, dass Leader andere Nodes suchen können, da sie unbedingt
+  // auf ihrer Frequenz bleiben sollten.
+  if (command == SEARCHFOR && gs.id.layer & leader) {
+    return false;
+  }
 
   return interface_handlers[command](param);
 }

@@ -4,6 +4,7 @@
 #include "lib/logger.h"
 #include "src/config.h"
 #include "src/protocol/message.h"
+#include "src/protocol/message_formatter.h"
 #include "src/protocol/tree.h"
 #define _GNU_SOURCE
 #include "lib/time_util.h"
@@ -113,10 +114,14 @@ void *interface_collect_user_input(void *arg) {
   size_t n = 0;
 
   while (getline(&line, &n, stdin) != -1) {
+    dbgln("Read line: %s", line);
     argc = input_to_array(line, args);
     if (argc <= 0 || MAX_ARGC < argc)
       continue;
 
+    for (unsigned i = 0; i < argc; i++) {
+      dbgln("args[%u] = %s", i, args[i]);
+    }
     // TODO refactor
     switch (get_command(args[0])) {
     case ID:
@@ -174,7 +179,8 @@ void *interface_collect_user_input(void *arg) {
     case SEARCHFOR: {
       routing_id_t to_find = routing_id_create(0, NULL);
       if (parse_searchfor(args[1], &to_find)) {
-
+        to_find.layer = specific;
+        dbgln("Got a SEARCHFOR command for %s", format_routing_id(to_find));
         pthread_mutex_lock(&interface_lock);
         command.set = true;
         command.type = SEARCHFOR;

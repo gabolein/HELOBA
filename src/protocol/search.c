@@ -158,6 +158,7 @@ bool perform_search(routing_id_t to_find, frequency_t *found) {
               checked_hashmap_size(gs.search.checked_frequencies) - 1,
               format_routing_id(to_find));
         message_vector_destroy(responses);
+        transport_change_frequency(gs.frequency);
         return true;
       } else if (message_type(&current) == HINT &&
                  routing_id_equal(to_find, current.payload.hint.id)) {
