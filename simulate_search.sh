@@ -5,8 +5,8 @@ random_array_element() {
   printf '%s' "${arr[RANDOM % $#]}"
 }
 
-node_count=40
-simulation_runtime=10
+node_count=50
+simulation_runtime=120
 
 echo "Starting HELOBA Search Simulation with $node_count Nodes running for $simulation_runtime seconds"
 
@@ -22,9 +22,12 @@ for i in $(seq $node_count); do
     mkfifo "$fifo"
   fi
   
-  eval ./build/heloba < "$fifo" &>> simulation_log.txt&
+  eval "./build/heloba < $fifo &>> simulation_log.txt&"
+  pid=$!
+  
+  pids+=("$pid")
   fifos+=("$fifo")
-  pids+=($!)
+  
   # Wait a little bit to not flood the network with too many concurrent joins
   sleep 0.01s
 done
@@ -39,7 +42,7 @@ do
   pid_fmt=$(printf "%x:%x:%x:%x:%x:%x" $(((pid >> 0) & 0xff)) $(((pid >> 8) & 0xff)) $(((pid >> 16) & 0xff)) $(((pid >> 24) & 0xff)) $(((pid >> 32) & 0xff)) $(((pid >> 40) & 0xff)))
   echo "Commanding Node attached to $fifo to find Node $pid_fmt"
   echo "searchfor $pid_fmt" > "$fifo"
-  sleep 0.01s
+  sleep 0.1s
 done
 
 pkill -SIGKILL heloba
