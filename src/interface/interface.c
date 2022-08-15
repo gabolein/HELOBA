@@ -41,8 +41,10 @@ bool strtol_check_error(long number) {
 }
 
 bool parse_goto(char *freq_str, frequency_t *freq) {
+  errno = 0;
   long temp_freq = strtol(freq_str, NULL, 10);
-  if (errno == ERANGE || errno == EINVAL || (errno != 0 && temp_freq == 0)) {
+  if (temp_freq == 0 && errno != 0) {
+    warnln("Strtol error");
     return false;
   }
 

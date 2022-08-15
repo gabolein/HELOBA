@@ -58,69 +58,75 @@ bool radio_change_frequency(uint16_t frequency) {
 
 bool radio_receive_packet(uint8_t *buffer, unsigned *length) {
   bool ret = false;
-  struct timespec start_time;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
+  start_receiver_blocking();
   // FIXME: timeout sollte irgendwo mit #define gesetzt werden
-  if (!detect_RSSI(100)) {
+  if (!detect_RSSI(RADIO_RECV_BLOCK_WAIT_TIME_MS)) {
+    cc1200_cmd(SIDLE);
     return false;
   }
 
   enable_preamble_detection();
-  start_receiver_blocking();
-
+  dbgln("Detected RSSI, starting reception of packet.");
   if (!fifo_wait(RADIO_FIRST_BYTE_WAIT_TIME_MS)) {
+    warnln("Didn't receive anything after preamble.");
     ret = false;
     goto cleanup;
   }
 
-  uint8_t recv_length = rx_fifo_pop();
-  if (recv_length > *length) {
+  buffer[0] = rx_fifo_pop();
+  if (buffer[0] + 1 > *length) {
     warnln("Buffer with size=%u is too small to receive packet with size=%u.",
-           *length, recv_length);
+           *length, buffer[0] + 1);
     return false;
   }
 
   uint8_t status[PACKET_STATUS_LENGTH];
-  for (size_t i = 0; i < recv_length + PACKET_STATUS_LENGTH; i++) {
+  for (size_t i = 0; i < buffer[0] + PACKET_STATUS_LENGTH; i++) {
     if (!fifo_wait(RADIO_NEXT_BYTE_WAIT_TIME_MS)) {
-      warnln("Expected to receive %u bytes, only got %lu.", recv_length, i);
+      warnln("Expected to receive %u more bytes, only got %lu.", buffer[0], i);
       ret = false;
       goto cleanup;
     }
 
-    if (i < recv_length) {
-      buffer[i] = rx_fifo_pop();
+    if (i < buffer[0]) {
+      buffer[i + 1] = rx_fifo_pop();
     } else {
-      status[i - recv_length] = rx_fifo_pop();
+      status[i - buffer[0]] = rx_fifo_pop();
     }
   }
 
   // NOTE: sollte hier auf CRC geprüft werden oder wird das Paket in dem Fall
   // überhaupt nicht erst angenommen?
-  dbgln("Received message. Length: %u, RSSI: %i, CRC: %s, Link Quality: %u",
-        recv_length, status[0], status[1] & (1 << 7) ? "OK" : ":(",
+  dbgln("Received message. Length: %u, RSSI: %d, CRC: %s, Link Quality: %u",
+        buffer[0] + 1, status[0], status[1] & (1 << 7) ? "OK" : ":(",
         status[1] & ~(1 << 7));
 
-  *length = recv_length + 1;
-  ret = true;
+  if (!(status[1] & (1 << 7))) {
+      ret = false;
+  } else {
+    *length = buffer[0] + 1;
+    ret = true;
+  }
 
 cleanup:
   disable_preamble_detection();
   // NOTE: es kann sein, dass Flushen einer leeren FIFO zu Fehlern führt.
-  cc1200_cmd(SIDLE);
+  dbgln("Flushing FIFO");
   cc1200_cmd(SFRX);
+  cc1200_cmd(SIDLE);
+  do {
+    cc1200_cmd(SNOP);
+  } while (get_status_cc1200() != 0);
   return ret;
 }
 
 bool radio_send_packet(uint8_t *buffer, unsigned length) {
-
   struct timespec start_time;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
 
   while (!hit_timeout(RADIO_BACKOFF_TIMEOUT_MS, &start_time)) {
     if ((get_backoff_attempts() > 0) && !check_backoff_timeout()) {
-      dbgln("Backoff timeout not expired yet.");
       continue;
     }
 
@@ -132,7 +138,12 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
     for (size_t i = 0; i < length; i++) {
       tx_fifo_push(buffer[i]);
     }
+    // NOTE blocking? Would we hear our own RSSI?
     cc1200_cmd(STX);
+
+    do {
+      cc1200_cmd(SNOP);
+    } while (get_status_cc1200() != 0);
 
     // NOTE: sind wir hier sicher, dass unsere gesendete Nachricht auf jeden
     // Fall nicht angekommen ist?
@@ -143,9 +154,11 @@ bool radio_send_packet(uint8_t *buffer, unsigned length) {
 
     reset_backoff_attempts();
     dbgln("Transmission successful.");
+
     return true;
   }
 
+  warnln("Too many backoffs. Aborting sending operation");
   return false;
 }
 
@@ -157,8 +170,16 @@ bool radio_transport_initialize() {
 
   cc1200_cmd(SRES);
   write_default_register_configuration();
+  disable_preamble_detection();
   cc1200_cmd(SNOP);
   dbgln("CC1200 Status: %s", get_status_cc1200_str());
+
+  int8_t rssi_threshold;
+  if (!calculate_RSSI_threshold(&rssi_threshold)) {
+    warnln("Couldn't compute RSSI threshold.");
+    return false;
+  }
+  set_rssi_threshold(rssi_threshold);
   return true;
 }
 
@@ -185,11 +206,9 @@ bool radio_get_id(uint8_t out[MAC_SIZE]) {
   return true;
 }
 
-// FIXME: Hier fehlt noch ein Haufen Zeug:
-// 1. Warten bis im IDLE Mode
-// 2. In Receive Mode schalten
-// 3. detect_RSSI() aufrufen
-// 4. Zurück in IDLE Mode schalten
 bool radio_channel_active(unsigned timeout_ms) {
-  return detect_RSSI(timeout_ms);
+  start_receiver_blocking();
+  bool ret = detect_RSSI(timeout_ms);
+  cc1200_cmd(SIDLE);
+  return ret;
 }

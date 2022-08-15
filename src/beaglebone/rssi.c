@@ -5,6 +5,7 @@
 #include "lib/logger.h"
 #include "lib/time_util.h"
 #include "src/beaglebone/registers.h"
+#include "src/config.h"
 #include <SPIv1.h>
 #include <assert.h>
 #include <limits.h>
@@ -24,9 +25,12 @@ bool detect_RSSI(unsigned timeout_ms) {
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   while (!hit_timeout(timeout_ms, &start)) {
     int8_t curr_rssi;
-    if (read_RSSI(&curr_rssi) && curr_rssi >= global_rssi_threshold)
+    if (read_RSSI(&curr_rssi) && (curr_rssi >= global_rssi_threshold)) {
+      dbgln("Detected signal with strength %d", curr_rssi);
       return true;
+    }
   }
+
   return false;
 }
 
@@ -45,6 +49,11 @@ void start_receiver_blocking() {
   cc1200_cmd(SRX);
 
   do {
+    if (get_status_cc1200() == 6) {
+      warnln("Unexpected RXFIFO Error. Flushin'.");
+      cc1200_cmd(SFRX);
+      cc1200_cmd(SRX);
+    }
     cc1200_cmd(SNOP);
   } while (get_status_cc1200() != 1);
 }
@@ -81,14 +90,16 @@ bool calculate_RSSI_threshold(int8_t *out) {
     }
 
     f_rssi = (float)rssi;
-    threshold = threshold + (f_rssi - threshold) / ++samples;
+    threshold += (f_rssi - threshold) / ++samples;
   }
+  cc1200_cmd(SIDLE);
 
   dbgln("Collected %lu samples, got %lu errors", samples, errors);
 
   if (errors > samples)
     return false;
 
+  threshold += RSSI_PADDING;
   assert(threshold >= INT8_MIN && threshold <= INT8_MAX);
 
   *out = (int8_t)round(threshold);
@@ -101,6 +112,7 @@ bool calculate_RSSI_threshold(int8_t *out) {
 void set_rssi_threshold(int8_t threshold) {
   global_rssi_threshold = threshold;
   global_rssi_threshold_valid = true;
+  dbgln("RSSI threshold set to %d", threshold);
 }
 
 int8_t get_rssi_threshold() {

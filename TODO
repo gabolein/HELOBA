@@ -2,7 +2,6 @@ mute: que pasa?
 
 TEST:
 swap
-cache stresstest
 
 test beaglebone
 shutdown stuff
@@ -15,36 +14,28 @@ problem: node registered but currently searching
 no problem, next node coming becomes leader
 
 BEAGLEBONE PROBLEMS
-leader in midst of operation, other node sends message, message lost
-do we need to do asynchronous to fix this? just go into receive mode and let fifo handle it
+leader in midst of operation, other node sends message, message lost -> long enough preamble fixes it
 
-backoff: transfer mode asynchronous? -> backoff broken
 
 SWAP PROBLEMS
-if we only adjust old when we swap we will never attempt to swap down
 
-if we do it always we always get a ratio 1 (bc old always == current)
-but we are able to swap down
-
-swap down: node joins and goes to child to trigger swap from parent, node tries to register and catches old leaders swap request, node thinks it lost election
-solution: when node leaves down, leader must wait before attempting the swap, todo
-How? 
-1. set timer last node left, check before swapping down (extra timestamp in state)
-2. only do balance stuff when our score changes + timeout (timeout outside of balance)
-3. after node leaves we wait a timeout before continueing (would lose messages?)
-
-Important: split should not trigger a swap
 
 SWAP SOLVED
 swap problem: with empty parent frequencies we may end up with big detached subtrees
 solution: if on swapping up nobody answers, we split towards the parent
 like this we also distribute our load upwards and it eventually meets up with the top 
+(currently disabled)
 
+we readjusted swap logic to try to swap based on timeout
 
-leader leaving solution:
-already present nodes just start a new election
-problem: node registered but currently searching (shhhh)
+RADIO 
 
-will transfer from leader -> start election
+try to shorten preamble such that sending operation does not last as long
+try to reduce timeouts
 
-can leader searchfor?
+adjust backoff timeout accordingly
+
+Problem: sometimes the registration message is not received by the leader / CRC is broken
+
+thought its bc of short timeout but seems independent
+tried to reduce RSSI threshold, let's see if that works

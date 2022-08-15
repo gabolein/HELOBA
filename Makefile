@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-CPPFLAGS = -Iinclude -DVIRTUAL
+CPPFLAGS = -Iinclude #-DVIRTUAL
 LDFLAGS = -lm -lpthread
 SRC = $(shell find -name '*.c')
 
@@ -14,6 +14,7 @@ ifneq (,$(findstring -DVIRTUAL,$(CPPFLAGS)))
 SRC := $(filter-out ./src/beaglebone/%, $(SRC))
 else
 SRC := $(filter-out ./src/virtual_transport.c, $(SRC))
+LDFLAGS += -lspi -lprussdrvd
 endif
 
 BUILD_DIR = build
@@ -60,3 +61,8 @@ clean:
 
 deploy:
 	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@beaglebone.local:~/ppl_deployment/
+
+# for testing on multiple Beaglebones. IP Adresses to be replaced
+maxiDeploy:
+	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@192.168.178.121:~/ppl_deployment/
+	rsync -r --exclude=build/ --exclude=.vscode/ --exclude=.cache/ --delete . debian@192.168.178.143:~/ppl_deployment/
