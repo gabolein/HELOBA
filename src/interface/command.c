@@ -94,6 +94,7 @@ bool handle_interface_command(interface_commands command,
   // Wir verhindern, dass Leader andere Nodes suchen können, da sie unbedingt
   // auf ihrer Frequenz bleiben sollten.
   if (command == SEARCHFOR && gs.id.layer & leader) {
+    warnln("Leaders cannot search for other nodes!");
     return false;
   }
 
