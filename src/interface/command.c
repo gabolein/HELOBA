@@ -128,5 +128,8 @@ interface_commands get_command(char *command) {
   if (strcmp(command, "help") == 0)
     return HELP;
 
+  if (strcmp(command, "quit") == 0)
+    exit(0);
+
   return UNKNOWN;
 }
