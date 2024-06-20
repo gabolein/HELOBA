@@ -101,7 +101,8 @@ void print_help() {
          "searchfor <MAC>: Search for a Node with a given MAC address\n"
          "=== Leader Commands\n"
          "list: List all registered Nodes\n"
-         "split: Execute SPLIT command\n",
+         "split: Execute SPLIT command\n"
+         "quit: Take a guess\n",
          FREQUENCY_BASE, FREQUENCY_CEILING);
 }
 
@@ -230,4 +231,5 @@ void interface_initialize() {
   pthread_mutex_init(&interface_lock, NULL);
   pthread_t user_input_thread;
   pthread_create(&user_input_thread, NULL, interface_collect_user_input, NULL);
+  print_help();
 }
